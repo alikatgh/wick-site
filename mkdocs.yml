@@ -1,0 +1,45 @@
+site_name: wick
+site_description: >-
+  wick is the lantern engine's own scripting language — Lua's size and feel
+  with static types, optionals, and frame-boundary GC.
+repo_url: https://github.com/alikatgh/lantern
+repo_name: alikatgh/lantern
+edit_uri: ""
+
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: black
+    accent: amber
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - navigation.sections
+    - navigation.footer
+    - content.code.copy
+    - toc.integrate
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Overview: index.md
+  - Getting started: getting-started.md
+  - Language:
+      - Syntax: syntax.md
+      - Types & optionals: types.md
+      - Functions: functions.md
+      - Collections: collections.md
+      - Built-ins: builtins.md
+  - The engine API (lt.*): engine-api.md
+  - Compile errors, explained: errors.md
+  - Internals & embedding: internals.md
+  - wick vs Lua: comparison.md
+  - v0.1 limits: limits.md

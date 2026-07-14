@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>wick — the lantern engine's own language</title>
+<meta name="description" content="wick is a tiny statically-typed scripting language for the lantern game engine: Lua's size and feel, optionals that make nil bugs compile errors, type-checked engine calls, deterministic randomness, and GC that only runs between frames.">
+<link rel="canonical" href="https://wick.famemu.aulenor.com/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="wick — the lantern engine's own language">
+<meta property="og:description" content="Lua's size and feel with the sharp edges designed out: static types, optionals, typed engine calls, frame-boundary GC. ~2k lines, zero deps, zlib.">
+<meta property="og:url" content="https://wick.famemu.aulenor.com/">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect x='7' y='2' width='2' height='5' fill='%23e8be3c'/><rect x='5' y='7' width='6' height='7' fill='%23e8be3c'/><rect x='7' y='9' width='2' height='3' fill='%230e0d16'/></svg>">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="./"><span class="tip">|</span> wick</a>
+    <nav class="top">
+      <a href="#why">Why</a>
+      <a href="#code">Code</a>
+      <a href="docs/">Docs</a>
+      <a href="https://github.com/alikatgh/lantern/tree/main/wick">Source</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="hero">
+    <h1>The language that<br>lights the <em>lantern</em>.</h1>
+    <p class="sub">wick is the <a href="https://github.com/alikatgh/lantern">lantern
+    engine</a>'s own scripting language: Lua's size and feel, with the sharp
+    edges designed out. Static types with optionals, type-checked engine
+    calls, deterministic randomness, and a GC that only runs between frames
+    — in ~2,000 dependency-free lines you can read in an afternoon.</p>
+    <div class="cta">
+      <a class="btn primary" href="docs/">Read the docs</a>
+      <a class="btn" href="docs/getting-started/">Get started</a>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b>~2,000</b><span>lines: lexer to VM</span></div>
+    <div class="stat"><b>0</b><span>dependencies</span></div>
+    <div class="stat"><b>T?</b><span>nil bugs don't compile</span></div>
+    <div class="stat"><b>0</b><span>GC pauses mid-frame</span></div>
+    <div class="stat"><b>zlib</b><span>same license as the engine</span></div>
+  </div>
+
+  <section id="why">
+    <h2>Every Lua pain, fixed by design</h2>
+    <p class="lead">wick exists because we shipped real games in Lua and
+    catalogued what hurt. Each pain became a language decision — not a
+    linter rule, not a convention, a thing the compiler enforces.</p>
+
+    <div class="grid">
+      <div class="cell">
+        <h3>Optionals, enforced</h3>
+        <p><code>lt.load_save()</code> returns <code>str?</code> — using it
+        unchecked is a compile error. Unwrap with <code>??</code> or narrow
+        with <code>if x != nil</code>. The "empty save file crashes frame 1"
+        bug we actually shipped in Lua cannot be written in wick.</p>
+      </div>
+      <div class="cell">
+        <h3>Typos can't create globals</h3>
+        <p>Every variable is a <code>let</code>. Assigning a misspelled name
+        doesn't silently create a nil global — it doesn't compile.</p>
+      </div>
+      <div class="cell">
+        <h3>Typed engine calls</h3>
+        <p>Every <code>lt.*</code> signature is known to the compiler. Wrong
+        arity, wrong type — you get the call name and argument number on the
+        error screen at load, not a runtime surprise on frame 4,000.</p>
+      </div>
+      <div class="cell">
+        <h3>No truthiness</h3>
+        <p>Conditions must be <code>bool</code>. <code>if 1</code> and
+        <code>if name</code> don't compile; <code>""</code> is not secretly
+        true. 0-based indexing, <code>continue</code>, and str+str-only
+        <code>+</code> round out the de-quirking.</p>
+      </div>
+      <div class="cell">
+        <h3>GC at frame boundaries only</h3>
+        <p>Collection runs exactly once per frame, after present — never
+        mid-draw. And there's no JIT anywhere: iOS-legal by construction,
+        with speed from static types (specialized opcodes, slot-resolved
+        locals) instead.</p>
+      </div>
+      <div class="cell">
+        <h3>Deterministic by default</h3>
+        <p><code>rand()</code> is a fixed xorshift — the same sequence on
+        every machine. Combined with the engine's fixed-timestep mode, whole
+        gameplay sessions replay byte-for-byte in CI.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="code">
+    <h2>The same game, twice</h2>
+    <p class="lead">Kora Night ships in both languages as separate
+    side-by-side projects that evolve together. The famous line — loading
+    a hi-score that might be a 0-byte file:</p>
+
+    <div class="cols">
+      <pre><code><span class="c">-- Lua: shipped with a frame-1 crash.
+-- "" is truthy, so `or "0"` never
+-- fires; tonumber("") = nil poisons
+-- everything downstream.</span>
+<span class="k">local</span> best = tonumber(
+  lt.load_save(<span class="s">"best"</span>) <span class="k">or</span> <span class="s">"0"</span>)</code></pre>
+      <pre><code><span class="c">// wick: the only version that
+// compiles. load_save is str?,
+// num() is num? — both nil cases
+// are handled, or it's a type error.</span>
+<span class="k">let</span> best = num(
+  lt.load_save(<span class="s">"best"</span>) ?? <span class="s">""</span>) ?? 0</code></pre>
+    </div>
+
+    <p class="lead" style="margin-top:28px">Full side-by-side reading:
+    <a href="docs/comparison/">wick vs Lua</a> in the docs — records,
+    multiple returns, and what you stop writing entirely.</p>
+  </section>
+
+  <section>
+    <h2>Part of the lantern engine</h2>
+    <p class="lead">wick lives in the engine repo (<a
+    href="https://github.com/alikatgh/lantern/tree/main/wick">wick/</a>) and
+    ships with it — there is nothing separate to install. A game is a folder
+    with <code>main.wick</code>; hot-reload, the in-engine error screen, and
+    CI screenshot verification all work exactly as they do for Lua and C,
+    which remain first-class. Start at the
+    <a href="docs/">documentation</a>.</p>
+  </section>
+
+</div>
+
+<footer class="site">
+  <div class="wrap">
+    <span>| wick — part of the lantern engine, a famemu project</span>
+    <a href="docs/">Documentation</a>
+    <a href="https://github.com/alikatgh/lantern">GitHub</a>
+  </div>
+</footer>
+
+</body>
+</html>
