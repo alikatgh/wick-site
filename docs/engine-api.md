@@ -65,8 +65,14 @@ Handles (meshes, textures, sounds) are `num`.
 | `lt.key(name: str): bool` | held; keyboard + gamepad merged |
 | `lt.pressed(name: str): bool` | went down this frame |
 | `lt.gamepad(): bool` · `lt.rumble(low, high, ms)` | |
+| `lt.touch_down(): bool` | screen touched now (desktop: left mouse button) |
+| `lt.touch_pressed(): bool` | touch began this frame — latched, so a sub-frame tap still fires once |
+| `lt.touch_x(): num` · `lt.touch_y(): num` | 400×240 screen coords, letterbox undone, clamped; last position sticks while up |
 | `lt.save(name: str, data: str): bool` | binary-safe |
 | `lt.load_save(name: str): str?` | **optional** — `nil` when unreadable |
 
 Input names: `left right up down z x c space return escape a s d w`
 (pad: d-pad/stick → directions, A→`z`, B→`x`, Y→`c`, Start→`return`).
+Touch is a single point, 3DS-style — deliberately not multitouch. On
+iPhone/iPad it is the real touchscreen; on desktop the left mouse button
+plays the finger.
