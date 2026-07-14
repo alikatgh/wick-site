@@ -1,0 +1,296 @@
+\chapter{Grammar}
+
+The following EBNF describes wick v0.1, derived from the syntax reference and
+the reference compiler's front end. Terminals are quoted; \texttt{\{\ \}}
+means zero or more repetitions, \texttt{[\ ]} means optional, and \texttt{|}
+separates alternatives. Comments and whitespace are handled by the lexer and
+are not shown. The precedence of the expression rules, from `orExpr` (loosest)
+down to `postfix` (tightest), matches the table in Chapter~3.
+
+\begin{lstlisting}[basicstyle=\ttfamily\small,keywordstyle={}]
+program        = { toplevel } ;
+toplevel       = fnDecl | statement ;
+
+fnDecl         = "fn" ident "(" [ params ] ")" [ ":" type ] block ;
+params         = param { "," param } ;
+param          = ident ":" type ;
+block          = "{" { statement } "}" ;
+
+statement      = letStmt | assign | callStmt | ifStmt | whileStmt
+               | forStmt | "break" | "continue" | returnStmt ;
+letStmt        = "let" ident [ ":" type ] "=" expr ;
+assign         = lvalue "=" expr ;
+lvalue         = ident | ident "[" expr "]" ;
+callStmt       = call ;
+ifStmt         = "if" expr block { "elif" expr block } [ "else" block ] ;
+whileStmt      = "while" expr block ;
+forStmt        = "for" ident "in" expr ".." expr block ;
+returnStmt     = "return" [ expr ] ;
+
+type           = scalar [ "?" ]
+               | "list" "<" scalar ">" [ "?" ]
+               | "map"  "<" scalar ">" [ "?" ] ;
+scalar         = "num" | "bool" | "str" ;
+
+expr           = orExpr ;
+orExpr         = andExpr    { "or"  andExpr } ;
+andExpr        = coalesce   { "and" coalesce } ;
+coalesce       = equality   { "??"  equality } ;
+equality       = comparison { ( "==" | "!=" ) comparison } ;
+comparison     = addition   { ( "<" | "<=" | ">" | ">=" ) addition } ;
+addition       = term       { ( "+" | "-" ) term } ;
+term           = unary      { ( "*" | "/" | "%" ) unary } ;
+unary          = ( "-" | "not" ) unary | postfix ;
+postfix        = primary { "(" [ args ] ")" | "[" expr "]" } ;
+primary        = number | string | "true" | "false" | "nil"
+               | qualified | ident | "(" expr ")"
+               | listLit | mapLit ;
+qualified      = ident "." ident ;         (* e.g. lt.draw *)
+call           = ( ident | qualified ) "(" [ args ] ")" ;
+args           = expr { "," expr } ;
+
+listLit        = "[" [ expr { "," expr } ] "]" ;
+mapLit         = "[" string ":" expr { "," string ":" expr } "]" ;
+
+ident          = letter { letter | digit } ;    (* letter includes _ *)
+number         = digit { digit } [ "." digit { digit } ] ;
+string         = '"' { char | escape } '"' ;
+escape         = "\n" | "\t" | '\"' | "\\" ;
+\end{lstlisting}
+
+\noindent
+Notes on the grammar. An empty `listLit` (\texttt{[]}) is legal syntactically
+but requires a type annotation on its enclosing `let`, since the element type
+cannot be inferred. A `mapLit` requires string-literal keys. The `..` in
+`forStmt` is a single token; the lexer guarantees that `1..5` tokenises as
+`1`, `..`, `5`. Type names are contextual, recognised only in the `type`
+position, so they are not reserved words.
+
+\chapter{Compile-Error Catalogue}
+
+Every wick diagnostic has the form \texttt{file:line: message} and appears on
+the in-engine error screen. Fix the file and save; the game hot-reloads. The
+table below lists the compile-time messages by cause, with the meaning and the
+usual remedy. Message text in the reference compiler may vary in minor
+wording; the patterns here are canonical.
+
+\begingroup
+\small
+\begin{longtable}{@{}p{0.40\linewidth}p{0.54\linewidth}@{}}
+\toprule
+\textbf{Message pattern} & \textbf{Meaning and fix} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Message pattern} & \textbf{Meaning and fix} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{2}{r}{\emph{continued on next page}} \\
+\endfoot
+\bottomrule
+\endlastfoot
+
+\texttt{expected str, got str?} (any types) &
+An optional (or a wrong type) used where a plain value is needed. Unwrap with
+\texttt{??} or narrow with \texttt{if x != nil \{ \}}. \\
+\addlinespace
+\texttt{if condition must be bool (wick has no truthiness)} &
+\texttt{if x} on a number or string. Write the comparison: \texttt{if x > 0},
+\texttt{if s != ""}. \\
+\addlinespace
+\texttt{while condition must be bool} &
+As above, for \texttt{while}. \\
+\addlinespace
+\texttt{unknown variable 'x' --- wick has no implicit globals; use let} &
+Assigned a name never declared (often a typo). Add \texttt{let}, or fix the
+spelling. \\
+\addlinespace
+\texttt{unknown variable 'x' (declare it with let)} &
+Read of an undeclared name. Declare it, or fix the spelling. \\
+\addlinespace
+\texttt{'+' needs num+num or str+str (use str(x))} &
+Mixed-type \texttt{+}. Convert explicitly: \texttt{"n=" + str(n)}. \\
+\addlinespace
+\texttt{'-' needs num operands} / \texttt{arithmetic needs num operands} &
+An arithmetic operator with a non-\texttt{num} operand. \\
+\addlinespace
+\texttt{f() argument 3: expected num, got str} &
+A typed call mismatch (engine or your own function). Check the signature. \\
+\addlinespace
+\texttt{f() needs at least N arguments} / \texttt{takes N arguments} &
+Arity mismatch. See the signature. \\
+\addlinespace
+\texttt{unknown function 'f' (wick requires declare-before-use)} &
+Called above its definition. Move the \texttt{fn} up. \\
+\addlinespace
+\texttt{can't infer a type from nil; annotate: let x: str? = nil} &
+A bare \texttt{nil} initialiser. Add the annotation. \\
+\addlinespace
+\texttt{empty [] needs a type: let xs: list<num> = []} &
+An untyped empty literal. Annotate the \texttt{let}. \\
+\addlinespace
+\texttt{list elements must share one type} &
+A heterogeneous literal such as \texttt{[1, "a"]}. Lists are homogeneous. \\
+\addlinespace
+\texttt{list elements must be num, bool, or str} &
+A container element of a disallowed type. \\
+\addlinespace
+\texttt{comparing non-optional to nil} &
+\texttt{x != nil} on a plain type; it can never be \texttt{nil}. Delete the
+check. \\
+\addlinespace
+\texttt{'??' left side must be an optional} &
+\texttt{a ?? b} where \texttt{a} can never be \texttt{nil}. Delete the
+\texttt{??}. \\
+\addlinespace
+\texttt{'??' default must be T} &
+The default's type does not match the optional's base type. \\
+\addlinespace
+\texttt{'x' already declared in this scope} / \texttt{'x' already declared} &
+A duplicate \texttt{let}. Assign instead, or rename. \\
+\addlinespace
+\texttt{parenthesize this condition: (a != b) and ...} &
+A narrowing pattern mixed with \texttt{and}/\texttt{or}. Add parentheses. \\
+\addlinespace
+\texttt{break outside a loop} / \texttt{continue outside a loop} &
+A loop-control statement with no enclosing loop. \\
+\addlinespace
+\texttt{fn declarations can't nest} &
+An \texttt{fn} inside another \texttt{fn}. Top level only (v0.1). \\
+\addlinespace
+\texttt{return outside a function} &
+A \texttt{return} at top level. \\
+\addlinespace
+\texttt{void function can't return a value} &
+\texttt{return expr} in a function with no declared return type. \\
+\addlinespace
+\texttt{this function must return T} &
+A bare \texttt{return}, or a type mismatch, in a value-returning function. \\
+\addlinespace
+\texttt{map keys must be str literals} &
+Computed keys in a map literal. Build with \texttt{m[k] = v}. \\
+\addlinespace
+\texttt{container elements must be num, bool, or str} &
+A nested container. Flatten it (Chapter~5). \\
+\addlinespace
+\texttt{only lists and maps can be indexed} &
+Indexing a value that is not a list or map. \\
+\addlinespace
+\texttt{'and'/'or' needs bool operands} &
+A logical operator with a non-\texttt{bool} operand. \\
+\addlinespace
+\texttt{unexpected character 'x'} &
+A byte the lexer does not recognise. \\
+\end{longtable}
+\endgroup
+
+\section*{Runtime errors}
+
+Static typing removes the compile-time classes above but cannot remove the
+following, which depend on values only known at run time. Each stops the frame
+and shows on the error screen with a line number.
+
+\begin{center}
+\begin{tabular}{@{}p{0.42\linewidth}p{0.50\linewidth}@{}}
+\toprule
+\textbf{Message} & \textbf{Cause} \\
+\midrule
+\texttt{list index N out of range (len M)} &
+An out-of-bounds \texttt{xs[i]}, read or write. \\
+\texttt{check failed: <msg>} &
+Your own \texttt{check()} assertion failed. \\
+\texttt{load\_texture/mesh/sound failed: <path>} &
+A missing or malformed asset. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\chapter{Quick Reference}
+
+\section*{Built-ins}
+
+Always available, with no namespace. The generic built-ins (`len`, `str`,
+`num`, `push`, `pop`) are dispatched by static type at compile time.
+
+\begin{center}
+\small\begin{tabular}{@{}p{0.45\linewidth}p{0.47\linewidth}@{}}
+\toprule
+\textbf{Signature} & \textbf{Notes} \\
+\midrule
+\texttt{len(x): num} & length of a \texttt{str}, \texttt{list}, or \texttt{map} \\
+\texttt{str(x): str} & \texttt{num}, \texttt{bool}, or \texttt{str} to text; integers print clean \\
+\texttt{num(s: str): num?} & parse; \texttt{nil} on failure (including \texttt{""}) \\
+\texttt{push(xs: list<T>, v: T)} & append \\
+\texttt{pop(xs: list<T>): T?} & remove and return last; \texttt{nil} when empty \\
+\midrule
+\texttt{floor(x: num): num} \enskip \texttt{ceil(x: num): num} & \\
+\texttt{abs(x: num): num} \enskip \texttt{sqrt(x: num): num} & \\
+\texttt{min(a: num, b: num): num} \enskip \texttt{max(a, b): num} & \\
+\texttt{sin(x: num): num} \enskip \texttt{cos(x: num): num} & radians \\
+\texttt{atan(y: num, x: num): num} & two-argument arctangent \\
+\texttt{pi} & constant, 3.14159\ldots \\
+\midrule
+\texttt{rand(): num} & uniform \texttt{[0, 1)}; same sequence everywhere \\
+\texttt{srand(seed: num)} & reseed for replayable runs \\
+\texttt{env(name: str): str?} & read an environment variable; \texttt{nil} if unset \\
+\texttt{check(cond: bool, msg: str)} & runtime assertion \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section*{The \texttt{lt.*} engine interface}
+
+\begin{center}
+\small\begin{tabular}{@{}p{0.45\linewidth}p{0.47\linewidth}@{}}
+\toprule
+\textbf{Call} & \textbf{Notes} \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Frame and screen}} \\
+\texttt{lt.W} \enskip \texttt{lt.H} & constants 400, 240 \\
+\texttt{lt.clear(r,g,b)} & clear colour and depth \\
+\texttt{lt.time(): num} & seconds since boot \\
+\texttt{lt.screenshot(path: str)} & save frame as BMP \\
+\texttt{lt.quit()} \enskip \texttt{lt.escape\_quits(enable: bool)} & \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{3D scene}} \\
+\texttt{lt.camera(ex,ey,ez, tx,ty,tz, fov=55)} & position and look-at \\
+\texttt{lt.light(dx,dy,dz, ambient=0.35)} & directional light \\
+\texttt{lt.point\_light(i, x,y,z, radius, r=1,g=1,b=1)} & slots 0--3 \\
+\texttt{lt.fog(start, end, r,g,b)} & linear by depth \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Meshes}} \\
+\texttt{lt.cube()} \enskip \texttt{lt.plane(segs=1)} & unit primitives \\
+\texttt{lt.sphere(seg=12)} \enskip \texttt{lt.cylinder(seg=16)} \enskip \texttt{lt.cone(seg=16)} & \\
+\texttt{lt.mesh(verts: list<num>): num} & 12 floats per vertex \\
+\texttt{lt.load\_mesh(path: str): num} & Wavefront OBJ \\
+\texttt{lt.draw(m, x,y,z, rx,ry,rz, sx,sy,sz, r,g,b, tex=-1)} & lit draw \\
+\texttt{lt.draw\_lerp(a, b, t, \ldots, tex=-1)} & keyframe tween \\
+\texttt{lt.billboard(tex, x,y,z, w,h, \ldots)} & camera-facing quad \\
+\texttt{lt.shadow(x,y,z, radius, alpha=0.35)} & grounding blob \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{2D}} \\
+\texttt{lt.rect(x,y,w,h, r,g,b, a=1)} & filled, alpha-blended \\
+\texttt{lt.load\_texture(path: str): num} & BMP; magenta is transparent \\
+\texttt{lt.sprite(tex, x,y, sx=1,sy=1)} & top-left anchored \\
+\texttt{lt.sprite\_ex(tex, cx,cy, sx,sy, rot,r,g,b,a)} & centre, rotate, tint \\
+\texttt{lt.sprite\_uv(tex, x,y,w,h, u0,v0,u1,v1)} & atlas sub-rect \\
+\texttt{lt.print(text: str, x,y, r=1,g=1,b=1,a=1)} & 8$\times$8 font \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{Audio, input, saves}} \\
+\texttt{lt.load\_sound(path: str): num} & WAV \\
+\texttt{lt.play(sound, volume=1, loop=0): num} & channel, or $-1$ \\
+\texttt{lt.stop(channel)} \enskip \texttt{lt.volume(v)} & \\
+\texttt{lt.key(name: str): bool} & held \\
+\texttt{lt.pressed(name: str): bool} & went down this frame \\
+\texttt{lt.gamepad(): bool} \enskip \texttt{lt.rumble(low, high, ms)} & \\
+\texttt{lt.save(name: str, data: str): bool} & binary-safe \\
+\texttt{lt.load\_save(name: str): str?} & optional; \texttt{nil} when unreadable \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Input names: \texttt{left right up down z x c space return escape a s d w}.
+On a gamepad, the d-pad and stick map to the directions, and A, B, Y, Start
+map to \texttt{z}, \texttt{x}, \texttt{c}, \texttt{return}.

@@ -1,0 +1,219 @@
+\chapter{Collections}
+
+wick has two container types, the list and the map, and one idiom --- parallel
+lists --- that stands in for the structs it does not yet have. This chapter
+covers all three, along with the iteration patterns that go with 0-based
+indexing and the deliberate choice to make every fallible lookup an optional.
+
+\section{Lists}
+
+A list is a typed, ordered, 0-based sequence. Its element type is one of the
+three scalar types; a list literal infers its element type from its contents,
+and an empty literal must be annotated.
+
+\begin{lstlisting}[language=wick]
+let xs = [1, 2, 3]            // list<num>, element type inferred
+let names = ["a", "b"]        // list<str>
+let flags: list<bool> = []    // empty literal REQUIRES the annotation
+\end{lstlisting}
+
+\noindent
+The annotation on the empty list is not optional politeness; there is nothing
+in `[]` to infer from, and the compiler says so:
+\texttt{empty [] needs a type: let xs: list<num> = []}. A literal with mixed
+element types does not compile either --- lists are homogeneous ---
+and reports \texttt{list elements must share one type}, so `[1, "a"]` is
+rejected.
+
+\paragraph{Operating on lists.} The core operations are built-ins, dispatched
+by the static element type:
+
+\begin{lstlisting}[language=wick]
+push(xs, 4)                  // append; type-checked against the element type
+let last = pop(xs) ?? 0      // remove and return the last; T? (nil if empty)
+xs[0] = 10                   // index assignment
+let head = xs[0]             // index read
+let n = len(xs)              // number of elements
+\end{lstlisting}
+
+\noindent
+`push` appends a value that must match the element type --- `push(flags, 3)`
+does not compile. `pop` removes and returns the last element, but a list may
+be empty, so its result is an optional `T?`, `nil` when there is nothing to
+pop; you handle it like any optional, usually with `?? default`. `len` returns
+the element count as a `num`.
+
+\paragraph{Indexing is checked at run time.} Reading or writing an index
+outside \texttt{[0, len)} is a \emph{runtime} error, not undefined behaviour
+and not a silent `nil`. It stops the frame and shows on the error screen with
+the line number and the message \texttt{list index N out of range (len M)}.
+The static type system cannot know the value of an index in general, so this
+one check remains dynamic --- but it is a check, with a precise message, not a
+memory-safety hole.
+
+\paragraph{Element types.} List elements are `num`, `bool`, or `str`. There
+are no lists of lists in v0.1: `list<list<num>>` reports
+\texttt{container elements must be num, bool, or str}. The workaround, when
+you genuinely need a grid or a jagged structure, is index arithmetic on a flat
+list, shown at the end of this chapter.
+
+\section{Maps}
+
+A map is a string-keyed, value-typed collection. Keys are always `str`;
+values are one of the three scalar types.
+
+\begin{lstlisting}[language=wick]
+let scores = ["ana": 3, "bo": 5]   // map<num>
+scores["cid"] = 1                  // insert or update
+let s = scores["dee"] ?? 0         // get is ALWAYS T? -- missing key is nil
+let n = len(scores)                // number of entries
+\end{lstlisting}
+
+\noindent
+A map literal pairs string-literal keys with values; the keys in a literal
+must be string literals, not computed expressions
+(\texttt{map keys must be str literals}). To insert under a computed key, use
+index assignment: `m[k] = v`. The values in a literal must share one type,
+just as list elements do.
+
+\paragraph{Lookup is always optional.} The single most important fact about
+maps is that `m[key]` has type `T?`, always, even for a key you just inserted.
+The type system cannot prove a key is present, so it treats every lookup as
+possibly missing and hands you a `T?`. This is deliberate: the missing-key
+case --- the one everybody forgets --- is forced into view at the call site,
+where `??` handles it in three characters. There is no ``it was there a moment
+ago'' surprise, because the type never let you assume it.
+
+\begin{lstlisting}[language=wick]
+scores["ana"] = 10
+let a = scores["ana"] ?? 0    // still T?; the ?? is required, not optional
+\end{lstlisting}
+
+\section{Records via parallel lists}
+
+wick v0.1 has no structs. When you would reach for a record --- a lamp with a
+position and a lit flag, an enemy with health and a state --- you use
+\emph{parallel lists}: several lists of scalars, kept the same length, where a
+single index names one logical object across all of them.
+
+\begin{lstlisting}[language=wick]
+let lamp_x: list<num> = []
+let lamp_z: list<num> = []
+let lamp_lit: list<bool> = []
+// index i is one lamp: its x is lamp_x[i], its z is lamp_z[i],
+// its lit flag is lamp_lit[i]
+push(lamp_x, 3.4)  push(lamp_z, 3.4)  push(lamp_lit, true)
+push(lamp_x, -3.4) push(lamp_z, 3.4)  push(lamp_lit, true)
+\end{lstlisting}
+
+\noindent
+To operate on ``a lamp'' you operate on one index across the lists:
+
+\begin{lstlisting}[language=wick]
+fn relight(i: num) {
+  lamp_lit[i] = true
+}
+
+fn draw_lamps() {
+  for i in 0..len(lamp_x) {
+    if lamp_lit[i] {
+      lt.draw(cube, lamp_x[i], 0.62, lamp_z[i], 0, 0, 0,
+              0.14, 0.2, 0.14, 1.0, 0.8, 0.3)
+    }
+  }
+}
+\end{lstlisting}
+
+\noindent
+The honest assessment, which Chapter~8 makes at length: this reads less well
+than Lua's list of tables, where a lamp is one value with named fields. It is
+the top of wick's roadmap. But it is fully typed --- `lamp_lit` is a
+`list<bool>`, so `lamp_lit[i]` is a `bool` the compiler checks --- and for the
+scale of a game script it is workable. The one rule you must keep yourself is
+that the lists stay the same length; a `push` to one is a `push` to all.
+
+\section{Iteration patterns}
+
+There is one loop form for collections: iterate the indices, and index in.
+
+\begin{lstlisting}[language=wick]
+for i in 0..len(xs) {
+  use(xs[i])
+}
+\end{lstlisting}
+
+\noindent
+Because the range is end-exclusive and lists are 0-based, `0..len(xs)` visits
+exactly the valid indices, with no off-by-one. There is no `for x in list` in
+v0.1; the index form is the whole story, and it has the advantage that the
+index `i` is in hand when you need it --- for parallel lists you need it always,
+and for finding-the-nearest problems you need it to return.
+
+\paragraph{Search that returns an index.} A common shape is ``find the element
+matching some criterion, or report that there is none.'' With no multiple
+returns and no `for x in list`, you write a loop that carries a best-so-far
+index and a sentinel for ``none'':
+
+\begin{lstlisting}[language=wick]
+fn nearest_unlit(): num {        // returns a lamp index, or -1
+  let bi = 0 - 1
+  let bd = 0.0
+  for i in 0..len(lamp_x) {
+    if not lamp_lit[i] {
+      let dx = lamp_x[i] - px
+      let dz = lamp_z[i] - pz
+      let d = dx * dx + dz * dz
+      if bi < 0 or d < bd {
+        bi = i
+        bd = d
+      }
+    }
+  }
+  return bi
+}
+\end{lstlisting}
+
+\noindent
+The caller checks the sentinel before using the result:
+
+\begin{lstlisting}[language=wick]
+let i = nearest_unlit()
+if i >= 0 {
+  // i is a valid index
+}
+\end{lstlisting}
+
+\noindent
+Note that `bi` is written `0 - 1` rather than `-1` in the initialiser; either
+is legal --- unary minus exists --- and the game code happens to spell it as a
+subtraction. The `-1` sentinel is a plain `num`, not an optional, because it
+is cheaper to test `i >= 0` than to thread a `num?` through the caller; this
+is the idiomatic stand-in for the multiple-return the language lacks.
+
+\section{Nested data without nested containers}
+
+When you truly need a two-dimensional structure --- a tile grid, say --- and
+`list<list<num>>` is unavailable, flatten it: store row-major in a single
+list and compute the index.
+
+\begin{lstlisting}[language=wick]
+let W = 16
+let H = 12
+let tiles: list<num> = []
+for i in 0..W * H { push(tiles, 0) }
+
+fn get(tx: num, ty: num): num {
+  return tiles[ty * W + tx]
+}
+
+fn set(tx: num, ty: num, v: num) {
+  tiles[ty * W + tx] = v
+}
+\end{lstlisting}
+
+\noindent
+This is the same trick you would use in a systems language over a raw buffer,
+and it composes fine with the runtime bounds check: an out-of-range
+`ty * W + tx` is caught exactly as any other out-of-range index. It is more
+verbose than a nested container would be, and it is the honest v0.1 answer
+until nested containers arrive.

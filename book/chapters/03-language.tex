@@ -1,0 +1,402 @@
+\chapter{The Language}
+
+This is the reference chapter. It describes wick v0.1 completely and
+precisely: how source text is turned into tokens, what types exist, how
+variables are scoped, how expressions are formed and in what order they bind,
+what statements there are, how control flows, and how functions are declared
+and called. Where the tutorial was content to gesture, this chapter states
+rules. The grammar in Appendix~A is the formal companion to the prose here.
+
+\section{Lexical structure}
+
+A wick program is a sequence of Unicode bytes, read left to right and top to
+bottom, that the lexer turns into a stream of tokens. Whitespace and newlines
+separate tokens but are otherwise insignificant --- wick has no
+newline-sensitive rules and no semicolons. A statement ends where the grammar
+says it ends, not at a line break.
+
+\paragraph{Comments.} A comment begins with `//` and runs to the end of the
+line. There are no block comments.
+
+\begin{lstlisting}[language=wick]
+let x = 10   // this is a comment; it ends at the newline
+\end{lstlisting}
+
+\paragraph{Identifiers.} An identifier matches `[A-Za-z_][A-Za-z0-9_]*`: a
+letter or underscore, then any number of letters, digits, or underscores.
+Identifiers are case-sensitive. The following words are reserved and may not
+be used as identifiers:
+
+\begin{quote}
+\ttfamily let\quad fn\quad if\quad elif\quad else\quad while\quad for\quad
+in\quad break\quad continue\quad return\quad true\quad false\quad nil\quad
+and\quad or\quad not
+\end{quote}
+
+\noindent
+That is the entire keyword list --- seventeen words. Type names (`num`, `bool`,
+`str`, `list`, `map`) are \emph{not} keywords; they are contextual, recognised
+only where a type is expected, so nothing stops you from calling a variable
+`str` if you are determined to confuse yourself.
+
+\paragraph{Numbers.} There is one numeric type, `num`, an IEEE-754 double.
+A numeric literal is a run of digits with an optional single decimal point:
+`42`, `3.5`, `0.25`. There are no hexadecimal literals and no exponent
+notation in v0.1. The lexer is careful about the range operator: `1..5` lexes
+as the number `1`, the range token `..`, and the number `5` --- never as `1.`
+followed by `.5`. If you want a literal with a fractional part next to a
+range you must space it, but in practice ranges use integer bounds.
+
+\paragraph{Strings.} A string literal is enclosed in double quotes and may
+contain the escapes `\n` (newline), `\t` (tab), `\"` (a literal quote), and
+`\\` (a literal backslash). Strings are immutable. There are no single-quoted
+strings and no multi-line string literals.
+
+\begin{lstlisting}[language=wick]
+let a = "tenzin"
+let b = "line one\nline two"
+let c = "she said \"hi\""
+\end{lstlisting}
+
+\paragraph{Operators and punctuation.} The lexer recognises the following
+multi-character tokens, greedily: `..` (range), `??` (nil-coalesce), `==`,
+`!=`, `<=`, `>=`. The single-character tokens are the arithmetic and
+comparison operators `+ - * / % < >`, the assignment `=`, the optional marker
+`?`, the member dot `.`, and the grouping and separator characters
+\texttt{( ) [ ] \{ \} , :}. Any other character is a lexical error,
+reported as \texttt{unexpected character 'x'}.
+
+\section{Types}
+
+Every expression in wick has a static type, fixed at compile time. There are
+six type constructors.
+
+\begin{center}
+\begin{tabular}{@{}llp{0.44\linewidth}@{}}
+\toprule
+\textbf{Type} & \textbf{Values} & \textbf{Notes} \\
+\midrule
+\texttt{num} & IEEE-754 double & the only number type \\
+\texttt{bool} & \texttt{true}, \texttt{false} & the only type conditions accept \\
+\texttt{str} & immutable text & \texttt{+} concatenates \texttt{str} with \texttt{str} only \\
+\texttt{list<T>} & ordered, 0-based & \texttt{T} is \texttt{num}, \texttt{bool}, or \texttt{str} \\
+\texttt{map<T>} & string-keyed & values are \texttt{num}, \texttt{bool}, or \texttt{str} \\
+\texttt{T?} & \texttt{T} or \texttt{nil} & an \emph{optional} --- the headline feature \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The element type of a `list` or `map` must be one of the three scalar types
+`num`, `bool`, or `str`. There are no nested containers in v0.1: `list<list<num>>`
+and `map<list<str>>` do not exist, and attempting one produces
+\texttt{container elements must be num, bool, or str}. Chapter~5 gives the
+index-arithmetic workaround.
+
+\paragraph{\texttt{nil} and optionals.} `nil` is not a value of general type.
+It inhabits only optionals: an expression of type `T?` may be `nil` or may
+hold a `T`, and there is no way to write a bare `nil` whose type is unknown.
+`let x = nil` does not compile; the compiler cannot infer what the optional is
+optional \emph{of}, and says so:
+\texttt{can't infer a type from nil; annotate: let x: str? = nil}. Supply the
+annotation and it is fine:
+
+\begin{lstlisting}[language=wick]
+let x: str? = nil     // x is str?, currently nil
+\end{lstlisting}
+
+\noindent
+The whole of Chapter~4 is about optionals; here we note only that `T?` is a
+first-class type that the compiler tracks, and that you cannot use a `T?`
+where a `T` is required.
+
+\paragraph{\texttt{void}.} A function declared without a return type has
+return type `void`. `void` is not a value: a call to a void function is a
+statement, not an expression, and cannot appear on the right of a `let` or
+inside a larger expression. Attempting it yields
+\texttt{can't assign a void expression}.
+
+\section{Variables and scope}
+
+Every variable is introduced by `let`. There is no other way to bring a name
+into existence --- in particular, assigning to a name that was never declared
+is not an implicit declaration but a compile error. This single rule removes
+the entire class of typo-creates-a-global bug that haunts Lua.
+
+\begin{lstlisting}[language=wick]
+let x = 10          // num, inferred from 10
+let y: num = 10     // the same, written out
+let s = "hi"        // str
+\end{lstlisting}
+
+\noindent
+The type may be inferred from the initialiser or written explicitly after a
+colon. You must write it when there is nothing to infer from --- an empty
+container literal or a bare `nil` --- and you may write it anywhere for clarity.
+When both are present they must agree.
+
+\paragraph{Global versus local.} A `let` at the top level of the file creates
+a program \emph{global}: it is initialised once when the file loads and it
+persists for the life of the program, across every frame. A `let` inside a
+function creates a \emph{local}: it lives in that call's stack frame and is
+gone when the call returns. This is why per-frame state --- the player
+position, the score --- lives in top-level `let`s, while scratch values live in
+locals.
+
+\paragraph{Blocks and shadowing.} A variable is scoped to the block --- the
+brace-delimited region --- in which it is declared, and to the blocks nested
+inside it. An inner block may \emph{shadow} a name from an outer scope by
+declaring a new `let` with the same name; the inner name hides the outer one
+until the inner block ends. Redeclaring a name in the \emph{same} scope is an
+error:
+
+\begin{lstlisting}[language=wick]
+let n = 1
+if true {
+  let n = 2      // ok: shadows the outer n inside this block
+}
+let n = 3        // ERROR: 'n' already declared in this scope
+\end{lstlisting}
+
+\noindent
+The error for the last line is \texttt{'n' already declared}. To change an
+existing variable you assign to it; you do not re-`let` it.
+
+\paragraph{Assignment.} Assignment uses a single `=` and requires the name to
+have been declared. Reading an undeclared name reports
+\texttt{unknown variable 'x' (declare it with let)}; assigning to one reports
+\texttt{unknown variable 'x' --- wick has no implicit globals; use let}. The
+assigned value must have a type compatible with the variable (see the
+compatibility rules below).
+
+\section{Expressions and precedence}
+
+Expressions combine literals, variables, calls, indexing, and operators.
+Operators bind according to the following precedence table, from loosest
+(evaluated last, binds least tightly) to tightest. All binary operators are
+left-associative.
+
+\begin{center}
+\begin{tabular}{@{}cll@{}}
+\toprule
+\textbf{Level} & \textbf{Operators} & \textbf{Meaning} \\
+\midrule
+1 & \texttt{or} & logical or (short-circuit) \\
+2 & \texttt{and} & logical and (short-circuit) \\
+3 & \texttt{??} & nil-coalesce \\
+4 & \texttt{==} \quad \texttt{!=} & equality, inequality \\
+5 & \texttt{<} \enskip \texttt{<=} \enskip \texttt{>} \enskip \texttt{>=} & ordered comparison \\
+6 & \texttt{+} \quad \texttt{-} & add / concatenate, subtract \\
+7 & \texttt{*} \enskip \texttt{/} \enskip \texttt{\%} & multiply, divide, modulo \\
+8 & unary \texttt{-}, \texttt{not} & negation, logical not \\
+9 & \texttt{f(x)}, \texttt{a[i]} & call, index \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+So `a or b and c` parses as `a or (b and c)`, and `1 + 2 * 3` is `1 + (2*3)`,
+as arithmetic convention demands. The one surprise for newcomers is that `??`
+binds looser than comparison and arithmetic but tighter than `and`/`or`, which
+is why `num(s) ?? 0` works without parentheses --- the coalesce applies to the
+whole `num(s)`, and the result is a plain `num` ready for use.
+
+\paragraph{Arithmetic.} `+ - * / %` operate on `num` and produce `num`. Both
+operands must be non-optional `num`; using an optional is an error until you
+unwrap it. Division by zero follows IEEE-754 (it produces infinity or NaN
+rather than trapping), as in Lua.
+
+\paragraph{The two faces of \texttt{+}.} `+` is numeric addition when both
+operands are `num`, and string concatenation when both are `str`. It is never
+mixed. There is no implicit conversion: `"score " + 5` does not compile,
+because one side is `str` and the other `num`. The error is explicit about
+the fix: \texttt{'+' needs num+num or str+str (use str(x))}. Write
+`"score " + str(5)`. This is deliberate --- the silent stringification of
+numbers is a rich source of bugs, and wick would rather you say what you mean.
+
+\paragraph{Comparison and equality.} The ordered comparisons `< <= > >=`
+require `num` operands and produce `bool`. Equality `==` and inequality `!=`
+compare two values of the same type and produce `bool`; for `str`, equality
+compares contents, not identity. Comparing values of different types is an
+error (\texttt{'==' operands must have the same type}), with one blessed
+exception: comparing an optional to `nil`, which is the narrowing idiom
+covered in Chapter~4. Comparing a \emph{non}-optional to `nil` is itself an
+error --- \texttt{comparing non-optional to nil} --- because a non-optional can
+never be `nil`, so the check is dead code.
+
+\paragraph{Logical operators.} `and` and `or` require `bool` operands, produce
+`bool`, and short-circuit: `a and b` does not evaluate `b` when `a` is false,
+and `a or b` does not evaluate `b` when `a` is true. `not` requires a `bool`
+and negates it. Because there is no truthiness, you cannot write `a and b`
+where `a` is a number; you write the comparison that yields the `bool` you
+mean.
+
+\paragraph{The nil-coalesce \texttt{??}.} `a ?? b` requires `a` to be an
+optional `T?`; it evaluates to `a` unwrapped when `a` is non-`nil`, and to `b`
+otherwise. The default `b` must have the base type `T`, and the whole
+expression has type `T` --- non-optional. The right side is evaluated only when
+the left is `nil`. Applying `??` to a non-optional left side is an error
+(\texttt{'??' left side must be an optional}), because there is nothing to
+coalesce.
+
+\paragraph{Combined conditions and parentheses.} When a narrowing comparison
+`x != nil` is combined with `and` or `or`, the compiler asks you to
+parenthesise, so that the reader --- and the narrowing analysis --- can see the
+structure unambiguously. The message is
+\texttt{parenthesize this condition: (a != b) and ...}. Adding the parentheses
+resolves it:
+
+\begin{lstlisting}[language=wick]
+if (s != nil) and ready { }    // parenthesised as the compiler asks
+\end{lstlisting}
+
+\section{Statements}
+
+A wick program body is a sequence of statements. The statement forms are:
+
+\begin{lstlisting}[language=wick]
+let x = expr           // declaration (with optional : type)
+x = expr               // assignment to a declared variable
+xs[i] = expr           // element assignment (list index or map key)
+f(a, b)                // call statement; a non-void result is discarded
+if c { } elif c2 { } else { }
+while c { }
+for i in a..b { }      // i: num, from a to b-1
+break                  // exit the innermost loop
+continue               // next iteration of the innermost loop
+return expr            // or bare `return` in a void function
+\end{lstlisting}
+
+\noindent
+Blocks always use braces; there is no single-statement form without them. A
+call used as a statement discards its result if it has one, which is how you
+call a function for its effect. Element assignment works on a list index or a
+map key; the target must already be a list or map (indexing anything else is
+\texttt{only lists and maps can be indexed}).
+
+\section{Control flow}
+
+\paragraph{Conditionals.} `if`, optional `elif` chains, and an optional `else`
+form the conditional. Every condition must be `bool`. There is no truthiness,
+so `if 1 { }` and `if name { }` do not compile; the error names the rule
+directly: \texttt{if condition must be bool (wick has no truthiness)}. Write
+the comparison you mean --- `if x > 0`, `if s != ""`.
+
+\begin{lstlisting}[language=wick]
+if score > best {
+  best = score
+} elif score == best {
+  // tie
+} else {
+  // nothing
+}
+\end{lstlisting}
+
+\paragraph{\texttt{while}.} A `while` loop runs its body as long as the
+`bool` condition holds. The condition is checked before each iteration.
+
+\begin{lstlisting}[language=wick]
+let i = 0
+while i < 4 {
+  i = i + 1
+}
+\end{lstlisting}
+
+\paragraph{\texttt{for} ranges.} `for i in a..b` iterates the loop variable
+`i` over the half-open range \texttt{[a, b)} --- from `a` up to but not
+including `b`. Both bounds are `num` expressions, evaluated once. The loop
+variable is a fresh local, scoped to the loop body, of type `num`. This is the
+only iteration form in v0.1: there is no `for x in list`. To walk a list you
+iterate its indices:
+
+\begin{lstlisting}[language=wick]
+for i in 0..len(xs) {
+  lt.print(str(xs[i]), 4, 4 + i * 10, 1, 1, 1, 1)
+}
+\end{lstlisting}
+
+\noindent
+End-exclusivity is a deliberate match to 0-based indexing: `0..len(xs)` visits
+exactly the valid indices `0` through `len(xs) - 1`, with no off-by-one to get
+wrong.
+
+\paragraph{\texttt{break} and \texttt{continue}.} `break` exits the innermost
+enclosing loop; `continue` skips to that loop's next iteration. Both outside
+any loop are errors: \texttt{break outside a loop},
+\texttt{continue outside a loop}.
+
+\section{Functions}
+
+A function is declared with `fn`, at the top level only --- functions do not
+nest, and there are no closures or first-class function values in v0.1.
+Attempting a nested `fn` reports \texttt{fn declarations can't nest}.
+
+\begin{lstlisting}[language=wick]
+fn dist(ax: num, az: num, bx: num, bz: num): num {
+  let dx = bx - ax
+  let dz = bz - az
+  return sqrt(dx * dx + dz * dz)
+}
+\end{lstlisting}
+
+\paragraph{Parameters and return type.} Every parameter must be written with
+its type; there is no inference for parameters. The return type, if any,
+follows the parameter list after a colon. Omit it and the function is `void`.
+A `void` function may use bare `return` to exit early but may not
+`return expr` (\texttt{void function can't return a value}); a function with a
+declared return type must `return expr` of that type on the paths that
+produce a value, and may not `return` bare
+(\texttt{this function must return T}).
+
+\paragraph{Declare before use.} A function must be declared textually above
+its first call. The compiler is single-pass and resolves each call as it
+reaches it, so a call to a function defined later in the file reports
+\texttt{unknown function 'f' (wick requires declare-before-use)}. The remedy
+is to move the definition up. The two host-called functions, `update` and
+`draw`, are exempt from ordering relative to each other, because the host --
+not your code --- looks them up by name each frame.
+
+\paragraph{Recursion.} A function may call itself, since its own name is in
+scope within its body:
+
+\begin{lstlisting}[language=wick]
+fn fib(k: num): num {
+  if k < 2 { return k }
+  return fib(k - 1) + fib(k - 2)
+}
+\end{lstlisting}
+
+\paragraph{Call checking.} Calls are fully type-checked. Passing the wrong
+number of arguments reports \texttt{f() needs at least N arguments} or
+\texttt{f() takes N arguments}; passing an argument of the wrong type reports,
+for instance, \texttt{f() argument 3: expected num, got str}, naming the
+function and the argument position. This applies equally to your own functions
+and to engine calls, which are registered with typed signatures (Chapter~6).
+
+\paragraph{Return-path coverage.} v0.1 does not yet verify that every path
+through a non-void function returns a value. If control falls off the end of a
+function that declares a return type, the call yields `nil` --- do not rely on
+this. It is listed among the limits in Chapter~8, and the discipline is
+simple: make the last statement of a value-returning function a `return`.
+
+\section{Assignment compatibility}
+
+The rules that govern when one type may be stored where another is expected
+are short and worth stating together.
+
+\begin{itemize}
+\item A `T` may be stored where a `T?` is expected --- widening to an optional
+is free and always safe.
+\item A `T?` may \emph{not} be stored where a `T` is expected --- you must
+unwrap it first, with `??` or by narrowing.
+\item Containers are invariant: a `list<num>` accepts only `num` elements, and
+a `list<num>` is not a `list<num?>` or anything else. The element type is part
+of the type and must match exactly.
+\item `void` cannot be stored at all, because it is not a value.
+\end{itemize}
+
+\noindent
+These four rules, together with the optional discipline of the next chapter,
+are the whole of wick's type checking. There is no subtyping beyond
+`T`-into-`T?` widening, no coercion, and no generics beyond the built-in
+`list` and `map`. The system is small on purpose --- small enough to hold in
+your head, which is the point of the whole language.

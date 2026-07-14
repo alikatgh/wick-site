@@ -1,0 +1,324 @@
+\chapter{A wick Tutorial}
+
+This chapter builds a small but complete game, from an empty folder to
+something you can play. We introduce language features as we need them and
+explain them only as far as the game requires; the precise rules wait for
+Chapter~3. By the end you will have written variables, functions, an optional,
+a list, a loop, and the two functions the engine calls every frame --- and you
+will have used the two tools that make wick pleasant to work in, hot reload
+and the on-screen error screen.
+
+\section{Installing and running}
+
+wick ships inside the lantern engine. There is nothing separate to install:
+if you can build the engine, you can run wick.
+
+\begin{lstlisting}[language=bash,basicstyle=\ttfamily\small,keywordstyle={}]
+git clone https://github.com/alikatgh/lantern && cd lantern
+brew install sdl2 lua cmake pkg-config   # macOS; Linux: same packages
+cmake -B build && cmake --build build -j8
+
+./build/lantern games/wicklab            # the first wick program
+./build/lantern games/showcase_wick      # Kora Night, in wick
+\end{lstlisting}
+
+\noindent
+The first command builds the engine. The last two run games that already
+exist in the repository: `wicklab`, a small tour of the language, and
+`showcase_wick`, the wick build of Kora Night that recurs throughout this
+book.
+
+\section{A game is a folder}
+
+A wick game is a directory that contains a file named `main.wick`. When you
+point the engine at a folder, it runs that file if present, falling back to
+`main.lua` otherwise. To start a new game:
+
+\begin{lstlisting}[language=bash,basicstyle=\ttfamily\small,keywordstyle={}]
+mkdir games/lamp
+$EDITOR games/lamp/main.wick
+./build/lantern games/lamp
+\end{lstlisting}
+
+\noindent
+The screen is 400 by 240 pixels. The engine runs at 60 frames per second and
+looks up two functions by name each frame:
+
+\begin{lstlisting}[language=wick]
+fn update(dt: num) {   // dt = seconds since last frame, capped at 0.1
+}
+
+fn draw() {            // 3D first, then 2D composites on top
+  lt.clear(0.1, 0.1, 0.2)
+  lt.print("HELLO 400X240", 4, 4, 1, 1, 1, 1)
+}
+\end{lstlisting}
+
+\noindent
+Both functions are optional; a `main.wick` with only top-level statements is
+a legal program. Top-level statements --- everything not inside a `fn` --- run
+once, at load, and that is where you create resources and set up state. Save
+the file with those two functions in it, run the folder, and you have a
+window that clears to a dark blue and prints a line of text in the built-in
+8-by-8 font. That is the smallest thing worth calling a game.
+
+\section{Variables and the first motion}
+
+Let us make something move. Every variable is introduced with `let`. Types
+are inferred from the initialiser, so you rarely write them:
+
+\begin{lstlisting}[language=wick]
+let x = 200.0      // num, inferred
+let y = 120.0
+\end{lstlisting}
+
+\noindent
+Those are top-level `let`s, so `x` and `y` are program globals: they persist
+across frames, which is exactly what we want for the player's position. Now
+read the keyboard in `update` and draw a square at \texttt{(x, y)} in `draw`:
+
+\begin{lstlisting}[language=wick]
+let x = 200.0
+let y = 120.0
+
+fn update(dt: num) {
+  let speed = 120.0
+  if lt.key("left")  { x = x - speed * dt }
+  if lt.key("right") { x = x + speed * dt }
+  if lt.key("up")    { y = y - speed * dt }
+  if lt.key("down")  { y = y + speed * dt }
+  x = max(8, min(392, x))
+  y = max(8, min(232, y))
+}
+
+fn draw() {
+  lt.clear(0.09, 0.07, 0.16)
+  lt.rect(x - 4, y - 4, 8, 8, 1, 0.85, 0.3, 1)
+}
+\end{lstlisting}
+
+\noindent
+A few things are already worth noticing. `speed` is declared with `let`
+inside `update`, so it is a local: it exists only for that call. Multiplying
+by `dt`, the seconds elapsed since the last frame, makes the motion
+frame-rate independent --- the square moves 120 pixels per second whether the
+machine runs at 60 or 144 frames. `max` and `min` are built-ins, always
+available with no namespace. And `lt.key` returns a `bool`, which is the only
+thing an `if` will accept: there is no truthiness in wick, so you cannot
+write `if x` and hope it means ``if x is nonzero.'' It simply will not
+compile.
+
+\section{Functions}
+
+A function is declared with `fn`, always at the top level --- functions do not
+nest in v0.1. Parameter types are required; the return type follows the
+parameter list after a colon, and you omit it for a function that returns
+nothing. Here is a tiny helper that makes the square bob up and down:
+
+\begin{lstlisting}[language=wick]
+fn wobble(v: num): num {
+  return sin(v * 2) * 6
+}
+\end{lstlisting}
+
+\noindent
+`sin` is a built-in and takes radians. To use `wobble` we need a clock, so
+add a top-level `let t = 0.0` and advance it in `update` with `t = t + dt`.
+Then the draw becomes:
+
+\begin{lstlisting}[language=wick]
+lt.rect(x - 4, y - 4 + wobble(t), 8, 8, 1, 0.85, 0.3, 1)
+\end{lstlisting}
+
+\noindent
+One rule to remember: functions must be declared before they are called
+(the compiler is single-pass; Chapter~7 explains why). `update` and `draw`
+are called by the host, not by your code, so their position relative to each
+other does not matter --- but `wobble` must appear above the line that calls
+it.
+
+\section{An optional, and a saved score}
+
+Now the part that makes wick wick. We want to keep a running count and save
+it to disk. Saving is easy:
+
+\begin{lstlisting}[language=wick]
+lt.save("lamp_best", str(best))
+\end{lstlisting}
+
+\noindent
+`str` converts a `num` to a `str`; `lt.save` writes bytes to a named save
+slot. Loading is where the type system earns its keep. `lt.load_save` cannot
+promise a value --- the save may not exist, or may be unreadable --- so its
+return type is not `str` but `str?`, an \emph{optional} string. You cannot
+use a `str?` where a `str` is wanted; the compiler stops you:
+
+\begin{lstlisting}[language=wick]
+let s = lt.load_save("lamp_best")   // s: str?
+lt.print(s, 4, 4, 1, 1, 1, 1)       // COMPILE ERROR: expected str, got str?
+\end{lstlisting}
+
+\noindent
+The error is `expected str, got str?`, and it is the good kind of error: it
+happens the moment you write the line, not on some player's machine a month
+after release. To turn a `str?` into a `str` you must say what happens when
+it is `nil`. The quickest way is `??`, which supplies a default:
+
+\begin{lstlisting}[language=wick]
+let best = num(lt.load_save("lamp_best") ?? "") ?? 0
+\end{lstlisting}
+
+\noindent
+Read it inside out. `lt.load_save("lamp_best")` is a `str?`. The first `??`
+turns it into a `str`, using `""` when the save is absent. `num` parses a
+`str` into a number, but parsing can fail --- `num("banana")` and even
+`num("")` cannot produce a number --- so `num` returns `num?`. The second `??`
+turns that into a plain `num`, using `0` when the parse failed. Both ways the
+value can be missing are handled, in one line, because the compiler refused
+to let either slip through. This is the zero-byte-save bug from the
+introduction, made unwritable. Chapter~4 tells the whole story.
+
+Wire it up: declare `best` at the top level, and bump it when the player
+presses \texttt{Z}:
+
+\begin{lstlisting}[language=wick]
+let best = num(lt.load_save("lamp_best") ?? "") ?? 0
+
+fn update(dt: num) {
+  // ... movement from before ...
+  if lt.pressed("z") {
+    best = best + 1
+    lt.save("lamp_best", str(best))
+  }
+}
+\end{lstlisting}
+
+\noindent
+`lt.pressed` is true only on the frame a key goes down, where `lt.key` is
+true for as long as it is held. Run the game, press \texttt{Z} a few times,
+quit, and run it again: the count survives, because it was saved and safely
+reloaded.
+
+\section{A list: the lamps}
+
+The game is called \emph{lamp}, so let us add lamps. We will keep four of
+them, each with a position and a lit/unlit flag. wick has no structs in v0.1,
+so we use the idiom that stands in for them: \emph{parallel lists}, where
+index `i` names one lamp across several lists.
+
+\begin{lstlisting}[language=wick]
+let lamp_x: list<num> = []
+let lamp_z: list<num> = []
+let lamp_lit: list<bool> = []
+\end{lstlisting}
+
+\noindent
+An empty list literal `[]` has no elements to infer a type from, so it
+\emph{requires} an annotation --- that is what `list<num>` on the left is for.
+Fill the lists with four lamps:
+
+\begin{lstlisting}[language=wick]
+push(lamp_x, 3.4)  push(lamp_z, 3.4)  push(lamp_lit, true)
+push(lamp_x, -3.4) push(lamp_z, 3.4)  push(lamp_lit, true)
+push(lamp_x, -3.4) push(lamp_z, -3.4) push(lamp_lit, true)
+push(lamp_x, 3.4)  push(lamp_z, -3.4) push(lamp_lit, true)
+\end{lstlisting}
+
+\noindent
+`push` appends, and it is type-checked: `push(lamp_lit, 3)` would not compile,
+because `lamp_lit` holds `bool`. Lists are 0-based and you iterate them with a
+numeric range. Here is a function that relights every lamp, using a `for` loop
+over the half-open range \texttt{[0, 4)}:
+
+\begin{lstlisting}[language=wick]
+fn reset_lamps() {
+  for i in 0..4 { lamp_lit[i] = true }
+}
+\end{lstlisting}
+
+\noindent
+`for i in a..b` runs `i` from `a` up to but not including `b` --- end-exclusive,
+to match 0-based indexing, so `0..4` and `0..len(lamp_lit)` mean the same
+thing here. Reading or writing an index that is out of range is a runtime
+error with a line number, not a silent `nil`; we will meet that error screen
+in a moment.
+
+\section{Putting a round together}
+
+We now have enough to make a game with a goal: lamps go dark over time, and
+the player relights the nearest one by standing next to it and pressing
+\texttt{Z}. The full logic is in `games/showcase_wick/main.wick`; here is the
+shape of the update, condensed to the ideas we have covered.
+
+\begin{lstlisting}[language=wick]
+let score = 0
+
+fn nearest_unlit(): num {     // lamp index, or -1 if all lit
+  let bi = 0 - 1
+  let bd = 0.0
+  for i in 0..4 {
+    if not lamp_lit[i] {
+      let dx = lamp_x[i] - x
+      let dz = lamp_z[i] - y
+      let d = dx * dx + dz * dz
+      if bi < 0 or d < bd { bi = i  bd = d }
+    }
+  }
+  return bi
+}
+
+fn update(dt: num) {
+  // ... movement, save on Z ...
+  let i = nearest_unlit()
+  if i >= 0 {
+    if lt.pressed("z") { lamp_lit[i] = true  score = score + 1 }
+  }
+}
+\end{lstlisting}
+
+\noindent
+Two things here look forward to later chapters. `nearest_unlit` returns a
+plain `num` --- the index, or `-1` as a sentinel --- because wick v0.1 has no
+multiple return values, so returning ``the index or nothing'' is done with an
+out-of-band value rather than an optional. And the nested `if` on the last
+two lines, rather than one `if i >= 0 and lt.pressed("z")`, keeps the
+condition simple; Chapter~3 covers when the compiler asks you to parenthesise
+combined conditions.
+
+\section{The development loop}
+
+Two features turn the write-run-fix cycle from minutes into seconds.
+
+\paragraph{Hot reload.} Save `main.wick` while the engine is running and it
+recompiles and reloads live. All previously created resources are freed
+first, so reloading never leaks --- you can iterate on gameplay for an hour
+without restarting. Change a constant, save, and watch the running game
+change.
+
+\paragraph{The error screen.} When your file has a mistake, the engine does
+not crash to the terminal. It renders the error in-engine, as
+\texttt{file:line: message}, and keeps waiting. Compile errors --- a `str?`
+used as a `str`, a `+` between a string and a number, a call to a function
+defined below its use --- and runtime errors alike --- an out-of-range index,
+a failed `check()` --- all show the same way. Fix the file, save, and the game
+hot-reloads on top of the error. You rarely leave the running game.
+
+For example, deleting the `?? 0` from our `best` line produces, on screen:
+
+\begin{lstlisting}[basicstyle=\ttfamily\small,keywordstyle={}]
+main.wick:1: expected num, got num?
+\end{lstlisting}
+
+\noindent
+and the game waits, showing you the line, until you put it back.
+
+\paragraph{Deterministic screenshots.} For automated testing, point
+`LANTERN_SHOT` at a path and the engine captures frame~60 as a BMP and then
+exits. Add `LANTERN_FIXED_DT=1` and that capture is byte-identical on every machine,
+because the frame clock is fixed-step and wick's `rand()` is deterministic.
+Whole gameplay sessions replay exactly. Chapter~6 builds a testing discipline
+on this; for now it is enough to know that ``it looks right on my machine''
+can be turned into a check that means the same thing on every machine.
+
+That is a complete game and the whole workflow around it. The rest of the
+book makes precise what this chapter showed by example.

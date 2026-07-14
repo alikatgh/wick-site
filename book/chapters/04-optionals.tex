@@ -1,0 +1,227 @@
+\chapter{Optionals}
+
+If wick has a single reason to exist, it is the optional. Everything else ---
+the static types, the ban on truthiness, the compile-time engine calls --- is
+supporting structure around one claim: that ``this value might be absent''
+should be a fact the compiler knows and the programmer must discharge, not a
+runtime surprise that surfaces three functions away from its cause. This
+chapter explains optionals fully, and tells the story of the bug that made
+them non-negotiable.
+
+\section{The problem, in Lua}
+
+Start with the failure, because the feature is shaped exactly to its
+contours. Kora Night keeps a high score in a save file. The Lua build loaded
+it like this:
+
+\begin{lstlisting}[language=luatwin]
+local best = tonumber(lt.load_save("koranight_best") or "0")
+\end{lstlisting}
+
+\noindent
+Every clause is reasonable. `lt.load_save` returns the saved string, or `nil`
+if there is no save; the `or "0"` supplies a default for the `nil` case; and
+`tonumber` parses the string to a number. It reads correctly, it passed
+review, and it shipped.
+
+Then a player force-quit the game during a save. A save is a write to disk,
+and a write interrupted at the wrong instant leaves the file created but
+empty --- zero bytes. On the next launch, `lt.load_save` opened that file,
+read it successfully, and returned not `nil` but the empty string `""`. Now
+walk the expression again with `""` in hand:
+
+\begin{itemize}
+\item `lt.load_save(...)` is `""` --- a real string, not `nil`.
+\item `"" or "0"` is `""`, because in Lua the empty string is
+\emph{truthy}. The fallback never fires.
+\item `tonumber("")` is `nil`, because the empty string is not a number.
+\item `local best = nil`, and every later use of `best` --- comparisons,
+arithmetic, drawing the number --- now operates on `nil`.
+\end{itemize}
+
+\noindent
+The game crashed on the first frame. Not at the save, not at the load, but
+downstream, where `nil` finally met an operation that could not tolerate it.
+The stack trace pointed at a line that was completely innocent. Four separate
+Lua decisions had to line up for this --- truthy empty strings, a load that
+returns `""` rather than `nil` for an empty file, `nil`-punning parse failure,
+and no static checking to catch the `nil` before it spread --- and all four
+are defensible in isolation. Together they turned an interrupted disk write
+into a first-frame crash that reading the code would never reveal.
+
+\section{The type that makes it unwritable}
+
+wick's answer is a type. An operation that can fail to produce a value does
+not return that value; it returns an \emph{optional}, written `T?`, which is
+either a `T` or `nil`. And the compiler will not let you use a `T?` as a `T`.
+
+\begin{lstlisting}[language=wick]
+let s = lt.load_save("hi")       // s: str?
+lt.print(s, 4, 4, 1, 1, 1, 1)    // COMPILE ERROR: expected str, got str?
+\end{lstlisting}
+
+\noindent
+The second line does not compile. The error is \texttt{expected str, got
+str?}, and it appears the instant you write the line, on your machine, not on
+a player's. There is no path by which a `str?` reaches `lt.print`, which wants
+a `str`. To get from `str?` to `str` you must state, in the program, what
+happens when the value is `nil`. wick gives you two ways to do that.
+
+\section{Unwrapping with \texttt{??}}
+
+The nil-coalesce operator `??` unwraps an optional by supplying a default for
+the `nil` case. `a ?? b` evaluates to `a` when `a` is non-`nil`, and to `b`
+otherwise; the result type is the non-optional base type.
+
+\begin{lstlisting}[language=wick]
+let text = s ?? "no save yet"    // text: str
+let n = num("maybe") ?? 0        // n: num  (num parses str -> num?)
+\end{lstlisting}
+
+\noindent
+The default must match the base type: `s ?? "..."` is fine because `s` is
+`str?` and the default is `str`; a mismatched default reports
+\texttt{'??' default must be str} (or whatever the base type is). The right
+side is evaluated lazily, only when the left is `nil`, so it is safe to put
+work there. And `??` requires a genuine optional on its left --- using it on a
+value that can never be `nil` is the error \texttt{'??' left side must be an
+optional}, because there is nothing to coalesce.
+
+Now return to the war story. The wick translation of that fatal Lua line is:
+
+\begin{lstlisting}[language=wick]
+let best = num(lt.load_save("koranight_wick_best") ?? "") ?? 0
+\end{lstlisting}
+
+\noindent
+Trace it with the zero-byte file that crashed the Lua build.
+`lt.load_save(...)` returns `str?`. Whether it is `nil` (no file) or `""`
+(empty file) makes no difference to what follows, because the first `??`
+turns \emph{both} into a `str`: `nil` becomes `""`, and `""` is already `""`.
+Then `num("")` is `num?` --- and it is `nil`, because the empty string is not a
+number. The second `??` catches that and yields `0`. There is no value of the
+save file, present or absent, well-formed or empty, that produces anything but
+a clean `num`. The bug is not fixed; it is \emph{unwritable}. Delete either
+`??` and the program does not compile.
+
+That is the difference worth internalising. In Lua the safe version and the
+buggy version look almost identical, and the compiler accepts both; the
+difference surfaces only when a specific rare input arrives in production. In
+wick the buggy version --- the one missing a `??` --- is a compile error, and
+the safe version is the only one that builds. The type system has moved the
+discovery of the bug from a player's first frame to the author's first
+save.
+
+\section{Narrowing with \texttt{if x != nil}}
+
+The second way to handle an optional is to \emph{narrow} it: test it against
+`nil`, and inside the block where the test succeeded, use it as a plain `T`.
+
+\begin{lstlisting}[language=wick]
+if s != nil {
+  // inside this block, s has type str, not str?
+  lt.print(s, 4, 4, 1, 1, 1, 1)
+}
+\end{lstlisting}
+
+\noindent
+The comparison `s != nil` does double duty: it is a `bool` condition, and it
+tells the type checker that within the guarded block `s` cannot be `nil`, so
+its type there is `str`. This is the same move a reader makes intuitively ---
+``we already checked it is not nil, so here it is a string'' --- made formal
+and enforced.
+
+Narrowing is the right tool when you want to do several things with the value
+and a default would be awkward, or when the `nil` case has its own behaviour:
+
+\begin{lstlisting}[language=wick]
+let saved = lt.load_save("name")
+if saved != nil {
+  lt.print("WELCOME BACK " + saved, 4, 4, 1, 1, 1, 1)
+} else {
+  lt.print("NEW PLAYER", 4, 4, 1, 1, 1, 1)
+}
+\end{lstlisting}
+
+\paragraph{The limits of narrowing.} Narrowing in v0.1 works on \emph{local}
+variables. A module global is not narrowed by an `if`, because other code ---
+another function, a later frame --- could change it between the test and the
+use; to handle a global's optional, use `??`, or copy it into a local first
+and narrow the local. Assigning a new optional value to a narrowed variable
+inside the block \emph{un-narrows} it: the guarantee held only for the value
+that was tested. And narrowing does not thread through `and`/`or` chains in
+v0.1, which is why the compiler asks you to parenthesise combined conditions
+(Chapter~3); when in doubt, narrow with a nested `if` or copy to a local. Each
+of these is a known v0.1 boundary, listed in Chapter~8, not a bug.
+
+\section{What returns an optional}
+
+Optionals are not something you sprinkle on; they arrive from the operations
+that can genuinely fail, and the compiler propagates them from there. The
+sources in v0.1 are:
+
+\begin{center}
+\begin{tabular}{@{}llp{0.40\linewidth}@{}}
+\toprule
+\textbf{Expression} & \textbf{Type} & \textbf{\texttt{nil} when} \\
+\midrule
+\texttt{lt.load\_save(k)} & \texttt{str?} & no readable save \\
+\texttt{num(s)} & \texttt{num?} & \texttt{s} is not a number (incl.\ \texttt{""}) \\
+\texttt{pop(xs)} & \texttt{T?} & the list is empty \\
+\texttt{m[key]} & \texttt{T?} & the key is absent \\
+\texttt{env(name)} & \texttt{str?} & the variable is unset \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Each is a place where, in another language, you would get a sentinel you might
+forget to check: an empty string, a false, a `nil`, a special ``not found''
+value. wick makes the failure a type, so forgetting to check it is not
+possible --- the forgotten check is a compile error. Map lookup is the purest
+example: `m[key]` is \emph{always} `T?`, even when you are sure the key is
+present, because the type system cannot know that you are sure. The missing-key
+case is forced into view at the call site, where `??` disposes of it in three
+characters:
+
+\begin{lstlisting}[language=wick]
+let hp = stats["health"] ?? 100
+\end{lstlisting}
+
+\section{Optionals in the type system}
+
+A few rules tie optionals into the rest of the language; they were stated in
+Chapter~3 and are worth collecting here from the optional's point of view.
+
+\begin{itemize}
+\item \textbf{Widening is free.} A `T` may be used wherever a `T?` is wanted;
+going from ``definitely present'' to ``possibly absent'' loses no safety.
+\item \textbf{Unwrapping is required.} A `T?` may not be used where a `T` is
+wanted. `??` and narrowing are the only ways across, and both make you handle
+`nil`.
+\item \textbf{Optionals do not nest.} There is no `T??`. An optional is a `T`
+or `nil`, full stop.
+\item \textbf{\texttt{nil} needs a type.} A bare `nil` has no inferable type;
+`let x: str? = nil` supplies one. `nil` is meaningful only as the empty case
+of some specific optional.
+\item \textbf{Comparing a non-optional to \texttt{nil} is an error.} If `x` is
+a plain `str`, then `x != nil` is dead code --- `x` can never be `nil` --- and
+the compiler says \texttt{comparing non-optional to nil} rather than let you
+write a check that can never fail.
+\end{itemize}
+
+\section{The discipline in practice}
+
+In day-to-day wick you stop writing the defensive scaffolding that a dynamic
+language demands, because the compiler tracks what the scaffolding was
+guarding. You do not wrap every load and parse in an `if x ~= nil` chain; you
+write `??` once where the value enters, and from there on the value is a plain
+`T` that cannot betray you. The optional is not overhead. It is the removal of
+overhead --- the manual, forgettable, review-it-and-still-miss-it overhead of
+remembering which values might be `nil` --- replaced by a compiler that
+remembers for you and refuses to forget.
+
+The zero-byte save is one bug. The class it belongs to --- a fallible operation
+whose failure is representable as an ordinary value and therefore skippable ---
+is enormous, and it is the class wick was built to close. Every `T?` in a wick
+program is a small proof that one member of that class has been handled.

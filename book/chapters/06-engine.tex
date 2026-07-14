@@ -1,0 +1,266 @@
+\chapter{The Engine Interface}
+
+A wick program talks to the lantern engine through the `lt` namespace. Every
+`lt.*` call is registered with a typed signature that the compiler checks:
+wrong arity or a wrong argument type is a compile error naming the call and
+the argument position, exactly as for your own functions. This chapter
+describes the frame contract that structures every game, documents the API by
+area, and then covers the two properties --- determinism and verifiability ---
+that the engine and language were co-designed to provide.
+
+\section{The frame contract}
+
+The engine drives the game by calling two functions it looks up by name, once
+each per frame, at 60 frames per second:
+
+\begin{lstlisting}[language=wick]
+fn update(dt: num) { }   // simulation; dt is seconds since the last frame
+fn draw() { }            // rendering; 3D calls first, 2D composites on top
+\end{lstlisting}
+
+\noindent
+`update(dt)` advances the simulation. Its argument `dt` is the elapsed time in
+seconds, \emph{capped at 0.1} so that a long stall (a breakpoint, a slow load)
+cannot produce a single enormous step that tunnels the player through a wall.
+`draw()` renders the frame; 3D calls are issued first and the 2D calls
+composite on top, so a HUD drawn with `lt.print` and `lt.rect` always sits
+over the scene.
+
+Both functions are optional. A `main.wick` with neither is legal --- it runs
+its top-level statements once and then presents a static frame. Top-level
+statements, everything not inside a `fn`, run exactly once at load, and that
+is where a game creates its meshes, loads its textures and sounds, and
+initialises its state. The order is fixed and worth holding in mind: top-level
+once, then `update` and `draw` every frame, then collection at the frame
+boundary (Chapter~7).
+
+\section{Frame and screen}
+
+\begin{center}
+\small\begin{tabular}{@{}p{0.39\linewidth}p{0.53\linewidth}@{}}
+\toprule
+\textbf{Call} & \textbf{Notes} \\
+\midrule
+\texttt{lt.W} \enskip \texttt{lt.H} & compile-time constants: 400, 240 \\
+\texttt{lt.clear(r, g, b)} & clear colour and depth; call first in \texttt{draw()} \\
+\texttt{lt.time(): num} & seconds since boot (fixed-step under \texttt{LANTERN\_FIXED\_DT}) \\
+\texttt{lt.screenshot(path: str)} & save the 400$\times$240 frame as BMP \\
+\texttt{lt.quit()} & request a clean exit \\
+\texttt{lt.escape\_quits(enable: bool)} & Escape quits by default; disable for pause menus \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+`lt.W` and `lt.H` are numeric constants, not calls --- they resolve at compile
+time to 400 and 240 --- so `lt.W / 2` is a constant expression you can use
+freely for layout. The screen is always 400 by 240; the engine scales the
+presented image to the window.
+
+\section{The 3D scene}
+
+\begin{center}
+\small\begin{tabular}{@{}p{0.43\linewidth}p{0.49\linewidth}@{}}
+\toprule
+\textbf{Call} & \textbf{Notes} \\
+\midrule
+\texttt{lt.camera(ex,ey,ez, tx,ty,tz, fov=55)} & eye position and look-at target \\
+\texttt{lt.light(dx,dy,dz, ambient=0.35)} & the directional light \\
+\texttt{lt.point\_light(i, x,y,z, radius, r=1,g=1,b=1)} & slots 0--3; \texttt{radius <= 0} turns the slot off \\
+\texttt{lt.fog(start, end, r,g,b)} & linear by view depth; \texttt{end <= start} disables \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Trailing parameters with defaults --- `fov`, `ambient` --- may be omitted at the
+call site; the compiler fills the default in, so a native always receives full
+arity. There are four point-light slots, indexed 0 through 3; setting a slot's
+radius to zero or below disables it, which is how Kora Night extinguishes a
+lamp:
+
+\begin{lstlisting}[language=wick]
+if lamp_lit[i] {
+  lt.point_light(i, lamp_x[i], 0.8, lamp_z[i], 3.6, 1.0, 0.70, 0.28)
+} else {
+  lt.point_light(i, 0, 0, 0, 0, 0, 0, 0)   // radius 0: off
+}
+\end{lstlisting}
+
+\section{Meshes}
+
+\begin{center}
+\small\begin{tabular}{@{}p{0.43\linewidth}p{0.49\linewidth}@{}}
+\toprule
+\textbf{Call} & \textbf{Notes} \\
+\midrule
+\texttt{lt.cube(): num} & unit cube \\
+\texttt{lt.plane(segs=1): num} & unit XZ plane, tessellated \\
+\texttt{lt.sphere(seg=12)}, \texttt{lt.cylinder(seg=16)}, \texttt{lt.cone(seg=16)} & unit primitives \\
+\texttt{lt.mesh(verts: list<num>): num} & custom mesh, 12 floats per vertex \\
+\texttt{lt.load\_mesh(path: str): num} & Wavefront OBJ (flat-normal fallback) \\
+\texttt{lt.draw(m, x,y,z, rx,ry,rz, sx,sy,sz, r,g,b, tex=-1)} & gouraud-lit draw (rotations, scales, colour default) \\
+\texttt{lt.draw\_lerp(a, b, t, x,y,z, \ldots, tex=-1)} & keyframe tween between two same-count meshes \\
+\texttt{lt.billboard(tex, x,y,z, w,h, u0,v0,u1,v1)} & camera-facing quad (sprite characters) \\
+\texttt{lt.shadow(x,y,z, radius, alpha=0.35)} & grounding blob \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Every mesh constructor returns a `num` handle; there is no mesh type, because
+handles are opaque integers the engine owns. `lt.mesh` takes a flat
+`list<num>` of twelve floats per vertex --- position (3), normal (3), texture
+coordinates (2), and colour (4) --- which is a natural fit for the flat-list
+discipline of Chapter~5. `lt.draw` has a long tail of defaulted parameters, so
+the common case stays short:
+
+\begin{lstlisting}[language=wick]
+let ground = lt.plane(12)
+lt.draw(ground, 0, 0, 0, 0, 0, 0, 15, 1, 15, 0.42, 0.40, 0.40)
+\end{lstlisting}
+
+\section{2D}
+
+\begin{center}
+\small\begin{tabular}{@{}p{0.43\linewidth}p{0.49\linewidth}@{}}
+\toprule
+\textbf{Call} & \textbf{Notes} \\
+\midrule
+\texttt{lt.rect(x,y,w,h, r,g,b, a=1)} & filled, alpha-blended \\
+\texttt{lt.load\_texture(path: str): num} & BMP; magenta (255,0,255) is transparent \\
+\texttt{lt.sprite(tex, x,y, sx=1,sy=1)} & top-left anchored \\
+\texttt{lt.sprite\_ex(tex, cx,cy, sx=1,sy=1, rot=0, r=1,g=1,b=1,a=1)} & centre anchor, rotate, tint; negative scale flips \\
+\texttt{lt.sprite\_uv(tex, x,y,w,h, u0,v0,u1,v1)} & atlas sub-rect (tilemaps) \\
+\texttt{lt.print(text: str, x,y, r=1,g=1,b=1,a=1)} & built-in 8$\times$8 font, \texttt{\textbackslash n} aware \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+`lt.print` renders in a built-in 8-by-8 pixel font and understands `\n`.
+Because `+` concatenates only `str` with `str`, building a HUD line means
+converting numbers explicitly with `str` --- which, unlike Lua's
+`string.format`, prints integers cleanly with no trailing decimal:
+
+\begin{lstlisting}[language=wick]
+lt.print("LAMPS RELIT: " + str(score), 4, 3, 1, 1, 1, 0.95)
+\end{lstlisting}
+
+\section{Audio, input, and saves}
+
+\begin{center}
+\small\begin{tabular}{@{}p{0.43\linewidth}p{0.49\linewidth}@{}}
+\toprule
+\textbf{Call} & \textbf{Notes} \\
+\midrule
+\texttt{lt.load\_sound(path: str): num} & WAV \\
+\texttt{lt.play(sound, volume=1, loop=0): num} & returns a channel, or $-1$ if all 16 are busy \\
+\texttt{lt.stop(channel)} \enskip \texttt{lt.volume(v)} & \\
+\texttt{lt.key(name: str): bool} & held; keyboard and gamepad merged \\
+\texttt{lt.pressed(name: str): bool} & went down this frame \\
+\texttt{lt.gamepad(): bool} \enskip \texttt{lt.rumble(low, high, ms)} & \\
+\texttt{lt.save(name: str, data: str): bool} & binary-safe \\
+\texttt{lt.load\_save(name: str): str?} & \textbf{optional} --- \texttt{nil} when unreadable \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+`lt.key` is true while a key is held; `lt.pressed` is true only on the frame
+the key goes down --- the difference between continuous movement and a
+one-shot action. The recognised input names are:
+
+\begin{quote}
+\ttfamily left\quad right\quad up\quad down\quad z\quad x\quad c\quad space\quad
+return\quad escape\quad a\quad s\quad d\quad w
+\end{quote}
+
+\noindent
+Keyboard and gamepad are merged onto these names: the pad's d-pad and stick map
+to the directions, and its face buttons map A to `z`, B to `x`, Y to `c`, and
+Start to `return`. So a game written against `lt.key("z")` works with either
+input with no extra code.
+
+The one call in this table that returns an optional is `lt.load_save`, and it
+is no accident that the chapter which motivates the whole language turns on
+it. Its signature is `load_save(str): str?`; the compiler will not let you use
+the result until you have handled the `nil`, which is the entire point of
+Chapter~4.
+
+\section{Determinism}
+
+wick and lantern are built so that the same program with the same inputs
+produces the same frames on every machine. Two facilities make this true, and
+a testing culture is built on top of them.
+
+\paragraph{Deterministic randomness.} The built-in `rand()` returns a uniform
+value in \texttt{[0, 1)} from a fixed \mbox{xorshift64$^{*}$} generator --- the
+\emph{same sequence on every machine}. There is no time-seeded mode. If you
+want variation between runs, you seed it yourself with `srand(seed)`, using a
+number you chose and can log:
+
+\begin{lstlisting}[language=wick]
+srand(7)                    // same layout every run, on every machine
+let stars: list<num> = []
+for i in 0..40 {
+  push(stars, rand() * 400)
+  push(stars, rand() * 240)
+}
+\end{lstlisting}
+
+\noindent
+Because the sequence is fixed, a seeded run replays identically, which is what
+makes screenshot tests meaningful --- the ``random'' starfield is the same
+starfield in CI as on your desk.
+
+\paragraph{Fixed-step time.} `lt.time()` returns seconds since boot, and under
+the environment variable `LANTERN_FIXED_DT` the frame clock advances by a
+fixed step regardless of wall-clock speed. Combined with deterministic
+`rand()`, this makes an entire gameplay session reproducible frame for frame.
+
+\paragraph{Screenshot capture.} Setting `LANTERN_SHOT=/tmp/x` tells the engine
+to capture frame~60 as a BMP and exit. With `LANTERN_FIXED_DT=1` alongside it,
+that capture is byte-identical everywhere. The two together turn ``does it
+still look right'' into a mechanical check:
+
+\begin{lstlisting}[language=bash,basicstyle=\ttfamily\small,keywordstyle={}]
+LANTERN_SHOT=/tmp/x LANTERN_FIXED_DT=1 ./build/lantern games/mygame
+\end{lstlisting}
+
+\section{A culture of verification}
+
+Determinism is only useful if the game can drive and check itself, and wick
+gives two built-ins for exactly that.
+
+\paragraph{Self-play through \texttt{env}.} `env(name): str?` reads an
+environment variable --- an optional, `nil` when unset. A game can expose its
+own self-play switch and branch on it, so CI runs the game on autopilot with a
+fixed seed:
+
+\begin{lstlisting}[language=wick]
+let AUTO = env("SHOWCASE_AUTO") != nil   // deterministic self-play (CI)
+if AUTO { srand(7) }
+\end{lstlisting}
+
+\noindent
+In Kora Night, `AUTO` drives the player toward the nearest dark lamp instead
+of reading the keyboard, so a headless CI run plays a real, deterministic
+round and the frame-60 screenshot is a true regression test.
+
+\paragraph{Assertions with \texttt{check}.} `check(cond: bool, msg: str)` is a
+runtime assertion: when `cond` is false it stops the frame and shows
+\texttt{check failed: <msg>} on the error screen. The wick test suite is built
+from these --- a scene that sets up a known state and `check`s the results,
+run under fixed-step time so the outcome is exact:
+
+\begin{lstlisting}[language=wick]
+check(len(lamp_x) == 4, "expected four lamps")
+check(nearest_unlit() == -1, "all lamps should start lit")
+\end{lstlisting}
+
+\noindent
+Together, `env`-driven self-play, deterministic `rand`, fixed-step time, and
+`check` turn a game into something that tests itself the same way on every
+machine --- the practical payoff of designing the language and the engine for
+determinism from the start.

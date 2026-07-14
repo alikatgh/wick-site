@@ -33,7 +33,7 @@ jobs:
       - name: Build
         run: |
           mkdocs build --strict -d _site/docs
-          cp index.html style.css _site/
+          cp index.html style.css wick-book.pdf _site/
       - uses: actions/configure-pages@v5
         with:
           enablement: true

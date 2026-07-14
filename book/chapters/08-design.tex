@@ -1,0 +1,184 @@
+\chapter{Design and Trade-offs}
+
+A language is a set of decisions, and decisions have costs as well as
+benefits. This chapter argues for wick's decisions honestly: it puts the wick
+and Lua builds of the same real game side by side, it says plainly where Lua
+still reads better, and it explains the roadmap philosophy that makes v0.1's
+omissions deliberate rather than embarrassing.
+
+\section{The same game, twice}
+
+Kora Night is the proof. It ships in both languages, as two deliberately
+separate projects --- `games/showcase` in Lua and `games/showcase_wick` in
+wick --- kept side by side so the two languages stay comparable on the same
+real game. Read the pair like a Rosetta stone. Three excerpts carry the
+argument.
+
+\subsection{The hi-score load}
+
+This is the bug from Chapter~4, in its natural habitat. The Lua build shipped
+with a frame-1 crash:
+
+\begin{lstlisting}[language=luatwin]
+-- Lua: a 0-byte save makes load_save return "" (truthy!), the
+-- fallback never fires, and tonumber("") = nil poisons everything.
+local best = tonumber(lt.load_save("koranight_best") or "0")
+\end{lstlisting}
+
+\noindent
+The wick build cannot express that bug. The line below is the only version
+that compiles, because both ways the value can be absent --- no file, empty
+file --- are forced to be handled:
+
+\begin{lstlisting}[language=wick]
+// wick: the ONLY version the compiler accepts.
+let best = num(lt.load_save("koranight_wick_best") ?? "") ?? 0
+\end{lstlisting}
+
+\noindent
+Here wick wins outright. The safe code is shorter than the buggy Lua code, and
+the unsafe code does not compile.
+
+\subsection{Records}
+
+Now the case wick loses. A lamp has a position and a lit flag. In Lua it is a
+table with named fields, and a list of lamps is a list of tables:
+
+\begin{lstlisting}[language=luatwin]
+-- Lua: a list of records, read naturally
+local LAMPS = {
+  { x = 3.4, z = 3.4, lit = true },
+  -- ...
+}
+for i, l in ipairs(LAMPS) do  -- l.lit, l.x, l.z
+end
+\end{lstlisting}
+
+\noindent
+wick v0.1 has no structs, so the same data becomes typed parallel lists, with
+an index standing in for a record reference:
+
+\begin{lstlisting}[language=wick]
+// wick v0.1: typed parallel lists (structs are on the roadmap)
+let lamp_x: list<num> = []
+let lamp_z: list<num> = []
+let lamp_lit: list<bool> = []
+for i in 0..4 {
+  // lamp_lit[i], lamp_x[i], lamp_z[i]
+}
+\end{lstlisting}
+
+\noindent
+The honest score: Lua reads better here today. A lamp is one thing, and Lua
+lets you write it as one thing; wick scatters it across three lists you must
+keep in step. wick's version is fully typed, which Lua's is not --- `l.lit` is
+whatever it happens to be, where `lamp_lit[i]` is a checked `bool` --- but that
+is small consolation for the loss of readability. Records are the top of
+wick's v0.2 wishlist for exactly this reason.
+
+\subsection{Multiple returns}
+
+A smaller loss. Lua returns the nearest lamp and its distance together:
+
+\begin{lstlisting}[language=luatwin]
+local i, dist2 = nearest_unlit()
+\end{lstlisting}
+
+\noindent
+wick has no multiple returns, so the two queries are split, and ``no lamp''
+becomes a sentinel index rather than an absent second value:
+
+\begin{lstlisting}[language=wick]
+let i = nearest_unlit()      // returns the index, or -1
+let d = dist2_to(i)          // second query, explicit
+\end{lstlisting}
+
+\noindent
+This is more verbose, but it is not worse in kind --- the split is mechanical,
+and the sentinel is a well-understood idiom. Multiple returns are on the
+roadmap; their absence is an inconvenience, not a hazard.
+
+\section{What you stop writing}
+
+Set against those losses is a real reduction in the defensive code a dynamic
+language demands. Porting Kora Night to wick, the following simply left the
+source:
+
+\begin{itemize}
+\item The `if x ~= nil` chains around every save and parse. The compiler
+tracks nullability, so you write `??` once at the boundary and the value is a
+plain `T` thereafter.
+\item The `math.` prefixes. `sin`, `floor`, `rand`, and their kin are
+built-ins with no namespace.
+\item The `string.format` calls that existed only to print an integer without
+a trailing decimal. `str(n)` prints integers cleanly.
+\item The argument-order paranoia on engine calls. Arity and types are checked
+at compile time with the call name and the argument number in the message, so
+a mistake is caught the moment it is written, not discovered by a wrong-looking
+frame.
+\end{itemize}
+
+\section{What stays the same}
+
+It is worth being clear about what the language change did \emph{not} disturb,
+because it bounds the cost of adopting wick. The engine API is call-for-call
+identical: `lt.draw(...)` is the same line in both builds. The frame contract
+--- `update(dt)` and `draw()` --- is the same. Hot reload and the error screen
+behave the same. And the two games render the same frames, which is not a
+figure of speech: the deterministic screenshot tests of Chapter~6 hold the
+wick and Lua builds to the same pixels. wick changed the language, not the
+engine and not the workflow.
+
+\section{The v0.1 limits}
+
+wick is deliberately small --- Lua-1.0 small. Every omission below is a known
+gap with a workaround today and a place on the roadmap, not a surprise waiting
+to be discovered. The bar for v0.1 was fixed and narrow: run real lantern
+games, kill the Lua bug classes, and stay around two thousand lines.
+
+\begin{center}
+\begin{tabular}{@{}p{0.42\linewidth}p{0.50\linewidth}@{}}
+\toprule
+\textbf{Not in v0.1} & \textbf{Workaround today} \\
+\midrule
+Structs / records & typed parallel lists (see the port above) \\
+Closures, nested and first-class functions & top-level \texttt{fn} plus module globals \\
+Multiple return values & two functions, or out-of-band state \\
+Nested containers (\texttt{list<list<num>>}) & index arithmetic on a flat list \\
+Modules / imports (one \texttt{main.wick}) & it is a game script, not an app platform --- yet \\
+\texttt{for x in list} iteration & \texttt{for i in 0..len(xs)} \\
+String indexing / slicing / methods & \texttt{len}, \texttt{+}, \texttt{str()} cover the HUD cases \\
+Exhaustive return-path checking & a typed function that falls off the end returns \texttt{nil} --- don't \\
+Narrowing for globals / \texttt{and}-chains & \texttt{??}, or copy to a local first \\
+Hex / exponent number literals & decimal \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+Two entries deserve to be pulled out, because they are not limits at all but
+choices, and they are choices the roadmap will not reverse:
+
+\paragraph{No JIT.} This is iOS-legal by construction and gives deterministic
+performance with no warm-up. It is a feature, permanent.
+
+\paragraph{No time-seeded randomness.} Determinism is the default so that
+replays and CI screenshots work; if you want variety between runs you seed
+`srand()` yourself, with a number you can log. Also permanent.
+
+\section{Roadmap philosophy}
+
+The organising idea is ``Lua 1.0 small.'' Lua did not begin with metatables,
+coroutines, and an ecosystem; it began as a small, clean, embeddable core and
+grew as real use justified each addition. wick is taking the same path
+deliberately. Every omission in the table above is addable behind the same
+typed front end that already exists --- records, closures, and multiple returns
+do not require rethinking the compiler, only extending it --- and each will be
+added when a real game needs it enough to justify the size, not before.
+
+This is why the limits are stated so plainly. A language that hid its gaps
+would be inviting you to discover them at the worst moment. wick lists them,
+gives each a workaround, and puts each on a roadmap, because the whole thesis
+of the language is that a program's failure modes should be visible up front
+rather than discovered in production --- and a language owes its users the same
+honesty it enforces in their code.

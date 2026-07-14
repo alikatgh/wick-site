@@ -12,6 +12,11 @@
 <meta property="og:url" content="https://wick.famemu.aulenor.com/">
 <meta name="twitter:card" content="summary">
 <link rel="stylesheet" href="style.css">
+<script>
+  // apply the saved theme before first paint
+  const saved = localStorage.getItem("wick-theme");
+  if (saved) document.documentElement.dataset.theme = saved;
+</script>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect x='7' y='2' width='2' height='5' fill='%23e8be3c'/><rect x='5' y='7' width='6' height='7' fill='%23e8be3c'/><rect x='7' y='9' width='2' height='3' fill='%230e0d16'/></svg>">
 </head>
 <body>
@@ -21,9 +26,12 @@
     <a class="brand" href="./"><span class="tip">|</span> wick</a>
     <nav class="top">
       <a href="#why">Why</a>
+      <a href="#book">Book</a>
       <a href="#code">Code</a>
       <a href="docs/">Docs</a>
       <a href="https://github.com/alikatgh/lantern/tree/main/wick">Source</a>
+      <button class="theme-toggle" id="themeToggle"
+              aria-label="Toggle light/dark theme">theme</button>
     </nav>
   </div>
 </header>
@@ -38,7 +46,8 @@
     calls, deterministic randomness, and a GC that only runs between frames
     — in ~2,000 dependency-free lines you can read in an afternoon.</p>
     <div class="cta">
-      <a class="btn primary" href="docs/">Read the docs</a>
+      <a class="btn primary" href="wick-book.pdf">The book (PDF, 65 pages)</a>
+      <a class="btn" href="docs/">Read the docs</a>
       <a class="btn" href="docs/getting-started/">Get started</a>
     </div>
   </div>
@@ -49,6 +58,7 @@
     <div class="stat"><b>T?</b><span>nil bugs don't compile</span></div>
     <div class="stat"><b>0</b><span>GC pauses mid-frame</span></div>
     <div class="stat"><b>zlib</b><span>same license as the engine</span></div>
+    <div class="stat"><b>10/10</b><span>CI checks, incl. 8 must-not-compile</span></div>
   </div>
 
   <section id="why">
@@ -125,6 +135,21 @@
     multiple returns, and what you stop writing entirely.</p>
   </section>
 
+  <section id="book">
+    <h2>The book</h2>
+    <p class="lead"><i>The wick Programming Language</i> — a 65-page book,
+    typeset in Latin Modern with LaTeX, is the recommended starting point:
+    a real tutorial (you build a small game), the complete language
+    reference, the optionals chapter with the full story of the bug that
+    started it all, the engine interface, the internals of the compiler and
+    VM, and an honest design-trade-offs chapter. Every code sample in it is
+    valid v0.1 wick, verified against the reference implementation — the
+    tutorial's final program compiles and renders unmodified.
+    <a href="wick-book.pdf">Download the PDF</a> (free, zlib-licensed like
+    everything else; LaTeX source in
+    <a href="https://github.com/alikatgh/wick-site/tree/main/book">book/</a>).</p>
+  </section>
+
   <section>
     <h2>Part of the lantern engine</h2>
     <p class="lead">wick lives in the engine repo (<a
@@ -146,5 +171,15 @@
   </div>
 </footer>
 
+<script>
+  document.getElementById("themeToggle").addEventListener("click", () => {
+    const el = document.documentElement;
+    const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+    const cur = el.dataset.theme || (dark ? "dark" : "light");
+    const next = cur === "dark" ? "light" : "dark";
+    el.dataset.theme = next;
+    localStorage.setItem("wick-theme", next);
+  });
+</script>
 </body>
 </html>

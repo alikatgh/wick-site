@@ -1,0 +1,193 @@
+\chapter{Internals}
+
+This chapter opens the implementation. You do not need any of it to write wick
+games, but a language's design is best understood through its machinery, and
+wick's machinery is small enough to explain honestly in a chapter. The whole
+language --- lexer, compiler, virtual machine, garbage collector, built-ins ---
+is about two thousand lines of dependency-free \mbox{C\texttt{++}} in three
+files:
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\texttt{wick/wick.hpp} & the embed API (about 120 lines) \\
+\texttt{wick/wick\_front.cpp} & lexer and one-pass typed compiler $\rightarrow$ bytecode \\
+\texttt{wick/wick\_vm.cpp} & stack VM, mark/sweep GC, built-ins, signature parser \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{One-pass typed compilation}
+
+The defining choice is that \textbf{there is no abstract syntax tree}. The
+compiler is single-pass, in the style of Crafting Interpreters' \emph{clox}: a
+Pratt expression parser emits bytecode as it goes, and it carries a static
+`Type` for every expression as it emits. The type checker and the code
+generator are not two passes over a tree; they are the same walk. When the
+parser finishes an expression, it has both produced the bytecode that computes
+the value and determined the value's type, together, in one sweep.
+
+Two visible language rules fall directly out of this design.
+
+\paragraph{Declare before use.} Because the compiler resolves each name and
+each call at the moment it reaches it --- there is no later pass to fix up
+forward references --- a function must be defined textually before it is
+called, and a variable must be declared before it is used. This is not a
+limitation the designers chose for its own sake; it is what single-pass
+compilation costs, and the price is small.
+
+\paragraph{Types are known at emit time.} Since every expression's type is in
+hand as its code is generated, the compiler can \emph{specialise} the
+bytecode. This is the performance story, and it is worth being concrete about.
+
+\section{Specialised opcodes}
+
+In a dynamically typed VM, `a + b` compiles to a single generic ``add''
+opcode that, at run time, inspects the tags of its operands and decides
+whether to add numbers, concatenate strings, or raise an error. That tag check
+happens on every execution of the instruction. wick pays it \emph{once}, at
+compile time, because it already knows the types:
+
+\begin{itemize}
+\item `+` on two `num` emits `OP_ADD`; `+` on two `str` emits `OP_CONCAT`.
+There is never a runtime tag check to choose between them --- the choice was
+made when the code was generated.
+\item The ordered comparisons compile to numeric compare opcodes
+(`OP_LT`, `OP_LE`, `OP_GT`, `OP_GE`), because their operands are known to be
+`num`.
+\item Local variables resolve to \emph{frame slots} --- small integer offsets
+into the current call's stack frame --- so `OP_LOADL` and `OP_STOREL` take a
+slot number, and there is no name lookup at run time. Globals resolve to slot
+indices too, via `OP_LOADG` and `OP_STOREG`.
+\item Engine natives resolve to integer ids at compile time. The VM's native
+call, `OP_NCALL`, is an array index into the natives table, not a hash-table
+walk by name.
+\end{itemize}
+
+\noindent
+The bytecode has roughly forty opcodes. Alongside the arithmetic and
+comparison ops there are the control-flow jumps (`OP_JMP`, `OP_JF` which pops a
+`bool`, `OP_JB` for backward jumps in loops), two jumps that implement
+optionals (`OP_JNN`, ``jump if not nil'', and `OP_ISNIL`), the call ops
+(`OP_CALL` for wick functions, `OP_NCALL` for natives), the container ops
+(`OP_LIST`, `OP_MAP`, and the index get/set pairs `OP_IGET`/`OP_ISET` and
+`OP_MGET`/`OP_MSET`), and the specialised built-ins (`OP_LEN`, `OP_TOSTR`,
+`OP_TONUM`, `OP_LPUSH`, `OP_LPOP`). Each corresponds to something the
+type checker proved about the code around it.
+
+\section{The stack VM}
+
+The runtime is a classic stack machine. There is a constants pool, a stack of
+values, and a stack of call frames; each frame records its base --- the point
+in the value stack where its slots begin --- and its instruction pointer.
+Arguments to a call are already on the stack when the frame is pushed, and the
+callee's locals live in the slots just above them. Returning resizes the stack
+back to the frame's base, so the stack is empty between top-level statements
+and, crucially, empty between frames.
+
+Runtime errors carry a bytecode-offset-to-line table, built during
+compilation, so that when the VM raises an error --- an out-of-range index, a
+failed `check` --- it can report the source line, and the engine's error screen
+can point at it. This is why a wick runtime error reads `file:line: message`
+and not a raw bytecode offset.
+
+There is \textbf{no JIT}, and this is deliberate, not unfinished. The
+interpreter is fast enough for game logic at 400 by 240 --- the work per frame
+is small, and the specialised opcodes remove the overhead a naive interpreter
+would carry. More importantly, the engine targets platforms, iOS chief among
+them, where generating and executing code at run time is forbidden. A JIT
+would make wick illegal on those platforms; the specialised-bytecode interpreter
+is legal everywhere by construction, and its performance is predictable, with
+no warm-up and no deoptimisation cliffs.
+
+\section{Frame-boundary garbage collection}
+
+wick manages three kinds of heap object --- strings, lists, and maps --- with a
+mark-and-sweep collector. What makes it a game collector rather than a general
+one is \emph{when} it runs: never on its own initiative, only when the host
+calls `wick::collect()`. lantern calls that function exactly once per frame,
+after presenting the image.
+
+The consequence is that a collection can never land in the middle of a draw.
+The one moment a pause is invisible --- after the frame is on screen, before the
+next one begins --- is the only moment collection happens. The worst-case cost
+of a collection is bounded by how much garbage a single frame produced, which
+for a game loop that reuses its state is modest. There is no unpredictable,
+generation-triggered pause of the kind that drops a frame in a Lua game.
+
+The collector's roots are simple, and they are simple \emph{because} the
+language is small. The mark phase starts from the constants pool, the globals,
+and the VM value stack, and follows the references inside lists and maps.
+There are no closures and no upvalues in v0.1, so there are no captured
+environments to trace; the object graph is shallow. And because the value
+stack is empty between frames, at the moment collection runs the only live
+roots are the globals and the constants --- exactly the long-lived state --- so
+the mark phase has little to do.
+
+\section{Embedding wick}
+
+wick is meant to be embedded. The public surface is `wick.hpp` alone; embedders
+never touch the internal headers. The lifecycle is create, register the
+environment, load a program, call its functions each frame, collect at your
+safe point, and reset for hot reload.
+
+\begin{lstlisting}[language=C++,basicstyle=\ttfamily\small,keywordstyle=\color{wkKeyword}]
+#include "wick.hpp"
+
+wick::VM* vm = wick::create();
+std::string err;
+
+// typed natives: a signature DSL the compiler enforces
+wick::addNative(vm, "game", "spawn(num, num, str): num",
+    [](wick::VM& vm, const wick::Value* a, int) {
+        int id = mySpawn(a[0].d, a[1].d, wick::getStr(a[2]));
+        return wick::Value::num(id);
+    }, err);
+wick::addConst(vm, "game", "MAX", 64);
+
+wick::load(vm, source, "main.wick", err);   // compile + run top level
+wick::call(vm, "update", dt, true, err);    // each frame
+wick::collect(vm);                          // at YOUR safe point
+wick::reset(vm);                            // hot-reload support
+\end{lstlisting}
+
+\paragraph{The signature DSL.} A native is registered with a signature string
+that the compiler parses once and then enforces at every call site. The
+grammar is:
+
+\begin{quote}
+\ttfamily name(type[, type][, type = default]) [: type]
+\end{quote}
+
+\noindent
+where a type is `num`, `bool`, `str`, or `list`, with a trailing `?` for an
+optional. This one string is how `lt.load_save(str): str?` teaches the
+compiler that loading a save returns an optional --- the entire optional
+discipline of Chapter~4, for an engine call, is carried by two characters in a
+signature. Defaults, which must be numeric literals, make trailing parameters
+optional at the call site; the compiler fills them in, so the native always
+receives full arity and never has to check `argc`. Registering a native under
+a namespace (`"lt"`, `"game"`) qualifies its name; passing a null namespace
+puts it in the global scope, which is how the built-ins like `floor` and
+`sqrt` are installed.
+
+\paragraph{Reporting errors from a native.} A native signals failure by
+calling `wick::setError(vm, msg)`. The VM turns that into a `file:line`
+runtime error pointing at the call site, so a native's failure is reported the
+same way as any other runtime error and lands on the same error screen. The
+value helpers --- `makeStr`, `getStr`, `listLen`, `listGet` --- cover reading
+and building the heap values a native receives and returns.
+
+\paragraph{Hot reload.} `wick::reset(vm)` clears all program state --- globals,
+functions, the compiled protos --- while leaving the registered environment
+(the natives and constants) intact. That is exactly what hot reload needs:
+tear down the program, keep the bindings, load the new source. Because
+`reset` frees the old program's resources before the new one loads, reloading
+never leaks --- the property the tutorial promised.
+
+None of this is large. The embed API is about 120 lines, and the whole
+implementation is around two thousand. That smallness is the recurring theme
+of this book, and it is nowhere more visible than here: a statically typed,
+optional-checked, deterministic scripting language, with a garbage collector
+and a typed foreign-function interface, that you can read in an afternoon and
+own completely.

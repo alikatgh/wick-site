@@ -1,0 +1,176 @@
+\chapter{Introduction}
+
+\emph{The wick is the part of the lantern that carries the flame.} wick is
+the lantern engine's own scripting language: Lua's size and feel, with the
+sharp edges designed out at the language level rather than papered over with
+lint rules. This chapter explains why a game engine grew its own language,
+what problems that language is meant to remove, and how the rest of the book
+is arranged.
+
+\section{Why wick exists}
+
+wick was not written because the world needed another language. It was
+written because we shipped real games in Lua, kept a list of what hurt, and
+found that every entry on the list had the same shape: a mistake the
+language allowed us to make, discovered only when a player hit it.
+
+Lua is a wonderful language. It is small, embeddable, fast, and famously
+easy to bind to C. For a decade it has been the default answer to ``what
+should I script my game in.'' We are not here to argue against any of that.
+We are here because a scripting language for a game engine is a specific job
+with specific failure modes, and Lua's defaults --- chosen for generality and
+for the era it was born in --- turn out to be exactly the wrong defaults for
+that job.
+
+Consider the failure we keep coming back to, the one that gives Chapter~4 its
+spine. Kora Night, our showcase game, saves the player's best score to a
+file. In the Lua build the load looked like this:
+
+\begin{lstlisting}[language=luatwin]
+local best = tonumber(lt.load_save("koranight_best") or "0")
+\end{lstlisting}
+
+\noindent
+It reads correctly. It passed review. It shipped. And it crashed on the
+first frame whenever a save was interrupted mid-write, because an
+interrupted write leaves a zero-byte file, `lt.load_save` returns the empty
+string `""` rather than `nil`, the empty string is \emph{truthy} in Lua so
+the `or "0"` fallback never fires, and `tonumber("")` is `nil`, which then
+poisons every arithmetic expression downstream. Four separate Lua design
+decisions --- truthy empty strings, `nil`-punning error returns, silent `nil`
+propagation, and no static checking --- lined up to turn one interrupted disk
+write into a first-frame crash that no amount of reading the code would
+reveal.
+
+You cannot write that bug in wick. Not because we added a special case for
+saves, but because the type system will not compile a program that uses a
+value which might be `nil` without first dealing with the `nil`. The wick
+version of that line is the only version the compiler accepts:
+
+\begin{lstlisting}[language=wick]
+let best = num(lt.load_save("koranight_wick_best") ?? "") ?? 0
+\end{lstlisting}
+
+\noindent
+That is the whole thesis of the language in one line. Every design decision
+below serves it.
+
+\section{The Lua lessons}
+
+Here is the catalogue --- each Lua pain, and the wick decision it produced.
+None of these is a lint rule or a style guide; each is enforced by the
+compiler or the runtime, so it cannot be forgotten under deadline.
+
+\begin{center}
+\begin{tabular}{@{}p{0.46\linewidth}p{0.46\linewidth}@{}}
+\toprule
+\textbf{Lua pain} & \textbf{wick answer} \\
+\midrule
+\texttt{nil} errors at run time &
+Static types plus \texttt{T?} optionals; unchecked use does not compile. \\
+Typos create silent globals &
+Locals only; assigning an undeclared name is a compile error. \\
+1-based indexing, no \texttt{continue} &
+0-based \texttt{[\,]}, \texttt{continue}, \texttt{len(x)}. \\
+\texttt{""} and \texttt{0} are truthy &
+Conditions must be \texttt{bool}; there is no truthiness. \\
+GC pauses mid-frame &
+Collection runs \emph{between} frames only. \\
+Stack-index C bindings &
+Engine calls are type-checked at compile time. \\
+\texttt{math.random} differs by machine &
+\texttt{rand()} is a fixed xorshift --- deterministic everywhere. \\
+JIT forbidden on iOS &
+No JIT anywhere; specialized bytecode from static types. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The pattern is worth naming. In each row, Lua's behaviour is defensible in
+the abstract and dangerous in a game loop. Truthiness is convenient until a
+score of zero silently takes the wrong branch. Implicit globals are terse
+until a typo becomes a `nil` that surfaces three functions away. A garbage
+collector that runs whenever it likes is fine for a batch job and a dropped
+frame in an action game. wick's answer in every case is the same move: take
+the thing Lua does dynamically and at run time, and do it statically at
+compile time instead --- or, in the GC's case, at a moment the host chooses.
+
+\section{Design principles}
+
+Four principles run through the whole language. When a later chapter explains
+why some feature works the way it does, the answer is almost always one of
+these.
+
+\paragraph{Small.} wick is deliberately Lua-1.0 small. The entire
+implementation is about two thousand lines of dependency-free \mbox{C\texttt{++}}:
+lexer, compiler, virtual machine, garbage collector, and built-ins. There
+are no closures, no structs, no modules, no metatables, no varargs, and no
+string methods in v0.1. Every one of those omissions is listed in
+Chapter~8 with its workaround and its place on the roadmap. Smallness is not
+an accident we are apologising for; it is a feature we are defending. A
+language you can read in an afternoon is a language whose behaviour you can
+predict at three in the morning.
+
+\paragraph{Typed.} Every expression has a static type, known at the moment
+the compiler emits code for it. Types are inferred wherever inference has
+something to work with, so the surface stays light --- you write `let x = 10`,
+not `let x: num = 10` --- but the checking is total. The headline of the type
+system is the optional, `T?`, which makes ``this might be absent'' a fact the
+compiler tracks and the programmer must discharge.
+
+\paragraph{Deterministic.} The same program, given the same inputs, produces
+the same frames on every machine. `rand()` is a fixed xorshift generator with
+no time seeding; if you want variety between runs you seed `srand()` yourself,
+with a number you chose and can log. Under `LANTERN_FIXED_DT` the frame clock
+is fixed-step, so a whole gameplay session replays byte-for-byte. This is
+what makes screenshot-based CI possible, and Chapter~6 builds a testing
+culture on top of it.
+
+\paragraph{Frame-aware.} wick knows it lives inside a 60-frames-per-second
+loop. The garbage collector runs only when the host asks, which lantern does
+exactly once per frame after presenting the image --- the one moment a stall is
+invisible. The engine API is organised around two functions, `update(dt)` and
+`draw()`, that the host calls every frame. The language is not a
+general-purpose tool that happens to be embedded in a game; it is shaped by
+the game loop from the lexer up.
+
+\section{How to read this book}
+
+The book is meant to be read front to back the first time and used as a
+reference thereafter.
+
+\begin{itemize}
+\item \textbf{Chapter~2} is a tutorial. It installs the engine, runs the
+first program, and builds a small complete lamp game step by step, so you
+have working code under your hands before the reference chapters get precise.
+\item \textbf{Chapter~3} is the language reference: lexical structure, types,
+scope, expressions, precedence, statements, control flow, and functions.
+\item \textbf{Chapter~4} is about optionals --- the heart of wick --- told
+partly through the zero-byte-save war story from this introduction.
+\item \textbf{Chapter~5} covers the collections, lists and maps, and the
+parallel-lists idiom that stands in for structs.
+\item \textbf{Chapter~6} documents the `lt.*` engine interface: the frame
+contract, the typed API tables, determinism, and verification.
+\item \textbf{Chapter~7} opens the implementation: one-pass typed
+compilation, the stack VM, frame-boundary garbage collection, and how to
+embed wick in your own \mbox{C\texttt{++}}.
+\item \textbf{Chapter~8} is the design rationale --- wick against Lua on the
+same real game, the honest trade-offs, and the roadmap philosophy.
+\item The \textbf{appendices} give the full grammar in EBNF, the complete
+compile-error catalogue, and quick-reference tables for the built-ins and the
+engine API.
+\end{itemize}
+
+Throughout, code set in \texttt{this face} is wick unless a caption says
+otherwise. Every listing is real v0.1 wick and would compile; where a listing
+is deliberately wrong to show a compile error, the error message is quoted
+next to it. When we show Lua, it is the twin of a wick sample, and it is
+labelled as Lua.
+
+A note on honesty. This book will tell you, more than once, where Lua still
+does something better than wick does today --- records read more naturally as
+tables, multiple return values are genuinely missing, the ecosystem is
+enormous and ours is one engine. A language book that only flatters its
+subject is not much use. wick earns its place by removing a specific and
+expensive class of bug, and it is worth being precise about what it removes
+and what it does not.

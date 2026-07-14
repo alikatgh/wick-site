@@ -9,9 +9,20 @@ edit_uri: ""
 theme:
   name: material
   palette:
-    scheme: slate
-    primary: black
-    accent: amber
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: black
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
   font:
     text: Inter
     code: JetBrains Mono

@@ -1,0 +1,149 @@
+% The wick Programming Language
+% Compile with: tectonic main.tex   (or pdflatex main.tex, twice for the TOC)
+\documentclass[10pt]{book}
+
+% --- fonts & encoding ------------------------------------------------------
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}          % Latin Modern (the Computer Modern look)
+\usepackage{microtype}
+% inline code (\lstinline via backtick) cannot hyphenate; let TeX stretch
+% spaces a little to avoid overfull boxes rather than run into the margin.
+\setlength{\emergencystretch}{2.5em}
+\hbadness=2500
+
+% --- page geometry: ebook 6in x 9in ---------------------------------------
+\usepackage[paperwidth=6in,paperheight=9in,
+            top=0.85in,bottom=0.9in,inner=0.85in,outer=0.7in]{geometry}
+
+% --- tables, code, links --------------------------------------------------
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{titlesec}
+\usepackage[colorlinks=true,linkcolor={black!85},
+            urlcolor={blue!55!black},citecolor={blue!55!black},
+            pdftitle={The wick Programming Language},
+            pdfauthor={The lantern engine authors}]{hyperref}
+
+% --- colors ---------------------------------------------------------------
+\definecolor{wkKeyword}{RGB}{20,60,140}
+\definecolor{wkType}{RGB}{120,40,120}
+\definecolor{wkComment}{RGB}{100,110,100}
+\definecolor{wkString}{RGB}{140,70,20}
+\definecolor{wkRule}{gray}{0.75}
+\definecolor{wkBg}{gray}{0.975}
+
+% --- the wick listings language -------------------------------------------
+\lstdefinelanguage{wick}{
+  morekeywords={let,fn,if,elif,else,while,for,in,break,continue,return,%
+                true,false,nil,and,or,not},
+  morekeywords=[2]{num,bool,str,list,map,void},
+  sensitive=true,
+  morecomment=[l]{//},
+  morestring=[b]",
+}
+
+\lstdefinelanguage{luatwin}{
+  morekeywords={local,function,end,if,then,elseif,else,while,do,for,in,%
+                return,true,false,nil,and,or,not,break},
+  sensitive=true,
+  morecomment=[l]{--},
+  morestring=[b]",
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{wkKeyword}\bfseries,
+  keywordstyle=[2]\color{wkType},
+  commentstyle=\color{wkComment}\itshape,
+  stringstyle=\color{wkString},
+  showstringspaces=false,
+  columns=fullflexible,
+  keepspaces=true,
+  frame=single,
+  rulecolor=\color{wkRule},
+  backgroundcolor=\color{wkBg},
+  framexleftmargin=2pt,
+  xleftmargin=6pt,xrightmargin=6pt,
+  aboveskip=1.1em,belowskip=1.1em,
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=2,
+}
+
+% inline code helper: \lstinline with backtick delimiter is used in prose
+\lstMakeShortInline[basicstyle=\ttfamily,keywordstyle=\color{wkKeyword}]`
+
+% --- headings -------------------------------------------------------------
+\titleformat{\chapter}[display]
+  {\normalfont\Large\bfseries}
+  {\filright\normalsize\scshape \chaptertitlename\ \thechapter}
+  {0.6em}
+  {\Huge}
+\titlespacing*{\chapter}{0pt}{10pt}{28pt}
+
+\setcounter{tocdepth}{1}
+\setcounter{secnumdepth}{2}
+
+% ==========================================================================
+\begin{document}
+
+% --- title page -----------------------------------------------------------
+\begin{titlepage}
+\centering
+\vspace*{1.4in}
+{\Huge\bfseries The wick Programming Language\par}
+\vspace{1.2em}
+{\large A small, typed scripting language for the lantern engine\par}
+\vfill
+{\large The lantern engine authors\par}
+\vspace{0.8em}
+{\normalsize Version 0.1 \quad\textbullet\quad 2026\par}
+\vspace{1.2in}
+\end{titlepage}
+
+% --- colophon -------------------------------------------------------------
+\thispagestyle{empty}
+\null\vfill
+\noindent
+\textit{The wick Programming Language}, version 0.1.\par
+\vspace{0.6em}
+\noindent
+wick and the lantern engine are open source under the zlib license. The
+language implementation --- lexer, one-pass typed compiler, bytecode, and
+stack virtual machine --- is about two thousand lines of dependency-free
+\mbox{C\texttt{++}}, and lives with the engine at
+\texttt{github.com/alikatgh/lantern}.\par
+\vspace{0.6em}
+\noindent
+This book was typeset in Latin Modern with \LaTeX. Every code sample is
+valid wick v0.1 and compiles against the reference implementation.\par
+\vspace{0.6em}
+\noindent
+Copyright \textcopyright{} 2026 The lantern engine authors. Distributed
+under the same zlib terms as the engine: you may use, copy, and modify this
+text, provided the origin is not misrepresented.\par
+\vfill
+
+% --- contents -------------------------------------------------------------
+\frontmatter
+\tableofcontents
+
+% --- chapters -------------------------------------------------------------
+\mainmatter
+\include{chapters/01-introduction}
+\include{chapters/02-tutorial}
+\include{chapters/03-language}
+\include{chapters/04-optionals}
+\include{chapters/05-collections}
+\include{chapters/06-engine}
+\include{chapters/07-internals}
+\include{chapters/08-design}
+
+% --- appendices -----------------------------------------------------------
+\appendix
+\include{chapters/appendix}
+
+\end{document}
