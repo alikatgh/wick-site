@@ -1,9 +1,16 @@
 # v0.1 limits
 
+**The governing principle: wick contains only what we truly need —
+nothing for the sake of having it.** A feature is admitted when real game
+code demonstrably hurt without it, and not before. The side-by-side
+Kora Night builds are the standing evidence mechanism: if a missing
+feature causes real pain, it shows up there first, in code anyone can
+read. Optionals earned admission from a shipped crash. Nothing below is
+"scheduled" — each is a candidate awaiting its evidence.
+
 wick is deliberately small — Lua 1.0 small. Everything here is a known
-omission with a place on the roadmap, not a discovered surprise. The bar
-for v0.1 was: run real lantern games, kill the Lua bug classes, stay
-around 2k lines.
+omission, not a discovered surprise. The bar for v0.1 was: run real
+lantern games, kill the Lua bug classes, stay around 2k lines.
 
 | Not in v0.1 | Workaround today |
 |---|---|

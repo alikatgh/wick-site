@@ -168,6 +168,18 @@ replays and CI screenshots work; if you want variety between runs you seed
 
 \section{Roadmap philosophy}
 
+The rule that governs what happens next deserves stating as law, because
+it is the core thing this language follows: \emph{wick contains only what
+we truly need --- nothing for the sake of having it.} A feature is
+admitted when real game code demonstrably hurt without it, and not
+before. The paired Kora Night builds are the standing evidence mechanism:
+missing-feature pain must show up there, in code anyone can read, before
+the language grows. Optionals are in this book because a shipped crash
+demanded them; closures are not, because no shipped program has yet paid
+a price for their absence. Feature parity with other languages is
+explicitly not a reason to add anything.
+
+
 The organising idea is ``Lua 1.0 small.'' Lua did not begin with metatables,
 coroutines, and an ecosystem; it began as a small, clean, embeddable core and
 grew as real use justified each addition. wick is taking the same path
