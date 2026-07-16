@@ -18,9 +18,21 @@ let n = len(xs)               // length
 Indexing out of range is a **runtime error** (shown on the error screen
 with the line number) — not undefined behavior, not a silent nil.
 
-Elements are `num`, `bool`, or `str`; lists of lists are a v0.1
-[limit](limits.md). List literals must be homogeneous — `[1, "a"]` does
-not compile.
+Elements are `num`, `bool`, `str`, or a **record** type. Nested lists
+(`list<list<num>>`) are still a [limit](limits.md). List literals must be
+homogeneous — `[1, "a"]` does not compile.
+
+## Lists of records
+
+```wick
+record Pt { x: num, y: num }
+let pts: list<Pt> = []
+push(pts, Pt { x: 1, y: 2 })
+pts[0].x = 9
+```
+
+Prefer this over parallel lists when an entity has more than one field.
+Full guide: [Records](records.md).
 
 ## Maps
 
@@ -38,7 +50,16 @@ into view at the call site, where `??` handles it in three characters.
 
 ## Idioms
 
-**Records via parallel lists** (v0.1 has no structs):
+**Records (preferred for multi-field entities):**
+
+```wick
+record Lamp { x: num, z: num, lit: bool }
+let lamps: list<Lamp> = []
+push(lamps, Lamp { x: 3.4, z: 3.4, lit: true })
+```
+
+**Parallel lists** (still fine for tiny fixed sets, or data still baked
+that way):
 
 ```wick
 let lamp_x: list<num> = []

@@ -29,6 +29,7 @@
       <a href="#book">Book</a>
       <a href="#code">Code</a>
       <a href="docs/">Docs</a>
+      <a href="docs/blog/">Blog</a>
       <a href="https://github.com/alikatgh/lantern/tree/main/wick">Source</a>
       <button class="theme-toggle" id="themeToggle"
               aria-label="Toggle light/dark theme">theme</button>
@@ -42,23 +43,25 @@
     <h1>The language that<br>lights the <em>lantern</em>.</h1>
     <p class="sub">wick is the <a href="https://github.com/alikatgh/lantern">lantern
     engine</a>'s own scripting language: Lua's size and feel, with the sharp
-    edges designed out. Static types with optionals, type-checked engine
-    calls, deterministic randomness, and a GC that only runs between frames
-    — in ~2,000 dependency-free lines you can read in an afternoon.</p>
+    edges designed out. Static types with optionals, flat <strong>records</strong>,
+    type-checked engine calls, deterministic randomness, and a GC that only
+    runs between frames — in ~2,100 dependency-free lines you can read in an
+    afternoon.</p>
     <div class="cta">
-      <a class="btn primary" href="wick-book.pdf">The book (PDF, 65 pages)</a>
-      <a class="btn" href="docs/">Read the docs</a>
+      <a class="btn primary" href="docs/blog/2026-07-14-release-0.2/">0.2 release notes</a>
+      <a class="btn" href="docs/">Docs</a>
+      <a class="btn" href="docs/blog/">Blog</a>
       <a class="btn" href="docs/getting-started/">Get started</a>
     </div>
   </div>
 
   <div class="stats">
-    <div class="stat"><b>~2,000</b><span>lines: lexer to VM</span></div>
+    <div class="stat"><b>~2.1k</b><span>lines: lexer to VM</span></div>
     <div class="stat"><b>0</b><span>dependencies</span></div>
     <div class="stat"><b>T?</b><span>nil bugs don't compile</span></div>
+    <div class="stat"><b>record</b><span>flat data bags, evidence-gated</span></div>
     <div class="stat"><b>0</b><span>GC pauses mid-frame</span></div>
-    <div class="stat"><b>zlib</b><span>same license as the engine</span></div>
-    <div class="stat"><b>10/10</b><span>CI checks, incl. 8 must-not-compile</span></div>
+    <div class="stat"><b>12</b><span>CI language checks + must-not-compile</span></div>
   </div>
 
   <section id="why">
@@ -92,6 +95,12 @@
         <code>if name</code> don't compile; <code>""</code> is not secretly
         true. 0-based indexing, <code>continue</code>, and str+str-only
         <code>+</code> round out the de-quirking.</p>
+      </div>
+      <div class="cell">
+        <h3>Records, when earned</h3>
+        <p>Flat <code>record</code> types with named fields — no methods, no
+        inheritance. Admitted when KORA's kitchen props became five parallel
+        lists. The <a href="docs/blog/">blog</a> is the paper trail.</p>
       </div>
       <div class="cell">
         <h3>GC at frame boundaries only</h3>

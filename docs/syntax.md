@@ -8,7 +8,7 @@
   no exponents in v0.1. `1..5` lexes as a range, never as `1.` `.5`.
 - **Strings**: `"double quotes"` with escapes `\n`, `\t`, `\"`, `\\`.
 - **Keywords**: `let fn if elif else while for in break continue return
-  true false nil and or not`.
+  true false nil and or not record`.
 
 ## Variables
 
@@ -31,7 +31,10 @@ redeclaring in the *same* scope is an error.
 ```wick
 x = expr             // assignment (declared names only)
 xs[i] = expr         // list element / map value assignment
+p.field = expr       // record field assignment
+xs[i].field = expr   // record element field assignment
 f(a, b)              // call statement (non-void results are discarded)
+record Name { ... }  // top-level type declaration (see Records)
 if c { } elif c2 { } else { }
 while c { }
 for i in a..b { }    // i: num, from a to b-1

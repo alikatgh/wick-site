@@ -76,3 +76,16 @@ Input names: `left right up down z x c space return escape a s d w`
 Touch is a single point, 3DS-style — deliberately not multitouch. On
 iPhone/iPad it is the real touchscreen; on desktop the left mouse button
 plays the finger.
+
+## Paths & package mode
+
+Every `load_*` path is **relative to the game directory** and sandboxed:
+
+- no absolute paths (`/…`)
+- no `..` segments
+- no leading-dot segments
+- nested names like `assets/tileset.bmp` are allowed
+
+`lt.screenshot` in **package mode** (running a `.lant`) may only write a
+safe basename under the extract directory. See the blog post
+[Store safety is a language property](blog/2026-07-14-store-safety.md).

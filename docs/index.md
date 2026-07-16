@@ -41,17 +41,19 @@ Each pain became a design decision, not a lint rule:
 | stack-index C bindings | Engine calls **type-checked at compile time** |
 | `math.random` differs by machine | `rand()` is a fixed xorshift — deterministic everywhere |
 | JIT forbidden on iOS | No JIT anywhere — specialized bytecode from static types |
+| parallel-list entity tables | **Flat records** + `list<record>` when evidence appears |
 
-The flagship proof: **Kora Night ships in both languages** —
-[`games/showcase`](https://github.com/alikatgh/lantern/tree/main/games/showcase)
-(Lua) and
-[`games/showcase_wick`](https://github.com/alikatgh/lantern/tree/main/games/showcase_wick)
-(wick) — deliberately kept as separate, side-by-side projects that evolve
-together. Read the pair like a Rosetta stone: [wick vs Lua](comparison.md).
+The flagship proofs: **Lantern Night** ships in both languages
+([Lua](https://github.com/alikatgh/lantern/tree/main/games/showcase) /
+[wick](https://github.com/alikatgh/lantern/tree/main/games/showcase_wick))
+side by side; **KORA** on lantern is wick-only and exercises records,
+nested `.lant` packages, and scene packaging.
 
 ## Where to start
 
 - [Getting started](getting-started.md) — run a wick game in two minutes
 - [Types & optionals](types.md) — the heart of the language
+- [Records](records.md) — flat data bags, admitted with evidence
 - [The engine API](engine-api.md) — every `lt.*` call, typed
+- [Blog](blog/index.md) — design notes and release posts (Go-style)
 - [Compile errors, explained](errors.md) — what each message means

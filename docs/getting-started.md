@@ -51,12 +51,27 @@ Top-level statements run once, at load.
   capture is byte-identical on every machine — wick's `rand()` is
   deterministic too, so whole gameplay sessions replay exactly.
 
+## Package a game
+
+```sh
+./build/lantern_pack games/mygame mygame.lant
+./build/lantern mygame.lant
+```
+
+Store packages require `main.wick`. Nested folders (`assets/…`) pack with
+relative paths. Loads refuse `..` and absolute paths — see
+[PACKAGE.md](https://github.com/alikatgh/lantern/blob/main/docs/PACKAGE.md)
+and the [store-safety post](blog/2026-07-14-store-safety.md).
+
 ## Two minutes of syntax
 
 ```wick
 let speed = 120.0            // types are inferred
 let name: str = "tenzin"     // ...or written out
 let lamps: list<bool> = []   // empty literals need the annotation
+
+record Pt { x: num, y: num }
+let p = Pt { x: 1, y: 2 }
 
 for i in 0..4 {              // 0-based, end-exclusive
   push(lamps, true)
@@ -74,4 +89,4 @@ if saved != nil {
 }
 ```
 
-Read on: [Syntax](syntax.md) · [Types & optionals](types.md)
+Read on: [Syntax](syntax.md) · [Types & optionals](types.md) · [Records](records.md) · [Blog](blog/index.md)

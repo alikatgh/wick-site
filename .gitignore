@@ -1,0 +1,8 @@
+# Python virtualenv (mkdocs build env — never tracked)
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# OS / editor noise
+.DS_Store

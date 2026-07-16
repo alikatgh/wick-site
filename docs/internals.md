@@ -33,11 +33,11 @@ targets platforms where JITs are forbidden.
 
 ## Garbage collection
 
-Mark & sweep over strings, lists, and maps — but the collector **only
-runs when the host calls `wick::collect()`**, which lantern does exactly
-once per frame, after present. A collection can never land mid-draw;
-the worst case is bounded by how much garbage one frame creates.
-No closures/upvalues in v0.1 keeps the object graph shallow: roots are
+Mark & sweep over strings, lists, maps, and **records** — but the
+collector **only runs when the host calls `wick::collect()`**, which
+lantern does exactly once per frame, after present. A collection can
+never land mid-draw; the worst case is bounded by how much garbage one
+frame creates. No closures/upvalues keeps the object graph shallow: roots are
 globals, constants, and the (empty-between-frames) VM stack.
 
 ## Embedding wick yourself

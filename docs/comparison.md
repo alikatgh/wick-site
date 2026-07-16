@@ -33,12 +33,15 @@ for i, l in ipairs(LAMPS) do ... l.lit ... end
 ```
 
 ```wick
-// wick v0.1: typed parallel lists (structs are on the roadmap)
-let lamp_x: list<num> = []
-let lamp_z: list<num> = []
-let lamp_lit: list<bool> = []
-for i in 0..4 { ... lamp_lit[i] ... }
+// wick: flat records (admitted when KORA kitchen paid the cost)
+record Lamp { x: num, z: num, lit: bool }
+let lamps: list<Lamp> = []
+push(lamps, Lamp { x: 3.4, z: 3.4, lit: true })
+for i in 0..len(lamps) { ... lamps[i].lit ... }
 ```
+
+Lantern Night still uses parallel lists for four lamps — that's fine.
+KORA kitchen props use `list<Prop>`. Prefer records when a third field appears.
 
 Honest score: Lua reads better here today. This is the top of wick's
 v0.2 wishlist.

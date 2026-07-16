@@ -11,8 +11,9 @@ to work with.
 | `num` | IEEE-754 double | the only number type, like Lua |
 | `bool` | `true`, `false` | the only type conditions accept |
 | `str` | immutable text | `+` concatenates str+str only |
-| `list<T>` | ordered, 0-based | `T` is `num`, `bool`, or `str` |
+| `list<T>` | ordered, 0-based | `T` is `num`, `bool`, `str`, or a **record** |
 | `map<T>` | string-keyed | values are `num`, `bool`, or `str` |
+| *record* | named fields | see [Records](records.md) |
 | `T?` | `T` or `nil` | an **optional** — the headline feature |
 
 `nil` is not a general value: it only inhabits optionals. `let x = nil`
@@ -49,8 +50,8 @@ if s != nil {
 }
 ```
 
-Narrowing works on **local** variables in v0.1; module globals must use
-`??`. Assigning a new optional value inside the block un-narrows.
+Narrowing works on **local** variables; module globals must use `??`.
+Assigning a new optional value inside the block un-narrows.
 
 ## What returns an optional
 
@@ -63,7 +64,7 @@ Narrowing works on **local** variables in v0.1; module globals must use
 | `env(name)` | `str?` | the variable is unset |
 
 !!! note "The bug this kills"
-    In the Lua build of Kora Night, an interrupted save left a 0-byte
+    In the Lua build of Lantern Night, an interrupted save left a 0-byte
     file; `lt.load_save` returned `""` (truthy!), the `or "0"` fallback
     never fired, and `tonumber("")` produced a nil that crashed frame 1.
     The wick equivalent — `num(lt.load_save(k) ?? "") ?? 0` — is the only
@@ -73,6 +74,14 @@ Narrowing works on **local** variables in v0.1; module globals must use
 
 - `T` may be stored where `T?` is expected (widening is free).
 - `T?` may **not** be stored where `T` is expected — unwrap first.
-- Containers are invariant: `list<num>` only accepts `num` elements.
+- Containers are invariant: `list<num>` only accepts `num` elements;
+  `list<Prop>` only accepts that record type.
 - `void` (a function without a return type) cannot be assigned at all;
   calling a void function is a statement, not an expression.
+
+## Handles are still `num`
+
+Mesh, texture, and sound handles from `lt.load_*` are plain `num` today.
+Passing a texture id to `lt.play` type-checks; wrong use is a runtime
+no-op or error. Branded handle types are a candidate if store games need
+them — not yet admitted.

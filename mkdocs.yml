@@ -1,7 +1,8 @@
 site_name: wick
 site_description: >-
   wick is the lantern engine's own scripting language — Lua's size and feel
-  with static types, optionals, and frame-boundary GC.
+  with static types, optionals, records, and frame-boundary GC.
+site_url: https://wick.famemu.aulenor.com/
 repo_url: https://github.com/alikatgh/lantern
 repo_name: alikatgh/lantern
 edit_uri: ""
@@ -29,12 +30,14 @@ theme:
   features:
     - navigation.sections
     - navigation.footer
+    - navigation.indexes
     - content.code.copy
     - toc.integrate
 
 markdown_extensions:
   - admonition
-  - pymdownx.highlight
+  - pymdownx.highlight:
+      anchor_linenums: true
   - pymdownx.superfences
   - tables
   - toc:
@@ -43,9 +46,18 @@ markdown_extensions:
 nav:
   - Overview: index.md
   - Getting started: getting-started.md
+  - Blog:
+      - blog/index.md
+      - "2026-07-14 · Release 0.2": blog/2026-07-14-release-0.2.md
+      - "2026-07-14 · Admitting records": blog/2026-07-14-admitting-records.md
+      - "2026-07-14 · Store safety": blog/2026-07-14-store-safety.md
+      - "2026-07-14 · How we test": blog/2026-07-14-how-we-test.md
+      - "2026-07-14 · Why optionals": blog/2026-07-14-why-optionals.md
+      - "2026-07-14 · Welcome": blog/2026-07-14-welcome.md
   - Language:
       - Syntax: syntax.md
       - Types & optionals: types.md
+      - Records: records.md
       - Functions: functions.md
       - Collections: collections.md
       - Built-ins: builtins.md
@@ -53,4 +65,4 @@ nav:
   - Compile errors, explained: errors.md
   - Internals & embedding: internals.md
   - wick vs Lua: comparison.md
-  - v0.1 limits: limits.md
+  - Limits & ledger: limits.md

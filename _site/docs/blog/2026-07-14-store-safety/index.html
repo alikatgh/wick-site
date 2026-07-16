@@ -10,31 +10,31 @@
       
       
       
-        <link rel="canonical" href="https://wick.famemu.aulenor.com/engine-api/">
+        <link rel="canonical" href="https://wick.famemu.aulenor.com/blog/2026-07-14-store-safety/">
       
       
-        <link rel="prev" href="../builtins/">
+        <link rel="prev" href="../2026-07-14-admitting-records/">
       
       
-        <link rel="next" href="../errors/">
+        <link rel="next" href="../2026-07-14-how-we-test/">
       
       
         
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>The engine API (lt.*) - wick</title>
+        <title>2026-07-14 · Store safety - wick</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -53,7 +53,7 @@
       
     
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#the-engine-api-lt" class="md-skip">
+        <a href="#store-safety-is-a-language-property" class="md-skip">
           Skip to content
         </a>
       
@@ -94,7 +94,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="wick" class="md-header__button md-logo" aria-label="wick" data-md-component="logo">
+    <a href="../.." title="wick" class="md-header__button md-logo" aria-label="wick" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              The engine API (lt.*)
+              2026-07-14 · Store safety
             
           </span>
         </div>
@@ -232,7 +232,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="wick" class="md-nav__button md-logo" aria-label="wick" data-md-component="logo">
+    <a href="../.." title="wick" class="md-nav__button md-logo" aria-label="wick" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -262,7 +262,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -289,7 +289,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../getting-started/" class="md-nav__link">
+      <a href="../../getting-started/" class="md-nav__link">
         
   
   
@@ -313,6 +313,8 @@
       
   
   
+    
+  
   
   
     
@@ -343,15 +345,15 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../blog/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   
@@ -375,7 +377,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -395,7 +397,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/2026-07-14-release-0.2/" class="md-nav__link">
+      <a href="../2026-07-14-release-0.2/" class="md-nav__link">
         
   
   
@@ -423,7 +425,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/2026-07-14-admitting-records/" class="md-nav__link">
+      <a href="../2026-07-14-admitting-records/" class="md-nav__link">
         
   
   
@@ -448,10 +450,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../blog/2026-07-14-store-safety/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2026-07-14 · Store safety
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -467,6 +496,92 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#wick-only-packages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wick-only packages
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#path-sandbox" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Path sandbox
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#screenshots-in-package-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Screenshots in package mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nested-package-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nested package names
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-safe-by-construction-means-now" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What “safe by construction” means now
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#links" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Links
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -479,7 +594,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/2026-07-14-how-we-test/" class="md-nav__link">
+      <a href="../2026-07-14-how-we-test/" class="md-nav__link">
         
   
   
@@ -507,7 +622,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/2026-07-14-why-optionals/" class="md-nav__link">
+      <a href="../2026-07-14-why-optionals/" class="md-nav__link">
         
   
   
@@ -535,7 +650,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../blog/2026-07-14-welcome/" class="md-nav__link">
+      <a href="../2026-07-14-welcome/" class="md-nav__link">
         
   
   
@@ -636,7 +751,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../syntax/" class="md-nav__link">
+      <a href="../../syntax/" class="md-nav__link">
         
   
   
@@ -664,7 +779,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../types/" class="md-nav__link">
+      <a href="../../types/" class="md-nav__link">
         
   
   
@@ -692,7 +807,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../records/" class="md-nav__link">
+      <a href="../../records/" class="md-nav__link">
         
   
   
@@ -720,7 +835,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../functions/" class="md-nav__link">
+      <a href="../../functions/" class="md-nav__link">
         
   
   
@@ -748,7 +863,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../collections/" class="md-nav__link">
+      <a href="../../collections/" class="md-nav__link">
         
   
   
@@ -776,7 +891,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../builtins/" class="md-nav__link">
+      <a href="../../builtins/" class="md-nav__link">
         
   
   
@@ -808,37 +923,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    The engine API (lt.*)
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../engine-api/" class="md-nav__link">
         
   
   
@@ -854,103 +942,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#frame-screen" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Frame &amp; screen
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#3d-scene" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3D scene
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#meshes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Meshes
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2d" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2D
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#audio" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Audio
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#input-saves" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Input &amp; saves
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#paths-package-mode" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Paths &amp; package mode
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -962,7 +953,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../errors/" class="md-nav__link">
+      <a href="../../errors/" class="md-nav__link">
         
   
   
@@ -989,7 +980,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../internals/" class="md-nav__link">
+      <a href="../../internals/" class="md-nav__link">
         
   
   
@@ -1016,7 +1007,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../comparison/" class="md-nav__link">
+      <a href="../../comparison/" class="md-nav__link">
         
   
   
@@ -1043,7 +1034,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../limits/" class="md-nav__link">
+      <a href="../../limits/" class="md-nav__link">
         
   
   
@@ -1080,237 +1071,85 @@
 
 
 
-<h1 id="the-engine-api-lt">The engine API — <code>lt.*</code><a class="headerlink" href="#the-engine-api-lt" title="Permanent link">&para;</a></h1>
-<p>Every lantern call is registered with a <strong>typed signature the compiler
-checks</strong>: wrong arity or a wrong argument type is a compile error with the
-call name and argument number. Optional parameters show their defaults.
-Handles (meshes, textures, sounds) are <code>num</code>.</p>
-<h2 id="frame-screen">Frame &amp; screen<a class="headerlink" href="#frame-screen" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Call</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>lt.W</code> · <code>lt.H</code></td>
-<td>compile-time constants: 400, 240</td>
-</tr>
-<tr>
-<td><code>lt.clear(r, g, b)</code></td>
-<td>clear color and depth; call first in <code>draw()</code></td>
-</tr>
-<tr>
-<td><code>lt.time(): num</code></td>
-<td>seconds since boot (fixed-step under <code>LANTERN_FIXED_DT</code>)</td>
-</tr>
-<tr>
-<td><code>lt.screenshot(path: str)</code></td>
-<td>save the 400×240 frame as BMP</td>
-</tr>
-<tr>
-<td><code>lt.quit()</code></td>
-<td>request a clean exit</td>
-</tr>
-<tr>
-<td><code>lt.escape_quits(enable: bool)</code></td>
-<td>Escape quits by default; disable for pause menus</td>
-</tr>
-</tbody>
-</table>
-<h2 id="3d-scene">3D scene<a class="headerlink" href="#3d-scene" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Call</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>lt.camera(ex,ey,ez, tx,ty,tz, fov=55)</code></td>
-<td>position + look-at</td>
-</tr>
-<tr>
-<td><code>lt.light(dx,dy,dz, ambient=0.35)</code></td>
-<td>the directional light</td>
-</tr>
-<tr>
-<td><code>lt.point_light(i, x,y,z, radius, r=1,g=1,b=1)</code></td>
-<td>slots 0–3; <code>radius &lt;= 0</code> = off</td>
-</tr>
-<tr>
-<td><code>lt.fog(start, end, r,g,b)</code></td>
-<td>linear by view depth; <code>end &lt;= start</code> disables</td>
-</tr>
-</tbody>
-</table>
-<h2 id="meshes">Meshes<a class="headerlink" href="#meshes" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Call</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>lt.cube(): num</code></td>
-<td>unit cube</td>
-</tr>
-<tr>
-<td><code>lt.plane(segs=1): num</code></td>
-<td>unit XZ plane, tessellated</td>
-</tr>
-<tr>
-<td><code>lt.sphere(seg=12)</code> · <code>lt.cylinder(seg=16)</code> · <code>lt.cone(seg=16)</code></td>
-<td>unit primitives</td>
-</tr>
-<tr>
-<td><code>lt.mesh(verts: list&lt;num&gt;): num</code></td>
-<td>custom mesh, 12 floats/vertex: pos3 normal3 uv2 rgba4</td>
-</tr>
-<tr>
-<td><code>lt.load_mesh(path: str): num</code></td>
-<td>Wavefront OBJ (flat-normal fallback)</td>
-</tr>
-<tr>
-<td><code>lt.draw(m, x,y,z, rx=0,ry=0,rz=0, sx=1,sy=1,sz=1, r=1,g=1,b=1, tex=-1)</code></td>
-<td>gouraud-lit draw</td>
-</tr>
-<tr>
-<td><code>lt.draw_lerp(a, b, t, x,y,z, ...same..., tex=-1)</code></td>
-<td>keyframe tween between two same-count meshes</td>
-</tr>
-<tr>
-<td><code>lt.billboard(tex, x,y,z, w,h, u0=0,v0=0,u1=1,v1=1)</code></td>
-<td>camera-facing quad (sprite characters)</td>
-</tr>
-<tr>
-<td><code>lt.shadow(x,y,z, radius, alpha=0.35)</code></td>
-<td>grounding blob (pass floor height + small epsilon)</td>
-</tr>
-</tbody>
-</table>
-<h2 id="2d">2D<a class="headerlink" href="#2d" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Call</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>lt.rect(x,y,w,h, r,g,b, a=1)</code></td>
-<td>filled, alpha-blended</td>
-</tr>
-<tr>
-<td><code>lt.load_texture(path: str): num</code></td>
-<td>BMP; magenta (255,0,255) = transparent</td>
-</tr>
-<tr>
-<td><code>lt.sprite(tex, x,y, sx=1,sy=1)</code></td>
-<td>top-left anchored</td>
-</tr>
-<tr>
-<td><code>lt.sprite_ex(tex, cx,cy, sx=1,sy=1, rot=0, r=1,g=1,b=1,a=1)</code></td>
-<td>center, rotate, tint; negative scale flips</td>
-</tr>
-<tr>
-<td><code>lt.sprite_uv(tex, x,y,w,h, u0,v0,u1,v1)</code></td>
-<td>atlas sub-rect (tilemaps)</td>
-</tr>
-<tr>
-<td><code>lt.print(text: str, x,y, r=1,g=1,b=1,a=1)</code></td>
-<td>built-in 8×8 font, <code>\n</code> aware</td>
-</tr>
-</tbody>
-</table>
-<h2 id="audio">Audio<a class="headerlink" href="#audio" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Call</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>lt.load_sound(path: str): num</code></td>
-<td>WAV</td>
-</tr>
-<tr>
-<td><code>lt.play(sound, volume=1, loop=0): num</code></td>
-<td>returns channel, −1 if all 16 busy</td>
-</tr>
-<tr>
-<td><code>lt.stop(channel)</code> · <code>lt.volume(v)</code></td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<h2 id="input-saves">Input &amp; saves<a class="headerlink" href="#input-saves" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Call</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>lt.key(name: str): bool</code></td>
-<td>held; keyboard + gamepad merged</td>
-</tr>
-<tr>
-<td><code>lt.pressed(name: str): bool</code></td>
-<td>went down this frame</td>
-</tr>
-<tr>
-<td><code>lt.gamepad(): bool</code> · <code>lt.rumble(low, high, ms)</code></td>
-<td></td>
-</tr>
-<tr>
-<td><code>lt.touch_down(): bool</code></td>
-<td>screen touched now (desktop: left mouse button)</td>
-</tr>
-<tr>
-<td><code>lt.touch_pressed(): bool</code></td>
-<td>touch began this frame — latched, so a sub-frame tap still fires once</td>
-</tr>
-<tr>
-<td><code>lt.touch_x(): num</code> · <code>lt.touch_y(): num</code></td>
-<td>400×240 screen coords, letterbox undone, clamped; last position sticks while up</td>
-</tr>
-<tr>
-<td><code>lt.save(name: str, data: str): bool</code></td>
-<td>binary-safe</td>
-</tr>
-<tr>
-<td><code>lt.load_save(name: str): str?</code></td>
-<td><strong>optional</strong> — <code>nil</code> when unreadable</td>
-</tr>
-</tbody>
-</table>
-<p>Input names: <code>left right up down z x c space return escape a s d w</code>
-(pad: d-pad/stick → directions, A→<code>z</code>, B→<code>x</code>, Y→<code>c</code>, Start→<code>return</code>).
-Touch is a single point, 3DS-style — deliberately not multitouch. On
-iPhone/iPad it is the real touchscreen; on desktop the left mouse button
-plays the finger.</p>
-<h2 id="paths-package-mode">Paths &amp; package mode<a class="headerlink" href="#paths-package-mode" title="Permanent link">&para;</a></h2>
-<p>Every <code>load_*</code> path is <strong>relative to the game directory</strong> and sandboxed:</p>
+<h1 id="store-safety-is-a-language-property">Store safety is a language property<a class="headerlink" href="#store-safety-is-a-language-property" title="Permanent link">&para;</a></h1>
+<p><em>2026-07-14</em></p>
+<p>The lantern store ships games as <code>.lant</code> packages. The pitch is simple:</p>
+<blockquote>
+<p>The worst a store game can do is render rude pixels.</p>
+</blockquote>
+<p>That sentence is only true if the <strong>language + host</strong> make it true. This
+post is what we closed so the sentence is not aspirational.</p>
+<h2 id="wick-only-packages">wick-only packages<a class="headerlink" href="#wick-only-packages" title="Permanent link">&para;</a></h2>
+<p><code>lantern_pack</code> refuses folders without <code>main.wick</code>. Lua ships <code>os</code> and
+<code>io</code> — fine for local development, not for strangers' code. wick's only
+exits are typed <code>lt.*</code> natives registered by the host. There is no open
+file API, no shell, no sockets in the language.</p>
+<p>That is necessary and not sufficient.</p>
+<h2 id="path-sandbox">Path sandbox<a class="headerlink" href="#path-sandbox" title="Permanent link">&para;</a></h2>
+<p>Until this release, loads did:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>path = gameDir + &quot;/&quot; + userString
+</code></pre></div>
+<p>A wick program could pass <code>../</code> or an absolute path and read outside the
+game folder (and, with <code>lt.screenshot</code>, write outside it).</p>
+<p>Now every load (<code>load_texture</code>, <code>load_mesh</code>, <code>load_sound</code>) — wick and Lua —
+goes through <code>pathResolveUnder</code>:</p>
 <ul>
-<li>no absolute paths (<code>/…</code>)</li>
+<li>no absolute paths</li>
 <li>no <code>..</code> segments</li>
-<li>no leading-dot segments</li>
-<li>nested names like <code>assets/tileset.bmp</code> are allowed</li>
+<li>no hidden (leading-dot) segments</li>
+<li>multi-segment relative paths like <code>assets/tileset.bmp</code> are allowed</li>
 </ul>
-<p><code>lt.screenshot</code> in <strong>package mode</strong> (running a <code>.lant</code>) may only write a
-safe basename under the extract directory. See the blog post
-<a href="../blog/2026-07-14-store-safety/">Store safety is a language property</a>.</p>
+<p>Refusals surface as host errors (<code>path refused: …</code>) on the error screen /
+stderr. CI: <code>tests/path_sandbox_test.sh</code>.</p>
+<h2 id="screenshots-in-package-mode">Screenshots in package mode<a class="headerlink" href="#screenshots-in-package-mode" title="Permanent link">&para;</a></h2>
+<p>When the host extracts a <code>.lant</code> to a temp dir, it enters <strong>package mode</strong>.
+<code>lt.screenshot</code> may only write a basename under that extract directory.
+Folder-mode development still writes under the game dir with the same
+relative-path rules.</p>
+<h2 id="nested-package-names">Nested package names<a class="headerlink" href="#nested-package-names" title="Permanent link">&para;</a></h2>
+<p>KORA's assets live under <code>assets/</code>. The packer used to skip subdirectories
+silently — a KORA <code>.lant</code> would ship without textures. Packages now store
+relative paths with <code>/</code>; extract creates parent directories. Flat games
+(Lantern Night) are unchanged.</p>
+<p>Folder kitchen frames and package kitchen frames are <strong>byte-identical</strong>
+under <code>LANTERN_FIXED_DT</code> — the same determinism bar as everything else.</p>
+<h2 id="what-safe-by-construction-means-now">What “safe by construction” means now<a class="headerlink" href="#what-safe-by-construction-means-now" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Guarantee</th>
+<th>Mechanism</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No network / shell</td>
+<td>language has no APIs</td>
+</tr>
+<tr>
+<td>No arbitrary file read</td>
+<td>path sandbox on loads</td>
+</tr>
+<tr>
+<td>No arbitrary file write</td>
+<td>screenshot policy + no other write natives except named saves</td>
+</tr>
+<tr>
+<td>Saves are scoped</td>
+<td><code>lt.save</code> name charset filter under app support</td>
+</tr>
+<tr>
+<td>Reviewable surface</td>
+<td>wick-only store packages</td>
+</tr>
+</tbody>
+</table>
+<p>We still review store submissions. The host now matches the brochure.</p>
+<h2 id="links">Links<a class="headerlink" href="#links" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="https://github.com/alikatgh/lantern/blob/main/docs/PACKAGE.md">PACKAGE.md</a></li>
+<li><code>src/path_sandbox.cpp</code> in the lantern tree</li>
+</ul>
 
 
 
@@ -1340,7 +1179,7 @@ safe basename under the extract directory. See the blog post
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../builtins/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Built-ins">
+          <a href="../2026-07-14-admitting-records/" class="md-footer__link md-footer__link--prev" aria-label="Previous: 2026-07-14 · Admitting records">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1350,20 +1189,20 @@ safe basename under the extract directory. See the blog post
                 Previous
               </span>
               <div class="md-ellipsis">
-                Built-ins
+                2026-07-14 · Admitting records
               </div>
             </div>
           </a>
         
         
           
-          <a href="../errors/" class="md-footer__link md-footer__link--next" aria-label="Next: Compile errors, explained">
+          <a href="../2026-07-14-how-we-test/" class="md-footer__link md-footer__link--next" aria-label="Next: 2026-07-14 · How we test">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Compile errors, explained
+                2026-07-14 · How we test
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -1400,10 +1239,10 @@ safe basename under the extract directory. See the blog post
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.footer", "navigation.indexes", "content.code.copy", "toc.integrate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.footer", "navigation.indexes", "content.code.copy", "toc.integrate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
