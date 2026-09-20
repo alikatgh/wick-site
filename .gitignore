@@ -6,3 +6,9 @@ __pycache__/
 
 # OS / editor noise
 .DS_Store
+
+# Reproducible MkDocs output and generated book sources
+build/
+book-docs/
+docs/assets/reading.css
+.wrangler/
