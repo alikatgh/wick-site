@@ -17,7 +17,9 @@ jobs:
         run: |
           bash scripts/build-pdf.sh
           bash scripts/build-sites.sh
+          node scripts/test-theme.cjs
           mkdocs build --strict -d build/legacy
+          python scripts/check-content.py build/book build/reference build/legacy
       - uses: actions/upload-artifact@v4
         with:
           name: wick-0.3-book-review

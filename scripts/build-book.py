@@ -25,6 +25,17 @@ for path in sorted((ROOT / 'book/chapters').glob('*.tex')):
             return '\n\n' + keep('```' + language + '\n' + m[2].strip('\n') + '\n```') + '\n\n'
         text = re.sub(r'\\begin\{lstlisting\}(\[[^\n]*\])?\n(.*?)\\end\{lstlisting\}', listing, text, flags=re.S)
         text = re.sub(r'(?<!`)`([^`\n]+)`(?!`)', lambda m: keep('`' + m[1] + '`'), text)
+        # Layout-only TeX wrappers become raw HTML in GFM, which suppresses
+        # Markdown table parsing in MkDocs. Strip wrappers before conversion.
+        text = re.sub(r'\\(?:begin|end)\{center\}', '\n\n', text)
+        symbols = {r'\times': '×', r'\rightarrow': '→', '-1': '−1', '^{*}': '*'}
+        def math_text(match):
+            expression = match[1]
+            if expression not in symbols:
+                raise ValueError(f'Unmapped inline math in {path}: {expression}')
+            return symbols[expression]
+        text = re.sub(r'(?<!\\)\$(.*?)(?<!\\)\$', math_text, text)
+        text = text.replace('\\paragraph{', '\\subsection{')
         text = text.replace('\\chapter{', '\\section{').replace('\\section{', '\\WICKHEADING{',1)
         text = text.replace('\\subsection{','\\subsubsection{').replace('\\section{','\\subsection{').replace('\\WICKHEADING{','\\section{')
         text = re.sub(r'\\endfirsthead.*?\\endlastfoot', '', text, flags=re.S)
