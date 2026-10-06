@@ -312,7 +312,7 @@ main.wick:1: expected num, got num?
 \noindent
 and the game waits, showing you the line, until you put it back.
 
-\paragraph{Deterministic screenshots.} For automated testing, point
+\paragraph{Deterministic screenshots.} Set
 `LANTERN_SHOT` at a path and the engine captures frame~60 as a BMP and then
 exits. Add `LANTERN_FIXED_DT=1` and that capture is byte-identical on every machine,
 because the frame clock is fixed-step and wick's `rand()` is deterministic.

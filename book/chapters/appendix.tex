@@ -249,11 +249,14 @@ Always available, with no namespace. The generic built-ins (`len`, `str`,
 
 \section*{The \texttt{lt.*} engine interface}
 
-\begin{center}
-\small\begin{tabular}{@{}p{0.45\linewidth}p{0.47\linewidth}@{}}
+\begingroup\small
+\begin{longtable}{@{}p{0.45\linewidth}p{0.47\linewidth}@{}}
 \toprule
 \textbf{Call} & \textbf{Notes} \\
 \midrule
+\endhead
+\bottomrule
+\endfoot
 \multicolumn{2}{@{}l}{\emph{Frame and screen}} \\
 \texttt{lt.W} \enskip \texttt{lt.H} & constants 400, 240 \\
 \texttt{lt.clear(r,g,b)} & clear colour and depth \\
@@ -294,9 +297,8 @@ Always available, with no namespace. The generic built-ins (`len`, `str`,
 \texttt{lt.gamepad(): bool} \enskip \texttt{lt.rumble(low, high, ms)} & \\
 \texttt{lt.save(name: str, data: str): bool} & binary-safe \\
 \texttt{lt.load\_save(name: str): str?} & optional; \texttt{nil} when unreadable \\
-\bottomrule
-\end{tabular}
-\end{center}
+\end{longtable}
+\endgroup
 
 \noindent
 Input names: \texttt{left right up down z x c space return escape a s d w}.

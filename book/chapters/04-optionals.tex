@@ -94,7 +94,8 @@ let best = num(lt.load_save("lanternnight_wick_best") ?? "") ?? 0
 \end{lstlisting}
 
 \noindent
-Trace it with the zero-byte file that crashed the Lua build.
+Trace the zero-byte file that crashed the Lua build.
+
 `lt.load_save(...)` returns `str?`. Whether it is `nil` (no file) or `""`
 (empty file) makes no difference to what follows, because the first `??`
 turns \emph{both} into a `str`: `nil` becomes `""`, and `""` is already `""`.
