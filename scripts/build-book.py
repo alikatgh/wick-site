@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build MkDocs chapters from the original LaTeX book, preserving code verbatim."""
 from pathlib import Path
-import re, shutil
+import re, shutil, html
 import pypandoc
 ROOT = Path(__file__).resolve().parents[1]
 out = ROOT / 'book-docs'
@@ -42,6 +42,15 @@ for path in sorted((ROOT / 'book/chapters').glob('*.tex')):
         text = re.sub(r'\\endhead.*?\\endfoot', '', text, flags=re.S)
         text = text.replace('\\begingroup', '').replace('\\endgroup', '')
         text = text.replace('{longtable}', '{tabular}')
+        # GFM cannot represent spanning cells. Convert each table directly to
+        # semantic HTML, without allowing raw wrappers to swallow Markdown.
+        def table_html(match):
+            rendered = pypandoc.convert_text(match[0], 'html', format='latex', extra_args=['--wrap=none'])
+            for token, content in saved.items():
+                if content.startswith('`') and not content.startswith('```'):
+                    rendered = rendered.replace(token, '<code>' + html.escape(content[1:-1]) + '</code>')
+            return '\n\n' + keep(rendered.strip()) + '\n\n'
+        text = re.sub(r'\\begin\{tabular\}.*?\\end\{tabular\}', table_html, text, flags=re.S)
         md = pypandoc.convert_text(text, 'gfm', format='latex', extra_args=['--wrap=none'])
         # TeX treats straight apostrophes as closing quotes, including texttt.
         md = re.sub(r'`[^`]+`|<code>.*?</code>', lambda m: m[0].replace('’', chr(39)), md, flags=re.S)
