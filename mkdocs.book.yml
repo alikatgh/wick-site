@@ -1,6 +1,7 @@
 site_name: The Wick Book
 site_url: https://wick.aulenor.com/book/
-site_description: Read The Wick Programming Language online, from the original book by the Lantern engine authors.
+site_description: Read The Wick Programming Language online, from the original book
+  by the Lantern engine authors.
 repo_url: https://github.com/alikatgh/wick-site
 repo_name: Book source
 edit_uri: ''
@@ -13,32 +14,39 @@ theme:
   icon:
     logo: material/book-open-page-variant
   palette:
-    - scheme: default
-      toggle: {icon: material/weather-night, name: Switch to dark mode}
-    - scheme: slate
-      toggle: {icon: material/weather-sunny, name: Switch to light mode}
-  features: [navigation.sections, navigation.footer, content.code.copy, search.highlight, search.suggest]
-extra_css: [assets/reading.css]
-plugins: [search]
+    scheme: default
+  features:
+  - navigation.sections
+  - navigation.footer
+  - content.code.copy
+  - search.highlight
+  - search.suggest
+extra_css:
+- assets/reading.css
+plugins:
+- search
 markdown_extensions:
-  - attr_list
-  - admonition
-  - tables
-  - pymdownx.superfences
-  - pymdownx.highlight
-  - toc: {permalink: true}
+- attr_list
+- admonition
+- tables
+- pymdownx.superfences
+- pymdownx.highlight
+- toc:
+    permalink: true
 nav:
-  - The book: index.md
-  - '1 · Introduction': 01-introduction.md
-  - '2 · A Wick tutorial': 02-tutorial.md
-  - '3 · The language': 03-language.md
-  - '4 · Optionals': 04-optionals.md
-  - '5 · Collections': 05-collections.md
-  - '6 · The engine interface': 06-engine.md
-  - '7 · Internals': 07-internals.md
-  - '8 · Design and trade-offs': 08-design.md
-  - '9 · Bits, bytes, and buses': 09-bits-and-buses.md
-  - Appendices:
-    - Grammar: appendix-1.md
-    - Compile errors: appendix-2.md
-    - Quick reference: appendix-3.md
+- The book: index.md
+- 1 · Introduction: 01-introduction.md
+- 2 · A Wick tutorial: 02-tutorial.md
+- 3 · The language: 03-language.md
+- 4 · Optionals: 04-optionals.md
+- 5 · Collections: 05-collections.md
+- 6 · The engine interface: 06-engine.md
+- 7 · Internals: 07-internals.md
+- 8 · Design and trade-offs: 08-design.md
+- 9 · Bits, bytes, and buses: 09-bits-and-buses.md
+- Appendices:
+  - Grammar: appendix-1.md
+  - Compile errors: appendix-2.md
+  - Quick reference: appendix-3.md
+extra:
+  homepage: https://wick.aulenor.com/

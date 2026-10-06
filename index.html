@@ -3,190 +3,63 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>wick — the lantern engine's own language</title>
-<meta name="description" content="wick is a tiny statically-typed scripting language for the lantern game engine: Lua's size and feel, optionals that make nil bugs compile errors, type-checked engine calls, deterministic randomness, and GC that only runs between frames.">
+<title>Wick — a scripting language for the Lantern game engine</title>
+<meta name="description" content="Learn Wick, the small, statically typed scripting language for the Lantern game engine. Read the book, browse the reference, and build your first game.">
 <link rel="canonical" href="https://wick.aulenor.com/">
-<meta property="og:type" content="website">
-<meta property="og:title" content="wick — the lantern engine's own language">
-<meta property="og:description" content="Lua's size and feel with the sharp edges designed out: static types, optionals, typed engine calls, frame-boundary GC. Bits, bytes, zero deps, zlib.">
+<meta property="og:title" content="Wick — a scripting language for Lantern">
 <meta property="og:url" content="https://wick.aulenor.com/">
-<meta name="twitter:card" content="summary">
+<meta property="og:type" content="website">
+<script src="theme.js"></script>
+<link rel="stylesheet" href="assets/fonts.css">
 <link rel="stylesheet" href="style.css">
-<script>
-  // apply the saved theme before first paint
-  const saved = localStorage.getItem("wick-theme");
-  if (saved) document.documentElement.dataset.theme = saved;
-</script>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect x='7' y='2' width='2' height='5' fill='%23e8be3c'/><rect x='5' y='7' width='6' height='7' fill='%23e8be3c'/><rect x='7' y='9' width='2' height='3' fill='%230e0d16'/></svg>">
 </head>
 <body>
-
-<header class="site">
-  <div class="wrap">
-    <a class="brand" href="./"><span class="tip">|</span> wick</a>
-    <nav class="top">
-      <a href="#why">Why</a>
-      <a href="book/">Book</a>
-      <a href="#code">Code</a>
-      <a href="docs/">Docs</a>
-      <a href="docs/blog/">Blog</a>
-      <a href="https://github.com/alikatgh/lantern/tree/main/wick">Source</a>
-      <button class="theme-toggle" id="themeToggle"
-              aria-label="Toggle light/dark theme">theme</button>
-    </nav>
-  </div>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header wrap">
+  <a class="brand" href="./" aria-label="Wick home">wick<span class="version">0.3</span></a>
+  <nav aria-label="Main navigation"><a href="docs/getting-started/">Get started</a><a href="https://github.com/alikatgh/lantern/releases/tag/v0.8.0">Downloads</a><a href="docs/">Documentation</a><a href="book/">Book</a><a href="docs/blog/">Blog</a><a href="https://github.com/alikatgh/lantern/tree/main/wick">Source</a></nav>
+  <label class="appearance">Theme <select data-wick-theme aria-label="Theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
 </header>
-
-<div class="wrap">
-
-  <div class="hero">
-    <h1>The language that<br>lights the <em>lantern</em>.</h1>
-    <p class="sub">wick is the <a href="https://github.com/alikatgh/lantern">lantern
-    engine</a>'s own scripting language: Lua's size and feel, with the sharp
-    edges designed out. Static types with optionals, flat <strong>records</strong>,
-    type-checked engine calls, deterministic randomness, and a GC that only
-    runs between frames — in a small dependency-free implementation.</p>
-    <div class="cta">
-      <a class="btn primary" href="docs/blog/2026-10-06-release-0.3/">0.3 release notes</a>
-      <a class="btn" href="docs/">Docs</a>
-      <a class="btn" href="docs/blog/">Blog</a>
-      <a class="btn" href="docs/getting-started/">Get started</a>
+<main id="main" class="wrap">
+  <section class="intro" aria-labelledby="intro-title">
+    <div>
+      <h1 id="intro-title">A small language<br>for Lantern games.</h1>
+      <p>Wick is the <a href="https://github.com/alikatgh/lantern">Lantern engine</a>’s scripting language. It pairs a familiar, lightweight syntax with static types and explicit handling of missing values.</p>
+      <p>Write a <code>main.wick</code> file, run it in Lantern, and save to reload. The compiler checks your code and engine calls before the game starts.</p>
+      <p class="start"><a class="button" href="docs/getting-started/">Build your first game <span aria-hidden="true">→</span></a><a href="docs/comparison/">Coming from Lua?</a></p>
     </div>
-  </div>
+    <figure class="example">
+      <figcaption><span>main.wick</span><span>A moving square</span></figcaption>
+      <pre tabindex="0" aria-label="Wick moving square example"><code><span class="kw">let</span> x = <span class="num">0</span>
 
-  <div class="stats">
-    <div class="stat"><b>0.3</b><span>bits, bytes, and words</span></div>
-    <div class="stat"><b>0</b><span>dependencies</span></div>
-    <div class="stat"><b>T?</b><span>nil bugs don't compile</span></div>
-    <div class="stat"><b>record</b><span>flat data bags, evidence-gated</span></div>
-    <div class="stat"><b>0</b><span>GC pauses mid-frame</span></div>
-    <div class="stat"><b>106</b><span>bit-language test cases</span></div>
-  </div>
+<span class="kw">fn</span> update(dt: <span class="type">num</span>) {
+  x = (x + <span class="num">40</span> * dt) % <span class="num">400</span>
+}
 
-  <section id="why">
-    <h2>Every Lua pain, fixed by design</h2>
-    <p class="lead">wick exists because we shipped real games in Lua and
-    catalogued what hurt. Each pain became a language decision — not a
-    linter rule, not a convention, a thing the compiler enforces.</p>
-
-    <div class="grid">
-      <div class="cell">
-        <h3>Optionals, enforced</h3>
-        <p><code>lt.load_save()</code> returns <code>str?</code> — using it
-        unchecked is a compile error. Unwrap with <code>??</code> or narrow
-        with <code>if x != nil</code>. The "empty save file crashes frame 1"
-        bug we actually shipped in Lua cannot be written in wick.</p>
-      </div>
-      <div class="cell">
-        <h3>Typos can't create globals</h3>
-        <p>Every variable is a <code>let</code>. Assigning a misspelled name
-        doesn't silently create a nil global — it doesn't compile.</p>
-      </div>
-      <div class="cell">
-        <h3>Typed engine calls</h3>
-        <p>Every <code>lt.*</code> signature is known to the compiler. Wrong
-        arity, wrong type — you get the call name and argument number on the
-        error screen at load, not a runtime surprise on frame 4,000.</p>
-      </div>
-      <div class="cell">
-        <h3>No truthiness</h3>
-        <p>Conditions must be <code>bool</code>. <code>if 1</code> and
-        <code>if name</code> don't compile; <code>""</code> is not secretly
-        true. 0-based indexing, <code>continue</code>, and str+str-only
-        <code>+</code> round out the de-quirking.</p>
-      </div>
-      <div class="cell">
-        <h3>Records, when earned</h3>
-        <p>Flat <code>record</code> types with named fields — no methods, no
-        inheritance. Admitted when KORA's kitchen props became five parallel
-        lists. The <a href="docs/blog/">blog</a> is the paper trail.</p>
-      </div>
-      <div class="cell">
-        <h3>GC at frame boundaries only</h3>
-        <p>Collection runs exactly once per frame, after present — never
-        mid-draw. And there's no JIT anywhere: iOS-legal by construction,
-        with speed from static types (specialized opcodes, slot-resolved
-        locals) instead.</p>
-      </div>
-      <div class="cell">
-        <h3>Deterministic by default</h3>
-        <p><code>rand()</code> is a fixed xorshift — the same sequence on
-        every machine. Combined with the engine's fixed-timestep mode, whole
-        gameplay sessions replay byte-for-byte in CI.</p>
-      </div>
+<span class="kw">fn</span> draw() {
+  lt.clear(<span class="num">0.1</span>, <span class="num">0.1</span>, <span class="num">0.2</span>)
+  lt.rect(x, <span class="num">100</span>, <span class="num">16</span>, <span class="num">16</span>, <span class="num">1</span>, <span class="num">0.8</span>, <span class="num">0.2</span>, <span class="num">1</span>)
+}</code></pre>
+      <p>Lantern calls <code>update</code> and <code>draw</code> each frame. <a href="docs/engine-api/">Engine API →</a></p>
+    </figure>
+  </section>
+  <aside class="release" aria-label="Latest release"><strong>New in 0.3</strong><p>Hex and binary literals, bit operations, and explicit 8-bit and 16-bit wrapping.</p><a href="docs/blog/2026-10-06-release-0.3/">Release notes →</a></aside>
+  <section class="section" aria-labelledby="learn-title">
+    <h2 id="learn-title">Learn &amp; look things up</h2>
+    <div class="resources">
+      <article><h3><a href="book/">Read the book →</a></h3><p>Build a small game, then work through the language, engine interface, and compiler. Edition 0.3 includes bits, bytes, and buses.</p><a class="secondary" href="wick-book.pdf">Download the PDF</a></article>
+      <article><h3><a href="docs/">Language reference →</a></h3><p>Syntax, types, collections, built-in functions, and the <code>lt.*</code> engine API. For checking a detail while you write.</p><a class="secondary" href="docs/errors/">Compile errors, explained</a></article>
+      <article><h3><a href="docs/bits/">Work with bits &amp; bytes →</a></h3><p>Mask a value, wrap a register, or display a bus in binary. Includes a processor example and the runnable Bit Lab workbench.</p><a class="secondary" href="https://github.com/alikatgh/lantern/tree/main/games/bitlab">Bit Lab source</a></article>
     </div>
   </section>
-
-  <section id="code">
-    <h2>The same game, twice</h2>
-    <p class="lead">Lantern Night ships in both languages as separate
-    side-by-side projects that evolve together. The famous line — loading
-    a hi-score that might be a 0-byte file:</p>
-
-    <div class="cols">
-      <pre><code><span class="c">-- Lua: shipped with a frame-1 crash.
--- "" is truthy, so `or "0"` never
--- fires; tonumber("") = nil poisons
--- everything downstream.</span>
-<span class="k">local</span> best = tonumber(
-  lt.load_save(<span class="s">"best"</span>) <span class="k">or</span> <span class="s">"0"</span>)</code></pre>
-      <pre><code><span class="c">// wick: the only version that
-// compiles. load_save is str?,
-// num() is num? — both nil cases
-// are handled, or it's a type error.</span>
-<span class="k">let</span> best = num(
-  lt.load_save(<span class="s">"best"</span>) ?? <span class="s">""</span>) ?? 0</code></pre>
-    </div>
-
-    <p class="lead" style="margin-top:28px">Full side-by-side reading:
-    <a href="docs/comparison/">wick vs Lua</a> in the docs — records,
-    multiple returns, and what you stop writing entirely.</p>
+  <section class="section language" aria-labelledby="language-title">
+    <div><h2 id="language-title">What Wick checks</h2><p>Types are inferred or written explicitly. Engine calls are checked at load time. A misspelled variable is an error, and conditions must be <code>bool</code>.</p><p>Values that might be absent have an optional type, such as <code>str?</code>. Handle the missing case before using the value.</p><a href="docs/types/">Types and optionals →</a></div>
+    <figure class="example"><figcaption>Loading a score that may not exist</figcaption><pre tabindex="0"><code><span class="comment">// load_save returns str?; num returns num?</span>
+<span class="kw">let</span> saved = lt.load_save(<span class="str">"best"</span>)
+<span class="kw">let</span> best = num(saved ?? <span class="str">""</span>) ?? <span class="num">0</span></code></pre><p><code>??</code> supplies a fallback for <code>nil</code>. This handles both a missing save and text that cannot be parsed as a number.</p></figure>
   </section>
-
-  <section id="book">
-    <h2>The book</h2>
-    <p class="lead"><i>The wick Programming Language</i> — edition 0.3,
-    typeset in Latin Modern with LaTeX, is the recommended starting point:
-    a real tutorial (you build a small game), the complete language
-    reference, the optionals chapter with the full story of the bug that
-    started it all, the engine interface, the internals of the compiler and
-    VM, and an honest design-trade-offs chapter. The updated edition covers records and includes a new bits-and-buses chapter
-    for processor-building games.
-    <a href="wick-book.pdf">Download the PDF</a> (free, zlib-licensed like
-    everything else; LaTeX source in
-    <a href="https://github.com/alikatgh/wick-site/tree/main/book">book/</a>).</p>
-  </section>
-
-  <section>
-    <h2>Part of the lantern engine</h2>
-    <p class="lead">wick lives in the engine repo (<a
-    href="https://github.com/alikatgh/lantern/tree/main/wick">wick/</a>) and
-    ships with it — there is nothing separate to install. A game is a folder
-    with <code>main.wick</code>; hot-reload, the in-engine error screen, and
-    CI screenshot verification all work exactly as they do for Lua and C,
-    which remain first-class. Start at the
-    <a href="docs/">documentation</a>.</p>
-  </section>
-
-</div>
-
-<footer class="site">
-  <div class="wrap">
-    <span>| wick — part of the lantern engine, a famemu project</span>
-    <a href="docs/">Documentation</a>
-    <a href="https://github.com/alikatgh/lantern">GitHub</a>
-  </div>
-</footer>
-
-<script>
-  document.getElementById("themeToggle").addEventListener("click", () => {
-    const el = document.documentElement;
-    const dark = matchMedia("(prefers-color-scheme: dark)").matches;
-    const cur = el.dataset.theme || (dark ? "dark" : "light");
-    const next = cur === "dark" ? "light" : "dark";
-    el.dataset.theme = next;
-    localStorage.setItem("wick-theme", next);
-  });
-</script>
+  <section class="section runtime" aria-labelledby="runtime-title"><h2 id="runtime-title">How it fits into a game</h2><dl><div><dt>Data</dt><dd>Flat records with named fields, lists, and maps. <a href="docs/records/">Records →</a></dd></div><div><dt>Runtime</dt><dd>A bytecode VM without a JIT. Garbage collection runs between frames. <a href="docs/internals/">Internals →</a></dd></div><div><dt>Repeatability</dt><dd>Deterministic <code>rand()</code> and Lantern’s fixed-timestep mode support repeatable runs. <a href="docs/getting-started/#the-dev-loop">Development loop →</a></dd></div><div><dt>Scope</dt><dd>Wick is a small language under active development. Check the supported features and current constraints. <a href="docs/limits/">Limits &amp; ledger →</a></dd></div></dl></section>
+</main>
+<footer class="site-footer wrap"><p>Wick is part of <a href="https://github.com/alikatgh/lantern">Lantern</a>, a <a href="https://famemu.aulenor.com">Famemu</a> project.</p><nav aria-label="Footer"><a href="docs/blog/">Development blog</a><a href="https://github.com/alikatgh/lantern/blob/main/LICENSE">zlib license</a></nav></footer>
 </body>
 </html>

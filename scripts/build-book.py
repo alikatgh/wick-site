@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build MkDocs chapters from the original LaTeX book, preserving code verbatim."""
 from pathlib import Path
-import re, shutil
+import re, shutil, html
 import pypandoc
 ROOT = Path(__file__).resolve().parents[1]
 out = ROOT / 'book-docs'
@@ -25,9 +25,37 @@ for path in sorted((ROOT / 'book/chapters').glob('*.tex')):
             return '\n\n' + keep('```' + language + '\n' + m[2].strip('\n') + '\n```') + '\n\n'
         text = re.sub(r'\\begin\{lstlisting\}(\[[^\n]*\])?\n(.*?)\\end\{lstlisting\}', listing, text, flags=re.S)
         text = re.sub(r'(?<!`)`([^`\n]+)`(?!`)', lambda m: keep('`' + m[1] + '`'), text)
+        # Layout-only TeX wrappers become raw HTML in GFM, which suppresses
+        # Markdown table parsing in MkDocs. Strip wrappers before conversion.
+        text = re.sub(r'\\(?:begin|end)\{center\}', '\n\n', text)
+        symbols = {r'\times': '×', r'\rightarrow': '→', '-1': '−1', '^{*}': '*'}
+        def math_text(match):
+            expression = match[1]
+            if expression not in symbols:
+                raise ValueError(f'Unmapped inline math in {path}: {expression}')
+            return symbols[expression]
+        text = re.sub(r'(?<!\\)\$(.*?)(?<!\\)\$', math_text, text)
+        text = text.replace('\\section*{', '\\section{')
+        text = text.replace('\\paragraph{', '\\subsection{')
         text = text.replace('\\chapter{', '\\section{').replace('\\section{', '\\WICKHEADING{',1)
         text = text.replace('\\subsection{','\\subsubsection{').replace('\\section{','\\subsection{').replace('\\WICKHEADING{','\\section{')
         text = re.sub(r'\\endfirsthead.*?\\endlastfoot', '', text, flags=re.S)
+        text = re.sub(r'\\endhead.*?\\endfoot', '', text, flags=re.S)
+        text = text.replace('\\begingroup', '').replace('\\endgroup', '')
+        text = text.replace('{longtable}', '{tabular}')
+        # Pandoc's LaTeX reader cannot parse the @{} alignment in these
+        # spanning category rows. A regular two-cell row retains the label.
+        text = re.sub(r'\\multicolumn\{2\}\{@\{\}l\}\{\\emph\{([^}]+)\}\}',
+                      lambda m: r'\textbf{' + m[1] + '} & ', text)
+        # GFM cannot represent spanning cells. Convert each table directly to
+        # semantic HTML, without allowing raw wrappers to swallow Markdown.
+        def table_html(match):
+            rendered = pypandoc.convert_text(match[0], 'html', format='latex', extra_args=['--wrap=none'])
+            for token, content in saved.items():
+                if content.startswith('`') and not content.startswith('```'):
+                    rendered = rendered.replace(token, '<code>' + html.escape(content[1:-1]) + '</code>')
+            return '\n\n' + keep(rendered.strip()) + '\n\n'
+        text = re.sub(r'\\begin\{tabular\}.*?\\end\{tabular\}', table_html, text, flags=re.S)
         md = pypandoc.convert_text(text, 'gfm', format='latex', extra_args=['--wrap=none'])
         # TeX treats straight apostrophes as closing quotes, including texttt.
         md = re.sub(r'`[^`]+`|<code>.*?</code>', lambda m: m[0].replace('’', chr(39)), md, flags=re.S)

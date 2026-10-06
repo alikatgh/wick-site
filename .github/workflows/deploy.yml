@@ -36,8 +36,9 @@ jobs:
       - name: Build
         run: |
           mkdocs build --strict -d _site/docs
-          cp index.html style.css wick-book.pdf CNAME _site/
+          cp index.html style.css theme.js wick-book.pdf CNAME _site/
           cp -R build/book _site/book
+          cp -R theme/assets _site/assets
       - name: Preserve edition artifacts
         uses: actions/upload-artifact@v4
         with:

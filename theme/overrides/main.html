@@ -1,5 +1,14 @@
 {% extends "base.html" %}
+{% block extrahead %}
+{{ super() }}
+<link rel="stylesheet" href="{{ 'assets/fonts.css' | url }}">
+<script src="{{ 'assets/theme.js' | url }}"></script>
+{% endblock %}
+{% block header %}
+{{ super() }}
+<div class="wick-navigation"><nav aria-label="Wick website"><a href="https://wick.aulenor.com/">Wick home</a><a href="https://wick.aulenor.com/docs/">Reference</a><a href="https://wick.aulenor.com/book/">Book</a><a href="https://wick.aulenor.com/docs/blog/">Blog</a></nav><label class="appearance">Theme <select data-wick-theme aria-label="Theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label></div>
+{% endblock %}
 {% block footer %}
 {{ super() }}
-<div class="project-links"><a href="https://famemu.aulenor.com">Famemu</a><a href="https://wick.aulenor.com/docs/">Language reference</a><a href="https://wick.aulenor.com/book/">The Wick book</a><a href="https://aulenor.com">Aulenor ↗</a></div>
+<div class="project-links"><a href="https://wick.aulenor.com/">Wick</a><a href="https://famemu.aulenor.com">A Famemu project</a><a href="https://github.com/alikatgh/lantern">Lantern source</a></div>
 {% endblock %}
