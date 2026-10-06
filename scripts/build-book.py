@@ -39,6 +39,9 @@ for path in sorted((ROOT / 'book/chapters').glob('*.tex')):
         text = text.replace('\\chapter{', '\\section{').replace('\\section{', '\\WICKHEADING{',1)
         text = text.replace('\\subsection{','\\subsubsection{').replace('\\section{','\\subsection{').replace('\\WICKHEADING{','\\section{')
         text = re.sub(r'\\endfirsthead.*?\\endlastfoot', '', text, flags=re.S)
+        text = re.sub(r'\\endhead.*?\\endfoot', '', text, flags=re.S)
+        text = text.replace('\\begingroup', '').replace('\\endgroup', '')
+        text = text.replace('{longtable}', '{tabular}')
         md = pypandoc.convert_text(text, 'gfm', format='latex', extra_args=['--wrap=none'])
         # TeX treats straight apostrophes as closing quotes, including texttt.
         md = re.sub(r'`[^`]+`|<code>.*?</code>', lambda m: m[0].replace('’', chr(39)), md, flags=re.S)
