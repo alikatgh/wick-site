@@ -14,11 +14,15 @@ class Article(HTMLParser):
         self.blocks = []
         self.text = []
         self.tables = 0
+        self.h1s = 0
+        self.bad_tables = False
         self.feed(html)
     def handle_starttag(self, tag, attrs):
         if tag == 'article': self.active = True
         if not self.active: return
         if tag == 'table': self.tables += 1
+        if tag == 'h1': self.h1s += 1
+        if tag == 'div' and dict(attrs).get('class') == 'tabular': self.bad_tables = True
         if tag == 'pre': self.pre = True
         if tag == 'code' and self.pre: self.code = []
     def handle_endtag(self, tag):
@@ -39,6 +43,8 @@ for site in sys.argv[1:] or ['build/book', 'build/reference']:
         article = Article(file.read_text())
         if not article.text: continue
         count += 1
+        if article.h1s != 1: errors.append(f'{file}: expected one page heading, got {article.h1s}')
+        if article.bad_tables: errors.append(f'{file}: unconverted TeX table')
         text = ''.join(article.text)
         for pattern in [r'\|\s*:?---', r'\\(?:times|rightarrow|begin|end)\b', r'WICKPLACEHOLDER', r'\$`']:
             if re.search(pattern, text): errors.append(f'{file}: raw markup {pattern}')

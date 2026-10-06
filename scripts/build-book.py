@@ -35,6 +35,7 @@ for path in sorted((ROOT / 'book/chapters').glob('*.tex')):
                 raise ValueError(f'Unmapped inline math in {path}: {expression}')
             return symbols[expression]
         text = re.sub(r'(?<!\\)\$(.*?)(?<!\\)\$', math_text, text)
+        text = text.replace('\\section*{', '\\section{')
         text = text.replace('\\paragraph{', '\\subsection{')
         text = text.replace('\\chapter{', '\\section{').replace('\\section{', '\\WICKHEADING{',1)
         text = text.replace('\\subsection{','\\subsubsection{').replace('\\section{','\\subsection{').replace('\\WICKHEADING{','\\section{')
@@ -42,6 +43,10 @@ for path in sorted((ROOT / 'book/chapters').glob('*.tex')):
         text = re.sub(r'\\endhead.*?\\endfoot', '', text, flags=re.S)
         text = text.replace('\\begingroup', '').replace('\\endgroup', '')
         text = text.replace('{longtable}', '{tabular}')
+        # Pandoc's LaTeX reader cannot parse the @{} alignment in these
+        # spanning category rows. A regular two-cell row retains the label.
+        text = re.sub(r'\\multicolumn\{2\}\{@\{\}l\}\{\\emph\{([^}]+)\}\}',
+                      lambda m: r'\textbf{' + m[1] + '} & ', text)
         # GFM cannot represent spanning cells. Convert each table directly to
         # semantic HTML, without allowing raw wrappers to swallow Markdown.
         def table_html(match):
