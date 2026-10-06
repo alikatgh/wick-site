@@ -23,11 +23,11 @@ for the era it was born in --- turn out to be exactly the wrong defaults for
 that job.
 
 Consider the failure we keep coming back to, the one that gives Chapter~4 its
-spine. Kora Night, our showcase game, saves the player's best score to a
+spine. Lantern Night, our showcase game, saves the player's best score to a
 file. In the Lua build the load looked like this:
 
 \begin{lstlisting}[language=luatwin]
-local best = tonumber(lt.load_save("koranight_best") or "0")
+local best = tonumber(lt.load_save("lanternnight_best") or "0")
 \end{lstlisting}
 
 \noindent
@@ -48,7 +48,7 @@ value which might be `nil` without first dealing with the `nil`. The wick
 version of that line is the only version the compiler accepts:
 
 \begin{lstlisting}[language=wick]
-let best = num(lt.load_save("koranight_wick_best") ?? "") ?? 0
+let best = num(lt.load_save("lanternnight_wick_best") ?? "") ?? 0
 \end{lstlisting}
 
 \noindent
@@ -104,8 +104,8 @@ these.
 \paragraph{Small.} wick is deliberately Lua-1.0 small. The entire
 implementation is about two thousand lines of dependency-free \mbox{C\texttt{++}}:
 lexer, compiler, virtual machine, garbage collector, and built-ins. There
-are no closures, no structs, no modules, no metatables, no varargs, and no
-string methods in v0.1. Every one of those omissions is listed in
+are no closures, no classes, no modules, no metatables, no varargs, and no
+string methods in v0.3. Every one of those omissions is listed in
 Chapter~8 with its workaround and its place on the roadmap. Smallness is not
 an accident we are apologising for; it is a feature we are defending. A
 language you can read in an afternoon is a language whose behaviour you can
@@ -162,13 +162,13 @@ engine API.
 \end{itemize}
 
 Throughout, code set in \texttt{this face} is wick unless a caption says
-otherwise. Every listing is real v0.1 wick and would compile; where a listing
+otherwise. Every listing is real v0.3 wick and would compile; where a listing
 is deliberately wrong to show a compile error, the error message is quoted
 next to it. When we show Lua, it is the twin of a wick sample, and it is
 labelled as Lua.
 
 A note on honesty. This book will tell you, more than once, where Lua still
-does something better than wick does today --- records read more naturally as
+does something better than wick does today --- dynamic tables can hold nested data as
 tables, multiple return values are genuinely missing, the ecosystem is
 enormous and ours is one engine. A language book that only flatters its
 subject is not much use. wick earns its place by removing a specific and

@@ -1,6 +1,6 @@
 \chapter{The Language}
 
-This is the reference chapter. It describes wick v0.1 completely and
+This is the reference chapter. It describes wick v0.3 completely and
 precisely: how source text is turned into tokens, what types exist, how
 variables are scoped, how expressions are formed and in what order they bind,
 what statements there are, how control flows, and how functions are declared
@@ -30,19 +30,21 @@ be used as identifiers:
 \begin{quote}
 \ttfamily let\quad fn\quad if\quad elif\quad else\quad while\quad for\quad
 in\quad break\quad continue\quad return\quad true\quad false\quad nil\quad
-and\quad or\quad not
+and\quad or\quad not\quad record
 \end{quote}
 
 \noindent
-That is the entire keyword list --- seventeen words. Type names (`num`, `bool`,
+That is the keyword list. Type names (`num`, `bool`,
 `str`, `list`, `map`) are \emph{not} keywords; they are contextual, recognised
 only where a type is expected, so nothing stops you from calling a variable
 `str` if you are determined to confuse yourself.
 
 \paragraph{Numbers.} There is one numeric type, `num`, an IEEE-754 double.
 A numeric literal is a run of digits with an optional single decimal point:
-`42`, `3.5`, `0.25`. There are no hexadecimal literals and no exponent
-notation in v0.1. The lexer is careful about the range operator: `1..5` lexes
+`42`, `3.5`, `0.25`. Hexadecimal `0xFF` and binary `0b1010` integer literals are also
+accepted, through `0xFFFFFFFF` inclusive. Prefixes accept either case.
+Invalid digits, missing digits, underscores, fractions after a prefix, and
+overflow are compile errors. Exponent notation remains unsupported. The lexer is careful about the range operator: `1..5` lexes
 as the number `1`, the range token `..`, and the number `5` --- never as `1.`
 followed by `.5`. If you want a literal with a fractional part next to a
 range you must space it, but in practice ranges use integer bounds.
@@ -69,7 +71,7 @@ reported as \texttt{unexpected character 'x'}.
 \section{Types}
 
 Every expression in wick has a static type, fixed at compile time. There are
-six type constructors.
+scalar, container, optional, and named record types.
 
 \begin{center}
 \begin{tabular}{@{}llp{0.44\linewidth}@{}}
@@ -79,18 +81,29 @@ six type constructors.
 \texttt{num} & IEEE-754 double & the only number type \\
 \texttt{bool} & \texttt{true}, \texttt{false} & the only type conditions accept \\
 \texttt{str} & immutable text & \texttt{+} concatenates \texttt{str} with \texttt{str} only \\
-\texttt{list<T>} & ordered, 0-based & \texttt{T} is \texttt{num}, \texttt{bool}, or \texttt{str} \\
-\texttt{map<T>} & string-keyed & values are \texttt{num}, \texttt{bool}, or \texttt{str} \\
+\texttt{list<T>} & ordered, 0-based & scalar or flat record elements \\
+\texttt{map<T>} & string-keyed & scalar or flat record values \\
 \texttt{T?} & \texttt{T} or \texttt{nil} & an \emph{optional} --- the headline feature \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-The element type of a `list` or `map` must be one of the three scalar types
-`num`, `bool`, or `str`. There are no nested containers in v0.1: `list<list<num>>`
+The element type of a `list` or `map` may be `num`, `bool`, `str`,
+or a declared flat record type. There are no nested containers in v0.3: `list<list<num>>`
 and `map<list<str>>` do not exist, and attempting one produces
-\texttt{container elements must be num, bool, or str}. Chapter~5 gives the
+\texttt{container elements must be scalar or record types}. Chapter~5 gives the
 index-arithmetic workaround.
+
+\paragraph{Records.} A top-level `record` declares named fields of `num`,
+`bool`, or `str`. Construct a value with every field named, then access or
+assign fields with a dot. There are no methods or nested fields.
+
+\begin{lstlisting}[language=wick]
+record Register { value: num, name: str }
+let a = Register { value: 0, name: "A" }
+a.value = 0xFF
+check(a.value == 255, "record field")
+\end{lstlisting}
 
 \paragraph{\texttt{nil} and optionals.} `nil` is not a value of general type.
 It inhabits only optionals: an expression of type `T?` may be `nil` or may
@@ -305,7 +318,7 @@ while i < 4 {
 `i` over the half-open range \texttt{[a, b)} --- from `a` up to but not
 including `b`. Both bounds are `num` expressions, evaluated once. The loop
 variable is a fresh local, scoped to the loop body, of type `num`. This is the
-only iteration form in v0.1: there is no `for x in list`. To walk a list you
+only iteration form in v0.3: there is no `for x in list`. To walk a list you
 iterate its indices:
 
 \begin{lstlisting}[language=wick]
@@ -327,7 +340,7 @@ any loop are errors: \texttt{break outside a loop},
 \section{Functions}
 
 A function is declared with `fn`, at the top level only --- functions do not
-nest, and there are no closures or first-class function values in v0.1.
+nest, and there are no closures or first-class function values in v0.3.
 Attempting a nested `fn` reports \texttt{fn declarations can't nest}.
 
 \begin{lstlisting}[language=wick]
@@ -372,7 +385,7 @@ for instance, \texttt{f() argument 3: expected num, got str}, naming the
 function and the argument position. This applies equally to your own functions
 and to engine calls, which are registered with typed signatures (Chapter~6).
 
-\paragraph{Return-path coverage.} v0.1 does not yet verify that every path
+\paragraph{Return-path coverage.} v0.3 does not yet verify that every path
 through a non-void function returns a value. If control falls off the end of a
 function that declares a return type, the call yields `nil` --- do not rely on
 this. It is listed among the limits in Chapter~8, and the discipline is

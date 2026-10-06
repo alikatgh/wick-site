@@ -10,6 +10,7 @@ code demonstrably hurt without it, and not before. Side-by-side games
 | Candidate | Evidence | Status |
 |---|---|---|
 | **Records / structs** | KORA kitchen: five parallel prop lists | **Admitted** — flat `record`, `list<record>` |
+| **Bits / byte and word wrapping** | Processor-building game and Bit Lab | **Admitted (0.3)** — checked functions and hex/binary literals |
 | String indexing / iteration | ASCII maps baked offline for KORA | Recorded — baking is clean |
 | Closures / first-class fns | none yet | Candidate |
 | Nested containers | rare | Candidate |
@@ -30,7 +31,7 @@ code demonstrably hurt without it, and not before. Side-by-side games
 | Record fields that are records/lists | parallel lists or flat ids |
 | Exhaustive return-path checking | don't fall off a typed function |
 | Narrowing for globals / `and`-chains | `??`, or copy to a local first |
-| Hex/exponent number literals | decimal |
+| Exponent number literals | decimal (hex/binary available since 0.3) |
 
 ## Choices that are not limits
 

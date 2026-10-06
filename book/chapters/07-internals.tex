@@ -8,7 +8,7 @@ is about two thousand lines of dependency-free \mbox{C\texttt{++}} in three
 files:
 
 \begin{center}
-\begin{tabular}{@{}ll@{}}
+\begin{tabular}{@{}p{0.42\linewidth}p{0.50\linewidth}@{}}
 \toprule
 \texttt{wick/wick.hpp} & the embed API (about 120 lines) \\
 \texttt{wick/wick\_front.cpp} & lexer and one-pass typed compiler $\rightarrow$ bytecode \\
@@ -118,7 +118,7 @@ generation-triggered pause of the kind that drops a frame in a Lua game.
 The collector's roots are simple, and they are simple \emph{because} the
 language is small. The mark phase starts from the constants pool, the globals,
 and the VM value stack, and follows the references inside lists and maps.
-There are no closures and no upvalues in v0.1, so there are no captured
+There are no closures and no upvalues in v0.3, so there are no captured
 environments to trace; the object graph is shallow. And because the value
 stack is empty between frames, at the moment collection runs the only live
 roots are the globals and the constants --- exactly the long-lived state --- so

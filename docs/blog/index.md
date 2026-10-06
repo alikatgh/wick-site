@@ -1,5 +1,8 @@
 # The wick blog
 
+- [Wick 0.3: bits you can build with](2026-10-06-release-0.3.md) — 6 October 2026
+
+
 Design notes, release posts, and evidence for language decisions — the same
 role the [Go blog](https://go.dev/blog/) plays for Go: not marketing fluff,
 but a durable public record of *why* the language looks the way it does.

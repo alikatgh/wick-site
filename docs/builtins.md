@@ -41,3 +41,9 @@ with something you choose (and can log). CI screenshot tests rely on this.
 |---|---|
 | `env(name: str): str?` | read an environment variable (e.g. your game's own `MYGAME_AUTO` self-play switch) |
 | `check(cond: bool, msg: str)` | runtime assertion; failure shows `check failed: msg` on the error screen — the wick test suite is built from these |
+
+## Bits and register widths (0.3)
+
+`bit_and`, `bit_or`, `bit_xor`, `bit_not`, `bit_shl`, `bit_shr`, `u8`, `u16`,
+`hex`, `bin`: see [Bits, bytes, and words](bits.md) for exact domains,
+wrapping and formatting rules.

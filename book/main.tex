@@ -38,7 +38,7 @@
 % --- the wick listings language -------------------------------------------
 \lstdefinelanguage{wick}{
   morekeywords={let,fn,if,elif,else,while,for,in,break,continue,return,%
-                true,false,nil,and,or,not},
+                true,false,nil,and,or,not,record},
   morekeywords=[2]{num,bool,str,list,map,void},
   sensitive=true,
   morecomment=[l]{//},
@@ -74,7 +74,6 @@
 }
 
 % inline code helper: \lstinline with backtick delimiter is used in prose
-\lstMakeShortInline[basicstyle=\ttfamily,keywordstyle=\color{wkKeyword}]`
 
 % --- headings -------------------------------------------------------------
 \titleformat{\chapter}[display]
@@ -90,6 +89,9 @@
 % ==========================================================================
 \begin{document}
 
+% Activate inline code after packages finish their begin-document hooks.
+\lstMakeShortInline[basicstyle=\ttfamily,keywordstyle=\color{wkKeyword}]`
+
 % --- title page -----------------------------------------------------------
 \begin{titlepage}
 \centering
@@ -100,7 +102,7 @@
 \vfill
 {\large The lantern engine authors\par}
 \vspace{0.8em}
-{\normalsize Version 0.1 \quad\textbullet\quad 2026\par}
+{\normalsize Version 0.3 \quad\textbullet\quad 2026\par}
 \vspace{1.2in}
 \end{titlepage}
 
@@ -108,7 +110,7 @@
 \thispagestyle{empty}
 \null\vfill
 \noindent
-\textit{The wick Programming Language}, version 0.1.\par
+\textit{The wick Programming Language}, version 0.3.\par
 \vspace{0.6em}
 \noindent
 wick and the lantern engine are open source under the zlib license. The
@@ -119,7 +121,7 @@ stack virtual machine --- is about two thousand lines of dependency-free
 \vspace{0.6em}
 \noindent
 This book was typeset in Latin Modern with \LaTeX. Every code sample is
-valid wick v0.1 and compiles against the reference implementation.\par
+written for Wick 0.3; diagnostic examples intentionally demonstrate errors.\par
 \vspace{0.6em}
 \noindent
 Copyright \textcopyright{} 2026 The lantern engine authors. Distributed
@@ -141,6 +143,7 @@ text, provided the origin is not misrepresented.\par
 \include{chapters/06-engine}
 \include{chapters/07-internals}
 \include{chapters/08-design}
+\include{chapters/09-bits-and-buses}
 
 % --- appendices -----------------------------------------------------------
 \appendix

@@ -1,6 +1,6 @@
 \chapter{Grammar}
 
-The following EBNF describes wick v0.1, derived from the syntax reference and
+The following EBNF describes wick v0.3, derived from the syntax reference and
 the reference compiler's front end. Terminals are quoted; \texttt{\{\ \}}
 means zero or more repetitions, \texttt{[\ ]} means optional, and \texttt{|}
 separates alternatives. Comments and whitespace are handled by the lexer and
@@ -9,7 +9,9 @@ down to `postfix` (tightest), matches the table in Chapter~3.
 
 \begin{lstlisting}[basicstyle=\ttfamily\small,keywordstyle={}]
 program        = { toplevel } ;
-toplevel       = fnDecl | statement ;
+toplevel       = recordDecl | fnDecl | statement ;
+recordDecl     = "record" ident "{" field { "," field } "}" ;
+field          = ident ":" scalar ;
 
 fnDecl         = "fn" ident "(" [ params ] ")" [ ":" type ] block ;
 params         = param { "," param } ;
@@ -20,17 +22,18 @@ statement      = letStmt | assign | callStmt | ifStmt | whileStmt
                | forStmt | "break" | "continue" | returnStmt ;
 letStmt        = "let" ident [ ":" type ] "=" expr ;
 assign         = lvalue "=" expr ;
-lvalue         = ident | ident "[" expr "]" ;
+lvalue         = ident [ "[" expr "]" ] [ "." ident ] ;
 callStmt       = call ;
 ifStmt         = "if" expr block { "elif" expr block } [ "else" block ] ;
 whileStmt      = "while" expr block ;
 forStmt        = "for" ident "in" expr ".." expr block ;
 returnStmt     = "return" [ expr ] ;
 
-type           = scalar [ "?" ]
-               | "list" "<" scalar ">" [ "?" ]
-               | "map"  "<" scalar ">" [ "?" ] ;
+type           = element [ "?" ]
+               | "list" "<" element ">" [ "?" ]
+               | "map"  "<" element ">" [ "?" ] ;
 scalar         = "num" | "bool" | "str" ;
+element        = scalar | ident ;  (* ident: declared record type *)
 
 expr           = orExpr ;
 orExpr         = andExpr    { "or"  andExpr } ;
@@ -41,10 +44,11 @@ comparison     = addition   { ( "<" | "<=" | ">" | ">=" ) addition } ;
 addition       = term       { ( "+" | "-" ) term } ;
 term           = unary      { ( "*" | "/" | "%" ) unary } ;
 unary          = ( "-" | "not" ) unary | postfix ;
-postfix        = primary { "(" [ args ] ")" | "[" expr "]" } ;
+postfix        = primary { "(" [ args ] ")" | "[" expr "]" | "." ident } ;
 primary        = number | string | "true" | "false" | "nil"
                | qualified | ident | "(" expr ")"
-               | listLit | mapLit ;
+               | listLit | mapLit | recordLit ;
+recordLit      = ident "{" ident ":" expr { "," ident ":" expr } "}" ;
 qualified      = ident "." ident ;         (* e.g. lt.draw *)
 call           = ( ident | qualified ) "(" [ args ] ")" ;
 args           = expr { "," expr } ;
@@ -53,7 +57,11 @@ listLit        = "[" [ expr { "," expr } ] "]" ;
 mapLit         = "[" string ":" expr { "," string ":" expr } "]" ;
 
 ident          = letter { letter | digit } ;    (* letter includes _ *)
-number         = digit { digit } [ "." digit { digit } ] ;
+number         = digit { digit } [ "." digit { digit } ]
+               | ( "0x" | "0X" ) hexDigit { hexDigit }
+               | ( "0b" | "0B" ) bit { bit } ;
+hexDigit       = digit | "a".."f" | "A".."F" ;
+bit            = "0" | "1" ;
 string         = '"' { char | escape } '"' ;
 escape         = "\n" | "\t" | '\"' | "\\" ;
 \end{lstlisting}
@@ -157,7 +165,7 @@ A narrowing pattern mixed with \texttt{and}/\texttt{or}. Add parentheses. \\
 A loop-control statement with no enclosing loop. \\
 \addlinespace
 \texttt{fn declarations can't nest} &
-An \texttt{fn} inside another \texttt{fn}. Top level only (v0.1). \\
+An \texttt{fn} inside another \texttt{fn}. Top level only (v0.3). \\
 \addlinespace
 \texttt{return outside a function} &
 A \texttt{return} at top level. \\
@@ -241,11 +249,14 @@ Always available, with no namespace. The generic built-ins (`len`, `str`,
 
 \section*{The \texttt{lt.*} engine interface}
 
-\begin{center}
-\small\begin{tabular}{@{}p{0.45\linewidth}p{0.47\linewidth}@{}}
+\begingroup\small
+\begin{longtable}{@{}p{0.45\linewidth}p{0.47\linewidth}@{}}
 \toprule
 \textbf{Call} & \textbf{Notes} \\
 \midrule
+\endhead
+\bottomrule
+\endfoot
 \multicolumn{2}{@{}l}{\emph{Frame and screen}} \\
 \texttt{lt.W} \enskip \texttt{lt.H} & constants 400, 240 \\
 \texttt{lt.clear(r,g,b)} & clear colour and depth \\
@@ -286,11 +297,19 @@ Always available, with no namespace. The generic built-ins (`len`, `str`,
 \texttt{lt.gamepad(): bool} \enskip \texttt{lt.rumble(low, high, ms)} & \\
 \texttt{lt.save(name: str, data: str): bool} & binary-safe \\
 \texttt{lt.load\_save(name: str): str?} & optional; \texttt{nil} when unreadable \\
-\bottomrule
-\end{tabular}
-\end{center}
+\end{longtable}
+\endgroup
 
 \noindent
 Input names: \texttt{left right up down z x c space return escape a s d w}.
 On a gamepad, the d-pad and stick map to the directions, and A, B, Y, Start
 map to \texttt{z}, \texttt{x}, \texttt{c}, \texttt{return}.
+
+\section{Bits and register widths (0.3)}
+
+`bit_and`, `bit_or`, `bit_xor`, `bit_not`, `bit_shl`, and `bit_shr`
+accept unsigned 32-bit integers. Shift counts are integers 0--31.
+`u8` and `u16` wrap safe integers modulo 256 and 65536.
+`hex(n, width=1)` and `bin(n, width=1)` format unsigned values with
+minimum-width zero padding (1--8 and 1--32); no truncation.
+All functions reject invalid numeric domains at runtime. See Chapter 9.

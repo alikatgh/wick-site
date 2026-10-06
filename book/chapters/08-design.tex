@@ -3,12 +3,12 @@
 A language is a set of decisions, and decisions have costs as well as
 benefits. This chapter argues for wick's decisions honestly: it puts the wick
 and Lua builds of the same real game side by side, it says plainly where Lua
-still reads better, and it explains the roadmap philosophy that makes v0.1's
+still reads better, and it explains the roadmap philosophy that makes v0.3's
 omissions deliberate rather than embarrassing.
 
 \section{The same game, twice}
 
-Kora Night is the proof. It ships in both languages, as two deliberately
+Lantern Night is the proof. It ships in both languages, as two deliberately
 separate projects --- `games/showcase` in Lua and `games/showcase_wick` in
 wick --- kept side by side so the two languages stay comparable on the same
 real game. Read the pair like a Rosetta stone. Three excerpts carry the
@@ -22,7 +22,7 @@ with a frame-1 crash:
 \begin{lstlisting}[language=luatwin]
 -- Lua: a 0-byte save makes load_save return "" (truthy!), the
 -- fallback never fires, and tonumber("") = nil poisons everything.
-local best = tonumber(lt.load_save("koranight_best") or "0")
+local best = tonumber(lt.load_save("lanternnight_best") or "0")
 \end{lstlisting}
 
 \noindent
@@ -32,49 +32,26 @@ file --- are forced to be handled:
 
 \begin{lstlisting}[language=wick]
 // wick: the ONLY version the compiler accepts.
-let best = num(lt.load_save("koranight_wick_best") ?? "") ?? 0
+let best = num(lt.load_save("lanternnight_wick_best") ?? "") ?? 0
 \end{lstlisting}
 
 \noindent
 Here wick wins outright. The safe code is shorter than the buggy Lua code, and
 the unsafe code does not compile.
 
-\subsection{Records}
+\subsection{Records earned their place}
 
-Now the case wick loses. A lamp has a position and a lit flag. In Lua it is a
-table with named fields, and a list of lamps is a list of tables:
+Wick 0.1 represented lamps and props with parallel scalar lists. That kept
+the compiler small but scattered each logical object across several lists.
+KORA's kitchen made the cost concrete: five lists had to remain in step.
+Wick 0.2 therefore admitted flat records; Chapter 5 explains their checked
+fields and list storage. Lua still supports richer nested tables and methods;
+Wick intentionally does not claim that whole surface.
 
-\begin{lstlisting}[language=luatwin]
--- Lua: a list of records, read naturally
-local LAMPS = {
-  { x = 3.4, z = 3.4, lit = true },
-  -- ...
-}
-for i, l in ipairs(LAMPS) do  -- l.lit, l.x, l.z
-end
-\end{lstlisting}
-
-\noindent
-wick v0.1 has no structs, so the same data becomes typed parallel lists, with
-an index standing in for a record reference:
-
-\begin{lstlisting}[language=wick]
-// wick v0.1: typed parallel lists (structs are on the roadmap)
-let lamp_x: list<num> = []
-let lamp_z: list<num> = []
-let lamp_lit: list<bool> = []
-for i in 0..4 {
-  // lamp_lit[i], lamp_x[i], lamp_z[i]
-}
-\end{lstlisting}
-
-\noindent
-The honest score: Lua reads better here today. A lamp is one thing, and Lua
-lets you write it as one thing; wick scatters it across three lists you must
-keep in step. wick's version is fully typed, which Lua's is not --- `l.lit` is
-whatever it happens to be, where `lamp_lit[i]` is a checked `bool` --- but that
-is small consolation for the loss of readability. Records are the top of
-wick's v0.2 wishlist for exactly this reason.
+Wick 0.3 follows the same rule. The processor-building project needs masks,
+shifts, register wrapping, and readable bus values. Bit Lab exercises those
+operations directly; Chapter 9 documents the result. The new functions use
+the existing typed-native mechanism without changing expression precedence.
 
 \subsection{Multiple returns}
 
@@ -101,7 +78,7 @@ roadmap; their absence is an inconvenience, not a hazard.
 \section{What you stop writing}
 
 Set against those losses is a real reduction in the defensive code a dynamic
-language demands. Porting Kora Night to wick, the following simply left the
+language demands. Porting Lantern Night to wick, the following simply left the
 source:
 
 \begin{itemize}
@@ -129,19 +106,18 @@ figure of speech: the deterministic screenshot tests of Chapter~6 hold the
 wick and Lua builds to the same pixels. wick changed the language, not the
 engine and not the workflow.
 
-\section{The v0.1 limits}
+\section{The v0.3 limits}
 
 wick is deliberately small --- Lua-1.0 small. Every omission below is a known
 gap with a workaround today and a place on the roadmap, not a surprise waiting
-to be discovered. The bar for v0.1 was fixed and narrow: run real lantern
+to be discovered. The bar for v0.3 was fixed and narrow: run real lantern
 games, kill the Lua bug classes, and stay around two thousand lines.
 
 \begin{center}
 \begin{tabular}{@{}p{0.42\linewidth}p{0.50\linewidth}@{}}
 \toprule
-\textbf{Not in v0.1} & \textbf{Workaround today} \\
+\textbf{Not in v0.3} & \textbf{Workaround today} \\
 \midrule
-Structs / records & typed parallel lists (see the port above) \\
 Closures, nested and first-class functions & top-level \texttt{fn} plus module globals \\
 Multiple return values & two functions, or out-of-band state \\
 Nested containers (\texttt{list<list<num>>}) & index arithmetic on a flat list \\
@@ -150,7 +126,7 @@ Modules / imports (one \texttt{main.wick}) & it is a game script, not an app pla
 String indexing / slicing / methods & \texttt{len}, \texttt{+}, \texttt{str()} cover the HUD cases \\
 Exhaustive return-path checking & a typed function that falls off the end returns \texttt{nil} --- don't \\
 Narrowing for globals / \texttt{and}-chains & \texttt{??}, or copy to a local first \\
-Hex / exponent number literals & decimal \\
+Exponent number literals & decimal; hex/binary are supported \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -172,8 +148,8 @@ The rule that governs what happens next deserves stating as law, because
 it is the core thing this language follows: \emph{wick contains only what
 we truly need --- nothing for the sake of having it.} A feature is
 admitted when real game code demonstrably hurt without it, and not
-before. The paired Kora Night builds are the standing evidence mechanism:
-missing-feature pain must show up there, in code anyone can read, before
+before. The paired Lantern Night builds are the standing evidence mechanism:
+missing-feature pain must show up in a real game or focused example before
 the language grows. Optionals are in this book because a shipped crash
 demanded them; closures are not, because no shipped program has yet paid
 a price for their absence. Feature parity with other languages is
@@ -184,7 +160,7 @@ The organising idea is ``Lua 1.0 small.'' Lua did not begin with metatables,
 coroutines, and an ecosystem; it began as a small, clean, embeddable core and
 grew as real use justified each addition. wick is taking the same path
 deliberately. Every omission in the table above is addable behind the same
-typed front end that already exists --- records, closures, and multiple returns
+typed front end that already exists --- closures and multiple returns
 do not require rethinking the compiler, only extending it --- and each will be
 added when a real game needs it enough to justify the size, not before.
 
