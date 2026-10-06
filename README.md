@@ -1,4 +1,4 @@
-# wick-site — wick.famemu.aulenor.com
+# wick-site — wick.aulenor.com
 
 The public website for **wick**, the [lantern engine](https://github.com/alikatgh/lantern)'s
 own scripting language. The implementation lives in the engine repo under
@@ -23,11 +23,18 @@ python3 -m http.server 8351 -d _site
 # open http://127.0.0.1:8351/ and http://127.0.0.1:8351/docs/blog/
 ```
 
-## Go-live (custom domain)
+## Public website and custom domain
 
-DNS at aulenor.com: CNAME `wick.famemu` → `alikatgh.github.io`, then set
-`wick.famemu.aulenor.com` in Settings → Pages and tick Enforce HTTPS.
-Until then the site serves at `alikatgh.github.io/wick-site/`.
+- Home: https://wick.aulenor.com/
+- Reference and blog: https://wick.aulenor.com/docs/
+- Book: https://wick.aulenor.com/book/
+- PDF: https://wick.aulenor.com/wick-book.pdf
+
+The domain is registered with EuroDNS; authoritative DNS is in Cloudflare.
+The DNS-only CNAME `wick` points to `alikatgh.github.io`. GitHub Pages is
+configured for `wick.aulenor.com` with HTTPS enforced. The Actions deployment
+includes the checked-in CNAME file. The old project Pages address redirects
+to the custom domain while retaining paths.
 
 ## Keeping docs honest (non-negotiable)
 
@@ -47,10 +54,10 @@ The blog is not optional marketing. It is the public feature ledger.
 - Welcome · Why optionals · Admitting records · Store safety · How we test · Release 0.2  
   See `docs/blog/index.md`.
 
-## Aulenor reference and book sites
+## Legacy standalone reference and book deployments
 
-- `https://learn.wick.aulenor.com/` — the current language reference and design blog.
-- `https://wickbook.aulenor.com/` — the version 0.3 book, with nine chapters, three appendices, search, and its PDF.
+- `https://learn.wick.aulenor.com/` — a separately deployed language reference and design blog.
+- `https://wickbook.aulenor.com/` — a separately deployed book. These Worker deployments are not updated by the Pages workflow.
 
 The book's LaTeX stays canonical. `scripts/build-book.py` converts it to ignored
 `book-docs/` sources, preserving every listing verbatim. Edition 0.3 updates the existing chapters for records and adds bits, bytes,
@@ -67,7 +74,7 @@ npx wrangler@4 deploy --config wrangler.book.json
 ```
 
 Both are static Cloudflare Workers custom domains in the existing Aulenor account.
-The older GitHub Pages build remains available. Shared reading styles and footer
+The primary website is the GitHub Pages build at wick.aulenor.com. Shared reading styles and footer
 links live under `theme/`.
 
 The Pages workflow generates the current PDF before publishing and serves the
