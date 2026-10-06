@@ -50,7 +50,9 @@ for file in (root / 'book/chapters').glob('*.tex'):
         slug = file.stem if file.stem != 'appendix' else 'appendix-' + str(n)
         page = Article((book / slug / 'index.html').read_text())
         expected = len(re.findall(r'\\begin\{(?:tabular|longtable)\}', text))
-        if page.tables != expected: errors.append(f'{slug}: expected {expected} tables, got {page.tables}')
+        if page.tables != expected:
+            errors.append(f'{slug}: expected {expected} tables, got {page.tables}')
+            print((root / 'book-docs' / (slug + '.md')).read_text())
         for code in re.findall(r'\\begin\{lstlisting\}(?:\[[^\n]*\])?\n(.*?)\\end\{lstlisting\}', text, flags=re.S):
             if code.strip() not in page.blocks: errors.append(f'{slug}: changed or missing code: {code[:70]!r}')
 if errors:
