@@ -1,7 +1,4 @@
-# Builds the wick site: marketing page at the root + MkDocs reference at
-# /docs, deployed to GitHub Pages. Go-live for wick.famemu.aulenor.com:
-# add DNS CNAME `wick.famemu` -> alikatgh.github.io, then set the custom
-# domain in Settings -> Pages (do NOT add a CNAME file before DNS exists).
+# Publish wick.aulenor.com: landing page, reference/blog, and book.
 name: Deploy site
 
 on:
@@ -39,7 +36,7 @@ jobs:
       - name: Build
         run: |
           mkdocs build --strict -d _site/docs
-          cp index.html style.css wick-book.pdf _site/
+          cp index.html style.css wick-book.pdf CNAME _site/
           cp -R build/book _site/book
       - name: Preserve edition artifacts
         uses: actions/upload-artifact@v4

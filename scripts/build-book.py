@@ -49,7 +49,7 @@ shutil.copy(ROOT / 'wick-book.pdf', out / 'wick-book.pdf')
 
 ## About this edition
 
-By the Lantern engine authors. This is the web edition of the repository's version 0.3 book, converted from its canonical LaTeX chapters. This edition covers records and adds a chapter on bits, bytes, and buses for processor-building games. See the [language reference](https://learn.wick.aulenor.com/) for concise API contracts.
+By the Lantern engine authors. This is the web edition of the repository's version 0.3 book, converted from its canonical LaTeX chapters. This edition covers records and adds a chapter on bits, bytes, and buses for processor-building games. See the [language reference](https://wick.aulenor.com/docs/) for concise API contracts.
 
 Copyright © 2026 The Lantern engine authors. Distributed under the same zlib terms as the engine; the original authorship and source are preserved.
 ''')

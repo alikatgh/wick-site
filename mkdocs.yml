@@ -2,7 +2,7 @@ site_name: wick
 site_description: >-
   wick is the lantern engine's own scripting language — Lua's size and feel
   with static types, optionals, records, and frame-boundary GC.
-site_url: https://wick.famemu.aulenor.com/
+site_url: https://wick.aulenor.com/docs/
 repo_url: https://github.com/alikatgh/lantern
 repo_name: alikatgh/lantern
 edit_uri: ""
