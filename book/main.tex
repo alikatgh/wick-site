@@ -74,7 +74,6 @@
 }
 
 % inline code helper: \lstinline with backtick delimiter is used in prose
-\lstMakeShortInline[basicstyle=\ttfamily,keywordstyle=\color{wkKeyword}]`
 
 % --- headings -------------------------------------------------------------
 \titleformat{\chapter}[display]
@@ -89,6 +88,9 @@
 
 % ==========================================================================
 \begin{document}
+
+% Activate inline code after packages finish their begin-document hooks.
+\lstMakeShortInline[basicstyle=\ttfamily,keywordstyle=\color{wkKeyword}]`
 
 % --- title page -----------------------------------------------------------
 \begin{titlepage}
