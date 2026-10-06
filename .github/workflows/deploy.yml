@@ -29,11 +29,26 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install mkdocs mkdocs-material
+      - run: pip install -r requirements-sites.txt
+      - name: Install book typesetter
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends texlive-latex-extra lmodern
+      - name: Build edition 0.3 PDF and web book
+        run: |
+          bash scripts/build-pdf.sh
+          bash scripts/build-sites.sh
       - name: Build
         run: |
           mkdocs build --strict -d _site/docs
           cp index.html style.css wick-book.pdf _site/
+          cp -R build/book _site/book
+      - name: Preserve edition artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wick-0.3-book-and-sites
+          path: |
+            wick-book.pdf
+            build/book/
+            build/reference/
       - uses: actions/configure-pages@v5
         with:
           enablement: true

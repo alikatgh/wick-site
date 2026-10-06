@@ -1,0 +1,127 @@
+\chapter{Bits, Bytes, and Buses}
+
+Wick 0.3 grew from a concrete next project: a game in which the player builds
+a processor, using the Intel 8080 as the target. A language for that game
+needs to make bits visible and register widths explicit. This chapter builds
+the small pieces; it does not implement a full CPU or its timing.
+
+\section{Write the bits you mean}
+
+\begin{lstlisting}[language=wick]
+let opcode = 0x76
+let sign_mask = 0b10000000
+let last_address = 0xFFFF
+check(opcode == 118, "hexadecimal")
+check(sign_mask == 128, "binary")
+\end{lstlisting}
+
+Hexadecimal and binary prefixes accept either case. Digits must be valid for
+the base and the whole value must fit in 32 unsigned bits. A bare prefix,
+an underscore, a fractional prefixed literal, or a value above `0xFFFFFFFF`
+is a compile error. Decimal numbers keep their existing rules. All these
+values still have type `num`; no integer type was added.
+
+\section{Gates and masks}
+
+The six bit functions are `bit_and`, `bit_or`, `bit_xor`, `bit_not`,
+`bit_shl`, and `bit_shr`. The first three combine two values. NOT complements
+all 32 bits. Left shift discards bits beyond bit 31; right shift fills with
+zero. Operands must be whole numbers in 0 through 4294967295. Shift counts
+must be whole numbers in 0 through 31.
+
+\begin{lstlisting}[language=wick]
+let wires = 0b10100101
+check(bit_and(wires, 0x0F) == 5, "low nibble")
+check(bit_xor(wires, 0x80) == 0x25, "toggle bit 7")
+check(bit_shr(wires, 7) == 1, "read high bit")
+check(bit_shl(1, 31) == 0x80000000, "high bit")
+\end{lstlisting}
+
+Type and argument-count mistakes are compile errors. Numeric domain errors,
+such as a fractional operand or a shift count of 32, are runtime errors
+reported at the Wick call site. The VM validates the value before any C++
+integer conversion or shift. NaN and infinity are rejected too.
+
+These are ordinary typed functions. Their addition changes neither operator
+precedence nor the meaning of `and`, `or`, and `not`, which still operate on
+booleans.
+
+\section{A register has a width}
+
+`u8(n)` wraps a safe integer modulo 256; `u16(n)` wraps it modulo 65536.
+Both accept negative values. Inputs must be finite whole numbers between
+-9007199254740991 and 9007199254740991 inclusive. Ordinary arithmetic remains
+double arithmetic: wrapping happens only where you request it.
+
+\begin{lstlisting}[language=wick]
+record Register { value: num, name: str }
+let a = Register { value: 0xFF, name: "A" }
+let wide = a.value + 1
+let carry = wide > 0xFF
+a.value = u8(wide)
+check(a.value == 0 and carry, "keep the carry")
+check(u8(-1) == 255, "byte underflow")
+check(u16(0xFFFF + 1) == 0, "PC rollover")
+check(u8(bit_not(0x0F)) == 0xF0, "8-bit NOT")
+\end{lstlisting}
+
+Keep the wide result until the flags have been calculated. Wrapping first
+would erase the very carry the player needs to see. For an eight-bit ADD,
+zero is `result == 0`, sign tests mask `0x80`, and auxiliary carry tests
+whether the low-nibble sum exceeds `0x0F`. Parity counts the set bits of
+the wrapped result and is true for an even count.
+
+\section{Pairs and memory}
+
+A high byte and a low byte make a sixteen-bit address:
+
+\begin{lstlisting}[language=wick]
+let h = 0x80
+let l = 0x05
+let address = bit_or(bit_shl(h, 8), l)
+check(address == 0x8005, "register pair")
+check(bit_shr(address, 8) == h, "high byte")
+check(u8(address) == l, "low byte")
+let memory: list<num> = []
+for i in 0..65536 { push(memory, 0) }
+memory[address] = 0x76
+check(memory[0x8005] == 118, "memory write")
+\end{lstlisting}
+
+This list models the address space without a new container type. Its entries
+are still numbers, so write `u8(value)` at a byte-write boundary. It is not a
+packed byte buffer and makes no promise of hardware clock speed. The game
+can advance the processor by deliberate simulation steps independently of
+render frames.
+
+\section{Make the state readable}
+
+`hex(value, width=1)` returns uppercase digits without a prefix;
+`bin(value, width=1)` returns binary digits. Values use the unsigned 32-bit
+domain. Width is an integer minimum of 1--8 for hex and 1--32 for binary.
+A value is never truncated to fit a label.
+
+\begin{lstlisting}[language=wick]
+check(hex(10, 2) == "0A", "byte label")
+check(bin(5, 8) == "00000101", "bus label")
+check(hex(256, 2) == "100", "overflow stays visible")
+\end{lstlisting}
+
+\section{The workbench and the next game}
+
+Run `./build/lantern games/bitlab` to see these operations in a small Wick
+workbench. Arrow keys select and edit the input registers; Z cycles ADD,
+AND, and XOR. Touch or click an input bit to toggle it. The flags follow
+8080 ADD, ANA, and XRA behaviour, including ANA's auxiliary-carry rule:
+it reflects bit 3 of either input, rather than the 8085 rule of always
+setting that flag. The reference is Intel's \emph{8080/8085 Assembly Language
+Programming} manual (1977), chapter 1, ``Auxiliary Carry Flag.''
+
+Bit Lab is an example for the language release. Building the player's
+circuit editor, progression, instruction decoder, and complete processor
+verification remains game work. No circuit simulator is hidden in the host;
+the example's logic is Wick code.
+
+\paragraph{Upgrading.} The ten new built-in names reject same-named user function declarations at compile time. Rename a
+colliding user function. No imports, closures, nested records, string indexing, or new
+numeric types are introduced in this release.

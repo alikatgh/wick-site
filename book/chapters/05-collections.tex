@@ -52,7 +52,7 @@ one check remains dynamic --- but it is a check, with a precise message, not a
 memory-safety hole.
 
 \paragraph{Element types.} List elements are `num`, `bool`, or `str`. There
-are no lists of lists in v0.1: `list<list<num>>` reports
+are no lists of lists in v0.3: `list<list<num>>` reports
 \texttt{container elements must be num, bool, or str}. The workaround, when
 you genuinely need a grid or a jagged structure, is index arithmetic on a flat
 list, shown at the end of this chapter.
@@ -89,48 +89,32 @@ scores["ana"] = 10
 let a = scores["ana"] ?? 0    // still T?; the ?? is required, not optional
 \end{lstlisting}
 
-\section{Records via parallel lists}
+\section{Records and lists of records}
 
-wick v0.1 has no structs. When you would reach for a record --- a lamp with a
-position and a lit flag, an enemy with health and a state --- you use
-\emph{parallel lists}: several lists of scalars, kept the same length, where a
-single index names one logical object across all of them.
+A lamp, register, or circuit component is one logical value. Since Wick 0.2,
+a flat record gives that value named, checked fields:
 
 \begin{lstlisting}[language=wick]
-let lamp_x: list<num> = []
-let lamp_z: list<num> = []
-let lamp_lit: list<bool> = []
-// index i is one lamp: its x is lamp_x[i], its z is lamp_z[i],
-// its lit flag is lamp_lit[i]
-push(lamp_x, 3.4)  push(lamp_z, 3.4)  push(lamp_lit, true)
-push(lamp_x, -3.4) push(lamp_z, 3.4)  push(lamp_lit, true)
+record Lamp { x: num, z: num, lit: bool }
+let lamps: list<Lamp> = []
+push(lamps, Lamp { x: 3.4, z: 3.4, lit: true })
+push(lamps, Lamp { x: -3.4, z: 3.4, lit: true })
+lamps[0].lit = false
+check(lamps[1].x == -3.4, "named field")
+fn relight(i: num) { lamps[i].lit = true }
 \end{lstlisting}
 
-\noindent
-To operate on ``a lamp'' you operate on one index across the lists:
+Declare the record before use. Constructors name every field; missing,
+duplicate, unknown, or wrongly typed fields are errors. Fields are limited
+to `num`, `bool`, and `str`; records have no methods or nested containers.
+Records are heap objects: assigning one to another variable shares it, so a
+field mutation is visible through either reference. Construct a new value
+when an independent copy is wanted.
 
-\begin{lstlisting}[language=wick]
-fn relight(i: num) {
-  lamp_lit[i] = true
-}
-
-fn draw_lamps() {
-  for i in 0..len(lamp_x) {
-    if lamp_lit[i] {
-      lt.draw(cube, lamp_x[i], 0.62, lamp_z[i], 0, 0, 0,
-              0.14, 0.2, 0.14, 1.0, 0.8, 0.3)
-    }
-  }
-}
-\end{lstlisting}
-
-\noindent
-The honest assessment, which Chapter~8 makes at length: this reads less well
-than Lua's list of tables, where a lamp is one value with named fields. It is
-the top of wick's roadmap. But it is fully typed --- `lamp_lit` is a
-`list<bool>`, so `lamp_lit[i]` is a `bool` the compiler checks --- and for the
-scale of a game script it is workable. The one rule you must keep yourself is
-that the lists stay the same length; a `push` to one is a `push` to all.
+The older tutorial uses parallel scalar lists to remain comparable with its
+original game. That representation still works, but records remove the need
+to keep separate field lists at the same length. Nested data still needs flat
+IDs or separate lists. Chapter 9 uses a record for an eight-bit register.
 
 \section{Iteration patterns}
 
@@ -145,7 +129,7 @@ for i in 0..len(xs) {
 \noindent
 Because the range is end-exclusive and lists are 0-based, `0..len(xs)` visits
 exactly the valid indices, with no off-by-one. There is no `for x in list` in
-v0.1; the index form is the whole story, and it has the advantage that the
+v0.3; the index form is the whole story, and it has the advantage that the
 index `i` is in hand when you need it --- for parallel lists you need it always,
 and for finding-the-nearest problems you need it to return.
 
@@ -215,5 +199,5 @@ fn set(tx: num, ty: num, v: num) {
 This is the same trick you would use in a systems language over a raw buffer,
 and it composes fine with the runtime bounds check: an out-of-range
 `ty * W + tx` is caught exactly as any other out-of-range index. It is more
-verbose than a nested container would be, and it is the honest v0.1 answer
+verbose than a nested container would be, and it is the honest v0.3 answer
 until nested containers arrive.

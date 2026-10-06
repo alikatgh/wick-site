@@ -11,11 +11,11 @@ them non-negotiable.
 \section{The problem, in Lua}
 
 Start with the failure, because the feature is shaped exactly to its
-contours. Kora Night keeps a high score in a save file. The Lua build loaded
+contours. Lantern Night keeps a high score in a save file. The Lua build loaded
 it like this:
 
 \begin{lstlisting}[language=luatwin]
-local best = tonumber(lt.load_save("koranight_best") or "0")
+local best = tonumber(lt.load_save("lanternnight_best") or "0")
 \end{lstlisting}
 
 \noindent
@@ -90,7 +90,7 @@ optional}, because there is nothing to coalesce.
 Now return to the war story. The wick translation of that fatal Lua line is:
 
 \begin{lstlisting}[language=wick]
-let best = num(lt.load_save("koranight_wick_best") ?? "") ?? 0
+let best = num(lt.load_save("lanternnight_wick_best") ?? "") ?? 0
 \end{lstlisting}
 
 \noindent
@@ -143,22 +143,22 @@ if saved != nil {
 }
 \end{lstlisting}
 
-\paragraph{The limits of narrowing.} Narrowing in v0.1 works on \emph{local}
+\paragraph{The limits of narrowing.} Narrowing in v0.3 works on \emph{local}
 variables. A module global is not narrowed by an `if`, because other code ---
 another function, a later frame --- could change it between the test and the
 use; to handle a global's optional, use `??`, or copy it into a local first
 and narrow the local. Assigning a new optional value to a narrowed variable
 inside the block \emph{un-narrows} it: the guarantee held only for the value
 that was tested. And narrowing does not thread through `and`/`or` chains in
-v0.1, which is why the compiler asks you to parenthesise combined conditions
+v0.3, which is why the compiler asks you to parenthesise combined conditions
 (Chapter~3); when in doubt, narrow with a nested `if` or copy to a local. Each
-of these is a known v0.1 boundary, listed in Chapter~8, not a bug.
+of these is a known v0.3 boundary, listed in Chapter~8, not a bug.
 
 \section{What returns an optional}
 
 Optionals are not something you sprinkle on; they arrive from the operations
 that can genuinely fail, and the compiler propagates them from there. The
-sources in v0.1 are:
+sources in v0.3 are:
 
 \begin{center}
 \begin{tabular}{@{}llp{0.40\linewidth}@{}}

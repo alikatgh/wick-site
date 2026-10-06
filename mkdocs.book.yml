@@ -37,6 +37,7 @@ nav:
   - '6 · The engine interface': 06-engine.md
   - '7 · Internals': 07-internals.md
   - '8 · Design and trade-offs': 08-design.md
+  - '9 · Bits, bytes, and buses': 09-bits-and-buses.md
   - Appendices:
     - Grammar: appendix-1.md
     - Compile errors: appendix-2.md

@@ -8,7 +8,7 @@
 <link rel="canonical" href="https://wick.famemu.aulenor.com/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="wick — the lantern engine's own language">
-<meta property="og:description" content="Lua's size and feel with the sharp edges designed out: static types, optionals, typed engine calls, frame-boundary GC. ~2k lines, zero deps, zlib.">
+<meta property="og:description" content="Lua's size and feel with the sharp edges designed out: static types, optionals, typed engine calls, frame-boundary GC. Bits, bytes, zero deps, zlib.">
 <meta property="og:url" content="https://wick.famemu.aulenor.com/">
 <meta name="twitter:card" content="summary">
 <link rel="stylesheet" href="style.css">
@@ -45,10 +45,9 @@
     engine</a>'s own scripting language: Lua's size and feel, with the sharp
     edges designed out. Static types with optionals, flat <strong>records</strong>,
     type-checked engine calls, deterministic randomness, and a GC that only
-    runs between frames — in ~2,100 dependency-free lines you can read in an
-    afternoon.</p>
+    runs between frames — in a small dependency-free implementation.</p>
     <div class="cta">
-      <a class="btn primary" href="docs/blog/2026-07-14-release-0.2/">0.2 release notes</a>
+      <a class="btn primary" href="docs/blog/2026-10-06-release-0.3/">0.3 release notes</a>
       <a class="btn" href="docs/">Docs</a>
       <a class="btn" href="docs/blog/">Blog</a>
       <a class="btn" href="docs/getting-started/">Get started</a>
@@ -56,12 +55,12 @@
   </div>
 
   <div class="stats">
-    <div class="stat"><b>~2.1k</b><span>lines: lexer to VM</span></div>
+    <div class="stat"><b>0.3</b><span>bits, bytes, and words</span></div>
     <div class="stat"><b>0</b><span>dependencies</span></div>
     <div class="stat"><b>T?</b><span>nil bugs don't compile</span></div>
     <div class="stat"><b>record</b><span>flat data bags, evidence-gated</span></div>
     <div class="stat"><b>0</b><span>GC pauses mid-frame</span></div>
-    <div class="stat"><b>12</b><span>CI language checks + must-not-compile</span></div>
+    <div class="stat"><b>106</b><span>bit-language test cases</span></div>
   </div>
 
   <section id="why">
@@ -120,7 +119,7 @@
 
   <section id="code">
     <h2>The same game, twice</h2>
-    <p class="lead">Kora Night ships in both languages as separate
+    <p class="lead">Lantern Night ships in both languages as separate
     side-by-side projects that evolve together. The famous line — loading
     a hi-score that might be a 0-byte file:</p>
 
@@ -146,14 +145,13 @@
 
   <section id="book">
     <h2>The book</h2>
-    <p class="lead"><i>The wick Programming Language</i> — a 65-page book,
+    <p class="lead"><i>The wick Programming Language</i> — edition 0.3,
     typeset in Latin Modern with LaTeX, is the recommended starting point:
     a real tutorial (you build a small game), the complete language
     reference, the optionals chapter with the full story of the bug that
     started it all, the engine interface, the internals of the compiler and
-    VM, and an honest design-trade-offs chapter. Every code sample in it is
-    valid v0.1 wick, verified against the reference implementation — the
-    tutorial's final program compiles and renders unmodified.
+    VM, and an honest design-trade-offs chapter. The updated edition covers records and includes a new bits-and-buses chapter
+    for processor-building games.
     <a href="wick-book.pdf">Download the PDF</a> (free, zlib-licensed like
     everything else; LaTeX source in
     <a href="https://github.com/alikatgh/wick-site/tree/main/book">book/</a>).</p>

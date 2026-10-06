@@ -1,0 +1,27 @@
+name: Verify book and reference
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-sites.txt
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends texlive-latex-extra lmodern
+      - name: Typeset PDF and build both sites
+        run: |
+          bash scripts/build-pdf.sh
+          bash scripts/build-sites.sh
+          mkdocs build --strict -d build/legacy
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wick-0.3-book-review
+          path: |
+            wick-book.pdf
+            build/book/
+            build/reference/

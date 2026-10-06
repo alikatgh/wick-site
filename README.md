@@ -50,16 +50,17 @@ The blog is not optional marketing. It is the public feature ledger.
 ## Aulenor reference and book sites
 
 - `https://learn.wick.aulenor.com/` — the current language reference and design blog.
-- `https://wickbook.aulenor.com/` — the original version 0.1 book, with eight chapters, three appendices, search, and its PDF.
+- `https://wickbook.aulenor.com/` — the version 0.3 book, with nine chapters, three appendices, search, and its PDF.
 
 The book's LaTeX stays canonical. `scripts/build-book.py` converts it to ignored
-`book-docs/` sources, preserving every listing verbatim. It does not update the
-book to the newer language version; the web edition labels that distinction.
+`book-docs/` sources, preserving every listing verbatim. Edition 0.3 updates the existing chapters for records and adds bits, bytes,
+and buses. The PDF and both web builds are generated from the same sources.
 
 ```sh
 python3 -m venv .venv
 . .venv/bin/activate
 pip install -r requirements-sites.txt
+bash scripts/build-pdf.sh # requires pdflatex + lmodern + latex-extra
 bash scripts/build-sites.sh
 npx wrangler@4 deploy --config wrangler.reference.json
 npx wrangler@4 deploy --config wrangler.book.json
@@ -68,3 +69,7 @@ npx wrangler@4 deploy --config wrangler.book.json
 Both are static Cloudflare Workers custom domains in the existing Aulenor account.
 The older GitHub Pages build remains available. Shared reading styles and footer
 links live under `theme/`.
+
+The Pages workflow generates the current PDF before publishing and serves the
+web book at `/book/` as well as the reference at `/docs/`. Custom-domain
+Cloudflare deployments still use the two existing Wrangler configs.

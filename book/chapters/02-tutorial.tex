@@ -19,13 +19,13 @@ brew install sdl2 lua cmake pkg-config   # macOS; Linux: same packages
 cmake -B build && cmake --build build -j8
 
 ./build/lantern games/wicklab            # the first wick program
-./build/lantern games/showcase_wick      # Kora Night, in wick
+./build/lantern games/showcase_wick      # Lantern Night, in wick
 \end{lstlisting}
 
 \noindent
 The first command builds the engine. The last two run games that already
 exist in the repository: `wicklab`, a small tour of the language, and
-`showcase_wick`, the wick build of Kora Night that recurs throughout this
+`showcase_wick`, the wick build of Lantern Night that recurs throughout this
 book.
 
 \section{A game is a folder}
@@ -111,7 +111,7 @@ compile.
 \section{Functions}
 
 A function is declared with `fn`, always at the top level --- functions do not
-nest in v0.1. Parameter types are required; the return type follows the
+nest in v0.3. Parameter types are required; the return type follows the
 parameter list after a colon, and you omit it for a function that returns
 nothing. Here is a tiny helper that makes the square bob up and down:
 
@@ -202,7 +202,7 @@ reloaded.
 \section{A list: the lamps}
 
 The game is called \emph{lamp}, so let us add lamps. We will keep four of
-them, each with a position and a lit/unlit flag. wick has no structs in v0.1,
+them, each with a position and a lit/unlit flag. This original tutorial uses parallel lists; records are introduced in Chapter 5,
 so we use the idiom that stands in for them: \emph{parallel lists}, where
 index `i` names one lamp across several lists.
 
@@ -278,7 +278,7 @@ fn update(dt: num) {
 
 \noindent
 Two things here look forward to later chapters. `nearest_unlit` returns a
-plain `num` --- the index, or `-1` as a sentinel --- because wick v0.1 has no
+plain `num` --- the index, or `-1` as a sentinel --- because this tutorial does not use
 multiple return values, so returning ``the index or nothing'' is done with an
 out-of-band value rather than an optional. And the nested `if` on the last
 two lines, rather than one `if i >= 0 and lt.pressed("z")`, keeps the

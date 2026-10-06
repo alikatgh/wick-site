@@ -76,7 +76,7 @@ presented image to the window.
 Trailing parameters with defaults --- `fov`, `ambient` --- may be omitted at the
 call site; the compiler fills the default in, so a native always receives full
 arity. There are four point-light slots, indexed 0 through 3; setting a slot's
-radius to zero or below disables it, which is how Kora Night extinguishes a
+radius to zero or below disables it, which is how Lantern Night extinguishes a
 lamp:
 
 \begin{lstlisting}[language=wick]
@@ -244,7 +244,7 @@ if AUTO { srand(7) }
 \end{lstlisting}
 
 \noindent
-In Kora Night, `AUTO` drives the player toward the nearest dark lamp instead
+In Lantern Night, `AUTO` drives the player toward the nearest dark lamp instead
 of reading the keyboard, so a headless CI run plays a real, deterministic
 round and the frame-60 screenshot is a true regression test.
 

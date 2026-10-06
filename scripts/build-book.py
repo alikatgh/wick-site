@@ -38,7 +38,7 @@ for path in sorted((ROOT / 'book/chapters').glob('*.tex')):
 shutil.copy(ROOT / 'wick-book.pdf', out / 'wick-book.pdf')
 (out / 'index.md').write_text('''# The Wick Programming Language
 
-<div class="book-intro"><p class="edition">THE ONLINE BOOK · VERSION 0.1</p><p>A small, typed scripting language for the Lantern engine.</p><p>Start with a complete game, then work through the language, its engine interface, and the compiler behind it.</p></div>
+<div class="book-intro"><p class="edition">THE ONLINE BOOK · VERSION 0.3</p><p>A small, typed scripting language for the Lantern engine.</p><p>Start with a complete game, then work through the language, its engine interface, and the compiler behind it.</p></div>
 
 [Start reading →](01-introduction.md){ .md-button .md-button--primary }
 [Download the PDF](wick-book.pdf){ .md-button }
@@ -49,7 +49,7 @@ shutil.copy(ROOT / 'wick-book.pdf', out / 'wick-book.pdf')
 
 ## About this edition
 
-By the Lantern engine authors. This is the web edition of the repository's version 0.1 book, converted from its original LaTeX chapters. The [language reference](https://learn.wick.aulenor.com/) includes later changes, including records.
+By the Lantern engine authors. This is the web edition of the repository's version 0.3 book, converted from its canonical LaTeX chapters. This edition covers records and adds a chapter on bits, bytes, and buses for processor-building games. See the [language reference](https://learn.wick.aulenor.com/) for concise API contracts.
 
 Copyright © 2026 The Lantern engine authors. Distributed under the same zlib terms as the engine; the original authorship and source are preserved.
 ''')

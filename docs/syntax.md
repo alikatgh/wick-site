@@ -4,8 +4,7 @@
 
 - **Comments**: `// to end of line`. No block comments.
 - **Identifiers**: `[A-Za-z_][A-Za-z0-9_]*`.
-- **Numbers**: one type, `num` (IEEE double): `42`, `3.5`, `0.25`. No hex,
-  no exponents in v0.1. `1..5` lexes as a range, never as `1.` `.5`.
+- **Numbers**: one type, `num` (IEEE double): `42`, `3.5`, `0.25`. Hex/binary integers: `0xFF`, `0b1010` (0..0xFFFFFFFF). No exponents. `1..5` lexes as a range, never as `1.` `.5`.
 - **Strings**: `"double quotes"` with escapes `\n`, `\t`, `\"`, `\\`.
 - **Keywords**: `let fn if elif else while for in break continue return
   true false nil and or not record`.

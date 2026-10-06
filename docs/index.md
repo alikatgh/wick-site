@@ -5,8 +5,7 @@
 **wick** is the [lantern engine](https://github.com/alikatgh/lantern)'s own
 scripting language: Lua's size and feel, with the sharp edges designed out
 at the language level. The whole implementation — lexer, one-pass typed
-compiler, bytecode, stack VM, garbage collector — is about 2,000 lines of
-dependency-free C++, open source under the zlib license, living in the
+compiler, bytecode, stack VM, garbage collector — is a small dependency-free C++ implementation, open source under the zlib license, living in the
 engine repo at [`wick/`](https://github.com/alikatgh/lantern/tree/main/wick).
 
 ```wick
@@ -48,6 +47,11 @@ The flagship proofs: **Lantern Night** ships in both languages
 [wick](https://github.com/alikatgh/lantern/tree/main/games/showcase_wick))
 side by side; **KORA** on lantern is wick-only and exercises records,
 nested `.lant` packages, and scene packaging.
+
+## New in 0.3
+
+[Bits, bytes, and words](bits.md): masks, shifts, wrapping and register labels,
+with an interactive Bit Lab example. [Read the release post](blog/2026-10-06-release-0.3.md).
 
 ## Where to start
 
