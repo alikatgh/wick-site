@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wick in five minutes — a small typed language for games</title>
+  <meta name="description" content="See what Wick does, why it exists alongside Lua, and how to run your first program. Real examples, source code, downloads and the current limitations.">
+  <link rel="canonical" href="https://wick.aulenor.com/tour/">
+  <meta property="og:title" content="Wick in five minutes">
+  <meta property="og:description" content="A small typed language for games. See a real example, the reason for optionals, and the path from download to your first program.">
+  <meta property="og:url" content="https://wick.aulenor.com/tour/">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://wick.aulenor.com/tour/bitlab.png">
+  <meta property="og:image:alt" content="Bit Lab running in Lantern: two byte registers, an ADD operation and processor flags.">
+  <script src="/theme.js"></script>
+  <link rel="stylesheet" href="/assets/fonts.css">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/tour/tour.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header wrap">
+  <div class="masthead">
+    <a class="brand" href="/" aria-label="Wick home">wick<span class="version">0.3</span></a>
+    <span class="site-context">Language &amp; game engine</span>
+    <form class="site-search" role="search" action="/docs/" method="get"><label class="sr-only" for="site-query">Search Wick documentation</label><input id="site-query" name="q" type="search" placeholder="Search docs: u8, lt.rect, optionals…" required><button type="submit">Search</button></form>
+    <label class="appearance">Theme <select data-wick-theme aria-label="Theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
+  </div>
+  <nav aria-label="Main navigation"><a href="/tour/" aria-current="page">Five-minute tour</a><a href="/docs/getting-started/">Get started</a><a href="/docs/">Reference</a><a href="/book/">Book</a><a href="/lantern/">Lantern engine</a><a href="/lantern/#downloads">Downloads</a><a href="https://github.com/alikatgh/lantern">Source</a></nav>
+</header>
+<main id="main" class="wrap">
+  <section class="intro tour-intro" aria-labelledby="tour-title">
+    <div>
+      <p class="eyebrow">Wick 0.3 · Lantern 0.8.0 · Open source</p>
+      <h1 id="tour-title">Wick in five minutes.</h1>
+      <p>A small, statically typed language for game logic. A small engine to run it. One <code>main.wick</code> file to start.</p>
+      <p>Wick checks types and engine calls when your game loads. <a href="/lantern/">Lantern</a> provides the 400 × 240 renderer, input, sound and game loop.</p>
+      <p class="start"><a class="button" href="#run">Run it on your Mac <span aria-hidden="true">→</span></a><a href="/lantern/#build-from-source">Build from source</a></p>
+      <p class="availability">The downloadable build is for macOS Apple Silicon. Ad-hoc signed; not Apple notarized. <a href="#limits">Read the limits before choosing Wick.</a></p>
+    </div>
+    <figure class="tour-capture">
+      <img src="/tour/bitlab.png" width="400" height="240" alt="Bit Lab in Lantern. Register A is FF, B is 01, and ADD wraps the result to 00 with carry and zero flags set.">
+      <figcaption><strong>Bit Lab, running in Lantern.</strong> An actual engine capture. The downloadable example lets you change registers, toggle bits and switch operations. <a href="https://github.com/alikatgh/lantern/blob/v0.8.0/games/bitlab/main.wick">Read its Wick source →</a></figcaption>
+    </figure>
+  </section>
+  <div class="guide-layout">
+    <aside class="guide-nav"><nav aria-label="On this page"><strong>The short version</strong><a href="#why">Why another language?</a><a href="#program">A complete program</a><a href="#run">Download, run, change</a><a href="#limits">Where it fits</a></nav></aside>
+    <div class="engine-content">
+      <section id="why">
+        <p class="eyebrow">01 / The reason</p>
+        <h2>Make missing values explicit.</h2>
+        <p>A saved score can be missing. The saved text can also fail to parse. Wick gives both operations an optional result, so a number cannot quietly become <code>nil</code>.</p>
+        <figure class="example"><figcaption><span>Loading a score</span><span>Wick</span></figcaption><pre tabindex="0" aria-label="Wick optional score example"><code><span class="comment">// load_save returns str?; num returns num?</span>
+<span class="kw">let</span> saved = lt.load_save(<span class="str">"best"</span>) ?? <span class="str">""</span>
+<span class="kw">let</span> best = num(saved) ?? <span class="num">0</span></code></pre></figure>
+        <p class="tour-code-note">The first <code>??</code> handles a missing save. The second handles text that is not a number. <code>best</code> is a <code>num</code> in either case.</p>
+        <h3>Why not just use Lua?</h3>
+        <p>You can: Lantern also runs Lua, with the same engine API. Wick adds static types, explicit optionals, boolean conditions, and checks for engine argument types and counts. Choose it when those constraints help you write a small game.</p>
+        <p>Lua remains the more flexible choice when you need features Wick does not have, such as closures, first-class functions or multiple return values. Wick is an early language with a deliberately small feature set.</p>
+        <p><a href="/docs/comparison/">Compare the same game in Wick and Lua →</a> · <a href="/docs/internals/">Compiler and VM internals</a></p>
+      </section>
+      <section id="program">
+        <p class="eyebrow">02 / The shape of a game</p>
+        <h2>This is the whole program.</h2>
+        <p>A yellow square moves across the frame. <code>update</code> advances it in pixels per second; <code>draw</code> clears the screen and draws it. At the right edge, it wraps around.</p>
+        <figure class="example"><figcaption><span>main.wick</span><span>A moving square</span></figcaption><pre tabindex="0" aria-label="Wick moving square example"><code><span class="kw">let</span> x = <span class="num">0</span>
+
+<span class="kw">fn</span> update(dt: <span class="type">num</span>) {
+  x = (x + <span class="num">40</span> * dt) % <span class="num">400</span>
+}
+
+<span class="kw">fn</span> draw() {
+  lt.clear(<span class="num">0.1</span>, <span class="num">0.1</span>, <span class="num">0.2</span>)
+  lt.rect(x, <span class="num">100</span>, <span class="num">16</span>, <span class="num">16</span>, <span class="num">1</span>, <span class="num">0.8</span>, <span class="num">0.2</span>, <span class="num">1</span>)
+}</code></pre></figure>
+        <p class="tour-code-note"><a href="/examples/first-game/main.wick" download>Download this exact main.wick</a> · <a href="/docs/engine-api/">Look up the engine calls</a></p>
+      </section>
+      <section id="run">
+        <p class="eyebrow">03 / Try it locally</p>
+        <h2>Download, run, change.</h2>
+        <ol class="tour-steps">
+          <li><h3>Get the engine and an example.</h3><p><a href="https://github.com/alikatgh/lantern/releases/download/v0.8.0/lantern-0.8.0-macos-arm64-bitlab.tar.gz">Download Lantern for macOS Apple Silicon</a>. Extract it and open a terminal in the extracted folder. Wick is included; there is no separate installer.</p><p class="muted">Built on macOS 15.6. The binary is ad-hoc signed, not notarized. <a href="https://github.com/alikatgh/lantern/releases/tag/v0.8.0">Release files and checksums</a> · <a href="/lantern/#build-from-source">Source build instructions</a></p></li>
+          <li><h3>Launch Bit Lab.</h3><pre tabindex="0" aria-label="Run Bit Lab"><code>./lantern games/bitlab</code></pre><p>You should see the register workbench pictured above. Left and right select a register; up and down change its value. Press <kbd>Z</kbd> to cycle ADD, AND and XOR. Press Escape to quit.</p></li>
+          <li><h3>Make the moving square your own.</h3><p>Create the example folder:</p><pre tabindex="0" aria-label="Create your game folder"><code>mkdir -p games/first-game</code></pre><p>Save <a href="/examples/first-game/main.wick" download>main.wick</a> from the example above inside that folder, then run:</p><pre tabindex="0" aria-label="Run your first game"><code>./lantern games/first-game</code></pre><p>Change <code>40</code> to <code>80</code> in the file and save. The game reloads, the square restarts, and it moves twice as fast. Reloading resets game state.</p><p>If a compiler message appears, correct the indicated line and save again. <a href="/docs/errors/">Read common errors and their fixes.</a></p></li>
+        </ol>
+      </section>
+      <section id="limits">
+        <p class="eyebrow">04 / Before you commit to it</p>
+        <h2>Small by design. Still early.</h2>
+        <p>Wick fits small games, experiments, and learning how a language and engine work together. The compiler and bytecode VM are available under the zlib license.</p>
+        <dl class="reference-list">
+          <div><dt>Language</dt><dd>No modules, closures, first-class functions, multiple return values or nested containers yet. Games use one <code>main.wick</code> file.</dd></div>
+          <div><dt>Engine</dt><dd>A fixed 400 × 240 software renderer, per-vertex lighting, BMP textures and WAV audio. No JIT.</dd></div>
+          <div><dt>Platforms</dt><dd>The current release supplies a macOS Apple Silicon binary. Other desktop targets require a source build; this release includes no Linux or Windows binary. There is no browser runtime on this page.</dd></div>
+          <div><dt>Example scope</dt><dd>Bit Lab is a register and bit-operation workbench, not a complete Intel 8080 emulator.</dd></div>
+        </dl>
+        <p><a href="/docs/limits/">Full language limits</a> · <a href="/lantern/#platforms">Platform status</a> · <a href="https://github.com/alikatgh/lantern/blob/v0.8.0/LICENSE">License</a></p>
+        <h3>Keep exploring.</h3>
+        <p><a href="/book/">Read the Wick Book</a> for a guided explanation, or open <a href="https://github.com/alikatgh/lantern/tree/v0.8.0/games/showcase_wick">Lantern Night</a> for a game with lighting, input and a persistent score. The <a href="/docs/">reference</a> is there when you need a specific rule or function.</p>
+        <p>Found a bug or a missing explanation? <a href="https://github.com/alikatgh/lantern/issues">Report it with a small example.</a></p>
+      </section>
+    </div>
+  </div>
+</main>
+<footer class="site-footer wrap"><p>Wick 0.3 · Lantern 0.8.0 · <a href="https://github.com/alikatgh/lantern/blob/main/LICENSE">zlib license</a></p><nav aria-label="Footer"><a href="/">Wick home</a><a href="/docs/">Reference</a><a href="https://github.com/alikatgh/lantern">Source code</a></nav></footer>
+</body>
+</html>
