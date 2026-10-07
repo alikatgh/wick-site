@@ -8,6 +8,7 @@ The language and engine implementation lives in [alikatgh/lantern](https://githu
 | Source | Published content |
 |---|---|
 | `index.html`, `style.css` | Homepage, search entry and reference index at `/` |
+| `tour/` | Five-minute introduction, real Bit Lab capture, language tradeoffs and first-run path at `/tour/` |
 | `lantern/index.html` | Engine guide, downloads, builds, examples and packaging at `/lantern/` |
 | `examples/first-game/main.wick` | Downloadable example shared with the homepage and tutorial |
 | `docs/`, `mkdocs.yml` | Language and engine reference at `/docs/`, blog at `/docs/blog/` |
@@ -50,6 +51,11 @@ The existing Cloudflare redirects send `learn.wick.aulenor.com` to `/docs/` and
 `wickbook.aulenor.com` to `/book/` on the canonical hostname, retaining paths and
 queries. The standalone MkDocs/Worker configurations remain for compatibility;
 ordinary website changes publish through Pages, not the old Workers.
+
+The tour's `bitlab.png` is an actual Lantern framebuffer capture from the 0.3
+release verification, not a browser implementation. Its source is
+`games/bitlab/main.wick` in Lantern v0.8.0. Keep the screenshot and release links
+aligned when updating the tour; retain its explicit platform and language limits.
 
 ## Keep the content aligned
 

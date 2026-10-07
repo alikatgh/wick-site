@@ -1,0 +1,14 @@
+.tour-intro{align-items:center;padding-block:48px}
+.tour-capture{margin:0;min-width:0}
+.tour-capture img{display:block;width:100%;height:auto;image-rendering:pixelated;border:1px solid var(--line)}
+.tour-capture figcaption{font-size:14px;color:var(--muted);margin-top:12px;max-width:62ch}
+.tour-capture figcaption strong{color:var(--ink)}
+.tour-capture figcaption a{display:inline-block;margin-top:6px}
+.tour-intro+.guide-layout{border-top:1px solid var(--line)}
+.tour-code-note{margin-top:14px;font-size:15px}
+.tour-steps{padding-left:24px;margin:0}
+.tour-steps>li{padding-left:8px;margin-bottom:28px}
+.tour-steps>li::marker{color:var(--muted);font-weight:700}
+.tour-steps>li:last-child{margin-bottom:0}
+.tour-steps .muted{font-size:15px}
+@media(max-width:700px){.tour-intro{padding-block:28px}.tour-capture{max-width:480px}.tour-steps{padding-left:20px}.tour-steps>li{padding-left:4px}}
