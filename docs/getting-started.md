@@ -1,67 +1,84 @@
 # Getting started
 
-wick ships inside the lantern engine — there is nothing separate to
-install.
+Run your first Wick program with **Lantern 0.8.0 / Wick 0.3**. Wick is included
+with the engine; there is no separate language installation.
+
+## Get the engine
+
+**macOS Apple Silicon:** [download the Lantern bundle](https://wick.aulenor.com/lantern/#downloads),
+extract it, and open a terminal in the extracted folder. It contains `lantern`,
+`lantern_pack` and the Bit Lab example. The build is ad-hoc signed, not Apple notarized.
+
+**Building from source:** follow the [Lantern build instructions](https://wick.aulenor.com/lantern/#build-from-source).
+Commands below assume the downloaded bundle. In a source checkout, replace
+`./lantern` with `./build/lantern` and `./lantern_pack` with `./build/lantern_pack`.
+
+## Run your first program
+
+Create a game directory from the folder containing the engine:
 
 ```sh
-git clone https://github.com/alikatgh/lantern && cd lantern
-brew install sdl2 lua cmake pkg-config    # macOS; Linux: same packages
-cmake -B build && cmake --build build -j8
-
-./build/lantern games/wicklab             # the first wick program
-./build/lantern games/showcase_wick      # Kora Night, in wick
+mkdir -p games/first-game
 ```
+
+Save the following complete program as `games/first-game/main.wick`.
+You can also [download main.wick](https://wick.aulenor.com/examples/first-game/main.wick).
+
+```wick
+let x = 0
+
+fn update(dt: num) {
+  x = (x + 40 * dt) % 400
+}
+
+fn draw() {
+  lt.clear(0.1, 0.1, 0.2)
+  lt.rect(x, 100, 16, 16, 1, 0.8, 0.2, 1)
+}
+```
+
+Run it from the same terminal:
+
+```sh
+./lantern games/first-game
+```
+
+**Expected result:** a yellow square moves across a dark 400 × 240 frame.
+It wraps to the left when its x position reaches 400. Press Escape to quit.
+
+Change `40` to `80` and save the file while the game is running. The square
+restarts and moves twice as fast. If a compile error appears, fix the indicated
+line and save again. [Compiler messages and fixes](errors.md) explain common failures.
 
 ## A game is a folder
 
-A wick game is a directory containing `main.wick`. The host runs it when
-present (falling back to `main.lua` otherwise):
+`main.wick` is the entry point. Top-level statements run once when the game
+loads; Lantern then calls `update(dt: num)` and `draw()` if they exist.
+`dt` is elapsed time in seconds, capped at 0.1. Draw calls use screen coordinates
+or the engine's 3D scene; consult the [engine API](engine-api.md) for each signature.
 
-```sh
-mkdir games/mygame
-$EDITOR games/mygame/main.wick
-./build/lantern games/mygame
-```
-
-Define two functions. The engine calls them at 60 fps:
-
-```wick
-fn update(dt: num) {   // dt = seconds since last frame (capped at 0.1)
-}
-
-fn draw() {            // 3D first, then 2D composites on top
-  lt.clear(0.1, 0.1, 0.2)
-  lt.print("HELLO 400X240", 4, 4, 1, 1, 1, 1)
-}
-```
-
-Both are optional — a `main.wick` with only top-level statements is legal.
-Top-level statements run once, at load.
+The host prefers `main.wick` when both it and `main.lua` are present. Asset paths
+are relative to the game directory, including nested paths such as `assets/tiles.bmp`.
 
 ## The dev loop
 
-- **Hot reload**: save `main.wick` while the engine runs; it recompiles and
-  reloads live (all previous resources are freed first — reloading never
-  leaks).
-- **Error screen**: a compile error (or runtime error, like an
-  out-of-range index) renders in-engine with `file:line: message`. Fix the
-  file, save, keep playing.
-- **CI screenshots**: `LANTERN_SHOT=/tmp/x ./build/lantern games/mygame`
-  captures frame 60 as BMP and exits. Add `LANTERN_FIXED_DT=1` and the
-  capture is byte-identical on every machine — wick's `rand()` is
-  deterministic too, so whole gameplay sessions replay exactly.
+- Save `main.wick` to recompile and reload. Reloading starts the game's state again.
+- Compile and runtime errors appear in-engine with `file:line: message`.
+- `LANTERN_FIXED_DT=1` uses a fixed timestep for repeatable runs.
+- To save a framebuffer and exit after 60 frames, set `LANTERN_SHOT` to a writable
+  output prefix. For example, `LANTERN_SHOT=first-frame ./lantern games/first-game`
+  writes a BMP screenshot. `LANTERN_SHOT_FRAME` changes the capture frame.
 
 ## Package a game
 
 ```sh
-./build/lantern_pack games/mygame mygame.lant
-./build/lantern mygame.lant
+./lantern_pack games/first-game first-game.lant
+./lantern first-game.lant
 ```
 
-Store packages require `main.wick`. Nested folders (`assets/…`) pack with
-relative paths. Loads refuse `..` and absolute paths — see
-[PACKAGE.md](https://github.com/alikatgh/lantern/blob/main/docs/PACKAGE.md)
-and the [store-safety post](blog/2026-07-14-store-safety.md).
+The `.lant` file contains the game and its assets. Keep the source folder for
+editing. [Lantern's packaging guide](https://wick.aulenor.com/lantern/#package-a-game)
+covers the folder structure and links to the format specification.
 
 ## Two minutes of syntax
 

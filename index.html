@@ -1,34 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Wick — a scripting language for the Lantern game engine</title>
-<meta name="description" content="Learn Wick, the small, statically typed scripting language for the Lantern game engine. Read the book, browse the reference, and build your first game.">
-<link rel="canonical" href="https://wick.aulenor.com/">
-<meta property="og:title" content="Wick — a scripting language for Lantern">
-<meta property="og:url" content="https://wick.aulenor.com/">
-<meta property="og:type" content="website">
-<script src="theme.js"></script>
-<link rel="stylesheet" href="assets/fonts.css">
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<a class="skip" href="#main">Skip to content</a>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wick — language reference, examples and the Lantern engine</title><meta name="description" content="Write games in Wick. Run them in Lantern. Get started, look up language and engine APIs, read the book, or download the current release."><link rel="canonical" href="https://wick.aulenor.com/">
+<meta property="og:title" content="Wick — language reference, examples and the Lantern engine"><meta property="og:url" content="https://wick.aulenor.com/"><meta property="og:type" content="website">
+<script src="/theme.js"></script><link rel="stylesheet" href="/assets/fonts.css"><link rel="stylesheet" href="/style.css"></head>
+<body><a class="skip" href="#main">Skip to content</a>
 <header class="site-header wrap">
-  <a class="brand" href="./" aria-label="Wick home">wick<span class="version">0.3</span></a>
-  <nav aria-label="Main navigation"><a href="docs/getting-started/">Get started</a><a href="https://github.com/alikatgh/lantern/releases/tag/v0.8.0">Downloads</a><a href="docs/">Documentation</a><a href="book/">Book</a><a href="docs/blog/">Blog</a><a href="https://github.com/alikatgh/lantern/tree/main/wick">Source</a></nav>
-  <label class="appearance">Theme <select data-wick-theme aria-label="Theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
-</header>
-<main id="main" class="wrap">
-  <section class="intro" aria-labelledby="intro-title">
-    <div>
-      <h1 id="intro-title">A small language<br>for Lantern games.</h1>
-      <p>Wick is the <a href="https://github.com/alikatgh/lantern">Lantern engine</a>’s scripting language. It pairs a familiar, lightweight syntax with static types and explicit handling of missing values.</p>
-      <p>Write a <code>main.wick</code> file, run it in Lantern, and save to reload. The compiler checks your code and engine calls before the game starts.</p>
-      <p class="start"><a class="button" href="docs/getting-started/">Build your first game <span aria-hidden="true">→</span></a><a href="docs/comparison/">Coming from Lua?</a></p>
-    </div>
-    <figure class="example">
+  <div class="masthead"><a class="brand" href="/" aria-label="Wick home">wick<span class="version">0.3</span></a><span class="site-context">Language &amp; game engine</span>
+  <form class="site-search" role="search" action="/docs/" method="get"><label class="sr-only" for="site-query">Search Wick documentation</label><input id="site-query" name="q" type="search" placeholder="Search docs: u8, lt.rect, optionals…" required><button type="submit">Search</button></form>
+  <label class="appearance">Theme <select data-wick-theme aria-label="Theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label></div>
+  <nav aria-label="Main navigation"><a href="/docs/getting-started/">Get started</a><a href="/docs/">Reference</a><a href="/book/">Book</a><a href="/lantern/" >Lantern engine</a><a href="/lantern/#downloads">Downloads</a><a href="/docs/blog/">Blog</a><a href="https://github.com/alikatgh/lantern">Source</a></nav>
+</header><main id="main" class="wrap">
+<section class="intro" aria-labelledby="intro-title"><div><p class="eyebrow">Wick 0.3 / for game programmers</p><h1 id="intro-title">A typed language.<br>A small game engine.</h1>
+<p>Write game logic in <strong>Wick</strong>. Run it in <a href="/lantern/">Lantern</a>, a 2D/3D engine with a 400 × 240 software renderer.</p><p>Static types, explicit optionals, and checked engine calls. Save a <code>main.wick</code> file to reload your game.</p>
+<p class="start"><a class="button" href="/docs/getting-started/">Run your first program <span aria-hidden="true">→</span></a><a href="/docs/comparison/">Coming from Lua?</a></p>
+<p class="availability">Wick is included with Lantern. <a href="/lantern/#downloads">macOS Apple Silicon download</a> · <a href="/lantern/#build-from-source">Build from source</a></p></div><figure class="example">
       <figcaption><span>main.wick</span><span>A moving square</span></figcaption>
       <pre tabindex="0" aria-label="Wick moving square example"><code><span class="kw">let</span> x = <span class="num">0</span>
 
@@ -40,26 +25,11 @@
   lt.clear(<span class="num">0.1</span>, <span class="num">0.1</span>, <span class="num">0.2</span>)
   lt.rect(x, <span class="num">100</span>, <span class="num">16</span>, <span class="num">16</span>, <span class="num">1</span>, <span class="num">0.8</span>, <span class="num">0.2</span>, <span class="num">1</span>)
 }</code></pre>
-      <p>Lantern calls <code>update</code> and <code>draw</code> each frame. <a href="docs/engine-api/">Engine API →</a></p>
-    </figure>
-  </section>
-  <aside class="release" aria-label="Latest release"><strong>New in 0.3</strong><p>Hex and binary literals, bit operations, and explicit 8-bit and 16-bit wrapping.</p><a href="docs/blog/2026-10-06-release-0.3/">Release notes →</a></aside>
-  <section class="section" aria-labelledby="learn-title">
-    <h2 id="learn-title">Learn &amp; look things up</h2>
-    <div class="resources">
-      <article><h3><a href="book/">Read the book →</a></h3><p>Build a small game, then work through the language, engine interface, and compiler. Edition 0.3 includes bits, bytes, and buses.</p><a class="secondary" href="wick-book.pdf">Download the PDF</a></article>
-      <article><h3><a href="docs/">Language reference →</a></h3><p>Syntax, types, collections, built-in functions, and the <code>lt.*</code> engine API. For checking a detail while you write.</p><a class="secondary" href="docs/errors/">Compile errors, explained</a></article>
-      <article><h3><a href="docs/bits/">Work with bits &amp; bytes →</a></h3><p>Mask a value, wrap a register, or display a bus in binary. Includes a processor example and the runnable Bit Lab workbench.</p><a class="secondary" href="https://github.com/alikatgh/lantern/tree/main/games/bitlab">Bit Lab source</a></article>
-    </div>
-  </section>
-  <section class="section language" aria-labelledby="language-title">
-    <div><h2 id="language-title">What Wick checks</h2><p>Types are inferred or written explicitly. Engine calls are checked at load time. A misspelled variable is an error, and conditions must be <code>bool</code>.</p><p>Values that might be absent have an optional type, such as <code>str?</code>. Handle the missing case before using the value.</p><a href="docs/types/">Types and optionals →</a></div>
-    <figure class="example"><figcaption>Loading a score that may not exist</figcaption><pre tabindex="0"><code><span class="comment">// load_save returns str?; num returns num?</span>
-<span class="kw">let</span> saved = lt.load_save(<span class="str">"best"</span>)
-<span class="kw">let</span> best = num(saved ?? <span class="str">""</span>) ?? <span class="num">0</span></code></pre><p><code>??</code> supplies a fallback for <code>nil</code>. This handles both a missing save and text that cannot be parsed as a number.</p></figure>
-  </section>
-  <section class="section runtime" aria-labelledby="runtime-title"><h2 id="runtime-title">How it fits into a game</h2><dl><div><dt>Data</dt><dd>Flat records with named fields, lists, and maps. <a href="docs/records/">Records →</a></dd></div><div><dt>Runtime</dt><dd>A bytecode VM without a JIT. Garbage collection runs between frames. <a href="docs/internals/">Internals →</a></dd></div><div><dt>Repeatability</dt><dd>Deterministic <code>rand()</code> and Lantern’s fixed-timestep mode support repeatable runs. <a href="docs/getting-started/#the-dev-loop">Development loop →</a></dd></div><div><dt>Scope</dt><dd>Wick is a small language under active development. Check the supported features and current constraints. <a href="docs/limits/">Limits &amp; ledger →</a></dd></div></dl></section>
-</main>
-<footer class="site-footer wrap"><p>Wick is part of <a href="https://github.com/alikatgh/lantern">Lantern</a>, a <a href="https://famemu.aulenor.com">Famemu</a> project.</p><nav aria-label="Footer"><a href="docs/blog/">Development blog</a><a href="https://github.com/alikatgh/lantern/blob/main/LICENSE">zlib license</a></nav></footer>
-</body>
-</html>
+      <p><a href="/docs/getting-started/#run-your-first-program">Run this example</a> · <a href="/examples/first-game/main.wick" download>Download main.wick</a> · <a href="/docs/engine-api/">Engine API</a></p>
+    </figure></section>
+<aside class="release" aria-label="Latest release"><strong>6 October 2026</strong><p><a href="/docs/blog/2026-10-06-release-0.3/">Wick 0.3 / Lantern 0.8.0</a> — bit operations, register wrapping and Bit Lab.</p><a href="https://github.com/alikatgh/lantern/blob/v0.8.0/CHANGELOG.md">Changelog →</a></aside>
+<div class="desk"><section aria-labelledby="reference-title"><h2 id="reference-title">Language reference</h2><p class="section-lead">Look up a rule, type or function while you write.</p>
+<dl class="reference-list"><div><dt><a href="/docs/syntax/">Syntax &amp; control flow</a></dt><dd><code>let</code>, <code>fn</code>, <code>if</code>, loops</dd></div><div><dt><a href="/docs/types/">Types &amp; optionals</a></dt><dd><code>num</code>, <code>str?</code>, <code>??</code>, narrowing</dd></div><div><dt><a href="/docs/records/">Records &amp; collections</a></dt><dd>Named fields, lists and maps</dd></div><div><dt><a href="/docs/builtins/">Built-in functions</a></dt><dd>Numbers, strings, randomness, assertions</dd></div><div><dt><a href="/docs/bits/">Bits, bytes &amp; words</a></dt><dd><code>bit_*</code>, <code>u8</code>, <code>u16</code>, <code>hex</code></dd></div><div><dt><a href="/docs/errors/">Compiler &amp; runtime errors</a></dt><dd>Messages, causes and corrections</dd></div></dl><p class="section-link"><a href="/docs/">Complete reference →</a></p></section>
+<aside class="learning" aria-labelledby="learn-title"><h2 id="learn-title">Learn by building</h2><article><h3><a href="/docs/getting-started/">Your first program</a></h3><p>Install the host, run a moving square, then change it while it runs.</p></article><article><h3><a href="/book/">The Wick Book</a></h3><p>A guided path through the language, engine and compiler.</p><a href="/wick-book.pdf">Download edition 0.3 (PDF)</a></article><article><h3><a href="/lantern/#examples">Example games</a></h3><p>Explore Wick Lab, Lantern Night and the Bit Lab register workbench.</p></article></aside></div>
+<section class="engine-strip" aria-labelledby="engine-title"><div><p class="eyebrow">The host for your game</p><h2 id="engine-title"><a href="/lantern/">Lantern engine</a></h2><p>Meshes, sprites, sound, input and saves. One game folder, a frame callback, and a typed <code>lt.*</code> API.</p></div><nav aria-label="Lantern resources"><a href="/lantern/#build-from-source">Build &amp; run</a><a href="/docs/engine-api/">Engine API</a><a href="/lantern/#package-a-game">Package a game</a><a href="/lantern/#platforms">Platforms &amp; limits</a></nav></section>
+</main><footer class="site-footer wrap"><p>Wick 0.3 · Lantern 0.8.0 · <a href="https://github.com/alikatgh/lantern/blob/main/LICENSE">zlib license</a></p><nav aria-label="Footer"><a href="/docs/limits/">Language limits</a><a href="https://github.com/alikatgh/lantern/issues">Report an issue</a><a href="https://famemu.aulenor.com">Famemu</a></nav></footer></body></html>

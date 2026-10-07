@@ -28,6 +28,20 @@ markdown_extensions:
 nav:
 - Overview: index.md
 - Getting started: getting-started.md
+- Language:
+  - Syntax: syntax.md
+  - Types & optionals: types.md
+  - Records: records.md
+  - Functions: functions.md
+  - Collections: collections.md
+  - Built-ins: builtins.md
+  - Bits, bytes & words: bits.md
+- Lantern engine: https://wick.aulenor.com/lantern/
+- The engine API (lt.*): engine-api.md
+- Compile errors, explained: errors.md
+- Internals & embedding: internals.md
+- wick vs Lua: comparison.md
+- Limits & ledger: limits.md
 - Blog:
   - blog/index.md
   - 2026-10-06 · Release 0.3: blog/2026-10-06-release-0.3.md
@@ -37,19 +51,6 @@ nav:
   - 2026-07-14 · How we test: blog/2026-07-14-how-we-test.md
   - 2026-07-14 · Why optionals: blog/2026-07-14-why-optionals.md
   - 2026-07-14 · Welcome: blog/2026-07-14-welcome.md
-- Language:
-  - Syntax: syntax.md
-  - Types & optionals: types.md
-  - Records: records.md
-  - Functions: functions.md
-  - Collections: collections.md
-  - Built-ins: builtins.md
-  - Bits, bytes & words: bits.md
-- The engine API (lt.*): engine-api.md
-- Compile errors, explained: errors.md
-- Internals & embedding: internals.md
-- wick vs Lua: comparison.md
-- Limits & ledger: limits.md
 site_dir: build/reference
 extra_css:
 - assets/reading.css
