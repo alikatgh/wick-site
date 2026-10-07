@@ -1,82 +1,61 @@
-# wick-site — wick.aulenor.com
+# Wick website
 
-The public website for **wick**, the [lantern engine](https://github.com/alikatgh/lantern)'s
-own scripting language. The implementation lives in the engine repo under
-[`wick/`](https://github.com/alikatgh/lantern/tree/main/wick); this repo is
-the site, the language reference, and the **blog**.
+The public programmer website at **https://wick.aulenor.com/**.
+The language and engine implementation lives in [alikatgh/lantern](https://github.com/alikatgh/lantern).
 
-## Layout
+## Sources and published routes
 
-| Path | Role |
-|------|------|
-| `index.html` + `style.css` | Marketing page (root) |
-| `docs/` + `mkdocs.yml` | A–Z reference **and** Go-style blog under `docs/blog/` |
-| `wick-book.pdf` | Optional long-form PDF (regenerate from book/ when needed) |
-| `.github/workflows/deploy.yml` | Builds MkDocs + copies marketing page → GitHub Pages |
+| Source | Published content |
+|---|---|
+| `index.html`, `style.css` | Homepage, search entry and reference index at `/` |
+| `lantern/index.html` | Engine guide, downloads, builds, examples and packaging at `/lantern/` |
+| `examples/first-game/main.wick` | Downloadable example shared with the homepage and tutorial |
+| `docs/`, `mkdocs.yml` | Language and engine reference at `/docs/`, blog at `/docs/blog/` |
+| `book/chapters/*.tex` | Canonical book source; web at `/book/`, PDF at `/wick-book.pdf` |
+| `theme/`, `theme.js` | Shared reading styles, local fonts, navigation and appearance |
 
-## Local preview
+`book-docs/`, `build/` and `_site/` are generated. Fix book conversion in
+`scripts/build-book.py`; do not patch its generated Markdown or HTML.
 
-```sh
-python3 -m venv .venv && .venv/bin/pip install mkdocs mkdocs-material
-.venv/bin/mkdocs build -d _site/docs && cp index.html style.css wick-book.pdf _site/ 2>/dev/null
-python3 -m http.server 8351 -d _site
-# open http://127.0.0.1:8351/ and http://127.0.0.1:8351/docs/blog/
-```
+## Build and review
 
-## Public website and custom domain
-
-- Home: https://wick.aulenor.com/
-- Reference and blog: https://wick.aulenor.com/docs/
-- Book: https://wick.aulenor.com/book/
-- PDF: https://wick.aulenor.com/wick-book.pdf
-
-The domain is registered with EuroDNS; authoritative DNS is in Cloudflare.
-The DNS-only CNAME `wick` points to `alikatgh.github.io`. GitHub Pages is
-configured for `wick.aulenor.com` with HTTPS enforced. The Actions deployment
-includes the checked-in CNAME file. The old project Pages address redirects
-to the custom domain while retaining paths.
-
-## Keeping docs honest (non-negotiable)
-
-When the language changes in the engine repo (`wick/`, `docs/WICK.md`,
-`CHANGELOG.md`):
-
-1. Update the matching page under `docs/` (types, records, limits, …).
-2. Add or amend a **blog post** under `docs/blog/` if the change is a design
-   decision or release — same role as the Go blog.
-3. Bump stats on `index.html` if line counts or CI check counts change.
-4. Prefer one PR / one sitting: engine + site stay in lockstep.
-
-The blog is not optional marketing. It is the public feature ledger.
-
-## Blog posts (current)
-
-- Welcome · Why optionals · Admitting records · Store safety · How we test · Release 0.2  
-  See `docs/blog/index.md`.
-
-## Legacy standalone reference and book deployments
-
-- `https://learn.wick.aulenor.com/` — a separately deployed language reference and design blog.
-- `https://wickbook.aulenor.com/` — a separately deployed book. These Worker deployments are not updated by the Pages workflow.
-
-The book's LaTeX stays canonical. `scripts/build-book.py` converts it to ignored
-`book-docs/` sources, preserving every listing verbatim. Edition 0.3 updates the existing chapters for records and adds bits, bytes,
-and buses. The PDF and both web builds are generated from the same sources.
+Use an existing Python environment, or create a virtual environment and install
+`requirements-sites.txt`. Book conversion needs Pandoc (via the declared Python
+dependency); PDF generation needs `pdflatex`, `lmodern` and the LaTeX extra packages.
 
 ```sh
-python3 -m venv .venv
-. .venv/bin/activate
-pip install -r requirements-sites.txt
-bash scripts/build-pdf.sh # requires pdflatex + lmodern + latex-extra
+bash scripts/build-pdf.sh
 bash scripts/build-sites.sh
-npx wrangler@4 deploy --config wrangler.reference.json
-npx wrangler@4 deploy --config wrangler.book.json
+node scripts/test-theme.cjs
+bash scripts/build-pages.sh
+python3 -m http.server 8351 -d _site
 ```
 
-Both are static Cloudflare Workers custom domains in the existing Aulenor account.
-The primary website is the GitHub Pages build at wick.aulenor.com. Shared reading styles and footer
-links live under `theme/`.
+Open `http://127.0.0.1:8351/`. Some reading-shell links intentionally use the
+canonical hostname; inspect those destinations separately when reviewing locally.
 
-The Pages workflow generates the current PDF before publishing and serves the
-web book at `/book/` as well as the reference at `/docs/`. Custom-domain
-Cloudflare deployments still use the two existing Wrangler configs.
+`build-pages.sh` assembles the exact Pages output and validates internal routes,
+anchors and assets. The content checker compares book table counts and source
+listings with generated pages. Neither check proves example execution or visual
+quality: review changed pages and interactions in a browser, including search,
+code copy controls, narrow layouts, and both appearance modes.
+
+## Publication
+
+`.github/workflows/verify-book.yml` checks pull requests. The `main` push workflow
+builds the PDF, reference, book, homepage, Lantern guide and example download,
+then deploys `_site/` to GitHub Pages. `CNAME` retains `wick.aulenor.com`.
+
+The existing Cloudflare redirects send `learn.wick.aulenor.com` to `/docs/` and
+`wickbook.aulenor.com` to `/book/` on the canonical hostname, retaining paths and
+queries. The standalone MkDocs/Worker configurations remain for compatibility;
+ordinary website changes publish through Pages, not the old Workers.
+
+## Keep the content aligned
+
+When the language or engine changes, update the affected reference pages,
+examples, book source and release post together. Check installation commands
+against actual release files and supported platforms. Distinguish the Wick
+language version from the Lantern engine version; do not promise platform
+binaries that the release does not contain. Keep the homepage example, its
+`main.wick` download and the getting-started listing consistent.
