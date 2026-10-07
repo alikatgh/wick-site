@@ -1,0 +1,10 @@
+let x = 0
+
+fn update(dt: num) {
+  x = (x + 40 * dt) % 400
+}
+
+fn draw() {
+  lt.clear(0.1, 0.1, 0.2)
+  lt.rect(x, 100, 16, 16, 1, 0.8, 0.2, 1)
+}

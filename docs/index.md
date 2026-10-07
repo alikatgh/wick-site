@@ -1,63 +1,57 @@
-# wick
+# Wick
 
-*The wick is the part of the lantern that carries the flame.*
-
-**wick** is the [lantern engine](https://github.com/alikatgh/lantern)'s own
-scripting language: Lua's size and feel, with the sharp edges designed out
-at the language level. The whole implementation — lexer, one-pass typed
-compiler, bytecode, stack VM, garbage collector — is a small dependency-free C++ implementation, open source under the zlib license, living in the
-engine repo at [`wick/`](https://github.com/alikatgh/lantern/tree/main/wick).
-
-```wick
-// a complete lantern game in wick
-let best = num(lt.load_save("best") ?? "") ?? 0
-
-fn update(dt: num) {
-  if lt.pressed("z") {
-    best = best + 1
-    lt.save("best", str(best))
-  }
-}
-
-fn draw() {
-  lt.clear(0.1, 0.1, 0.2)
-  lt.print("BEST " + str(best), 4, 4, 1, 1, 1, 1)
-}
-```
-
-## Why a new language
-
-wick exists because we shipped real games in Lua and catalogued what hurt.
-Each pain became a design decision, not a lint rule:
-
-| Lua pain | wick answer |
-|---|---|
-| nil errors at runtime | **Static types + `T?` optionals** — unchecked use doesn't compile |
-| typos create silent globals | **Locals only** — undeclared assignment is a compile error |
-| 1-based indexing, no `continue` | 0-based `[ ]`, `continue`, `len(x)` |
-| `""` and `0` are truthy | Conditions must be `bool` |
-| GC pauses mid-frame | Collection runs **between frames only** |
-| stack-index C bindings | Engine calls **type-checked at compile time** |
-| `math.random` differs by machine | `rand()` is a fixed xorshift — deterministic everywhere |
-| JIT forbidden on iOS | No JIT anywhere — specialized bytecode from static types |
-| parallel-list entity tables | **Flat records** + `list<record>` when evidence appears |
-
-The flagship proofs: **Lantern Night** ships in both languages
-([Lua](https://github.com/alikatgh/lantern/tree/main/games/showcase) /
-[wick](https://github.com/alikatgh/lantern/tree/main/games/showcase_wick))
-side by side; **KORA** on lantern is wick-only and exercises records,
-nested `.lant` packages, and scene packaging.
-
-## New in 0.3
-
-[Bits, bytes, and words](bits.md): masks, shifts, wrapping and register labels,
-with an interactive Bit Lab example. [Read the release post](blog/2026-10-06-release-0.3.md).
+Language reference for **Wick 0.3**, included with **Lantern 0.8.0**.
+Wick compiles to bytecode; Lantern supplies the game loop and the `lt.*` engine API.
 
 ## Where to start
 
-- [Getting started](getting-started.md) — run a wick game in two minutes
-- [Types & optionals](types.md) — the heart of the language
-- [Records](records.md) — flat data bags, admitted with evidence
-- [The engine API](engine-api.md) — every `lt.*` call, typed
-- [Blog](blog/index.md) — design notes and release posts (Go-style)
-- [Compile errors, explained](errors.md) — what each message means
+- **Run a program:** [Getting started](getting-started.md) covers installation, a complete example and reload-on-save.
+- **Learn in order:** [The Wick Book](https://wick.aulenor.com/book/) introduces the language through game development.
+- **Choose the host:** [Lantern](https://wick.aulenor.com/lantern/) covers downloads, builds, examples and platform status.
+- **Fix a failure:** [Compile and runtime errors](errors.md) lists messages, causes and corrections.
+
+## Language lookup
+
+| Task | Reference |
+|---|---|
+| Declare a variable, branch or loop | [Syntax](syntax.md) |
+| Handle a missing value | [Types, optionals and narrowing](types.md) |
+| Define named fields | [Records](records.md) |
+| Store or iterate over values | [Lists and maps](collections.md) |
+| Declare or call a function | [Functions](functions.md) |
+| Convert, format or check a value | [Built-in functions](builtins.md) |
+| Mask bits, wrap registers, display hex | [Bits, bytes and words](bits.md) |
+| Draw, read input, play audio or save | [Engine API — `lt.*`](engine-api.md) |
+
+Search accepts function names such as `u8`, `bit_shr` and `lt.rect`, or words
+from a diagnostic. Results link to the relevant reference section.
+
+## Common lookups
+
+- [`u8` and `u16`: explicit wrapping](bits.md#explicit-register-widths)
+- [`bit_and`, `bit_or`, `bit_xor`, `bit_not`, `bit_shl`, `bit_shr`](bits.md#bit-operations)
+- [`hex` and `bin`: formatting](bits.md#display)
+- [`lt.rect`, sprites and text](engine-api.md#2d)
+- [Input and save data](engine-api.md#input-saves)
+- [Supported features and current limits](limits.md)
+
+## Why a new language
+
+Wick uses static types, explicit `T?` optionals, declared variables and boolean
+conditions. Calls to the engine are checked for argument types and arity when
+a game loads. The runtime uses a bytecode VM with collection between frames.
+
+For specific differences, read [Wick and Lua](comparison.md). For implementation
+details, read [Internals and embedding](internals.md) or the
+[compiler and VM source](https://github.com/alikatgh/lantern/tree/v0.8.0/wick).
+
+## New in 0.3
+
+[Bits, bytes, and words](bits.md) adds checked bit operations, hex/binary
+literals, register wrapping and display functions. `u8` and `u16` are functions,
+not new types; ordinary `num` arithmetic does not wrap automatically.
+
+The ten added built-in names are reserved function names. See the
+[release notes](blog/2026-10-06-release-0.3.md) for compatibility details and
+[the changelog](https://github.com/alikatgh/lantern/blob/v0.8.0/CHANGELOG.md)
+for the matching engine release.

@@ -26,6 +26,32 @@ Fix the file and save — the game hot-reloads. The catalogue, A–Z by cause:
 | `map keys must be str literals` | computed keys in a literal | build with `m[k] = v` |
 | `container elements must be num, bool, or str` | nested containers | see [limits](limits.md) |
 
+## Example: handle an optional before using it
+
+This fails to compile because `lt.load_save` returns `str?`, but `lt.print`
+requires `str`:
+
+```wick
+let saved = lt.load_save("best")
+fn draw() {
+  lt.print(saved, 4, 4)
+}
+```
+
+Supply a fallback before using the value:
+
+```wick
+let saved = lt.load_save("best") ?? "No saved score"
+fn draw() {
+  lt.clear(0.1, 0.1, 0.2)
+  lt.print(saved, 4, 4)
+}
+```
+
+Alternatively, use an `if saved != nil` branch. Read [types and optionals](types.md)
+for narrowing rules. These checks happen when the program compiles, before the
+first frame runs.
+
 ## Runtime errors
 
 Static types can't remove these; they stop the frame and show on the
