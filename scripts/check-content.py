@@ -38,7 +38,7 @@ class Article(HTMLParser):
 root = Path(__file__).resolve().parents[1]
 errors = []
 count = 0
-for site in sys.argv[1:] or ['build/book', 'build/reference']:
+for site in sys.argv[1:] or ['build/book', 'build/reference', 'build/book-ja', 'build/reference-ja']:
     for file in (root / site).rglob('*.html'):
         article = Article(file.read_text())
         if not article.text: continue
@@ -49,18 +49,18 @@ for site in sys.argv[1:] or ['build/book', 'build/reference']:
         for pattern in [r'\|\s*:?---', r'\\(?:times|rightarrow|begin|end)\b', r'WICKPLACEHOLDER', r'\$`']:
             if re.search(pattern, text): errors.append(f'{file}: raw markup {pattern}')
 
-book = root / 'build/book'
-for file in (root / 'book/chapters').glob('*.tex'):
-    for n, text in enumerate(re.split(r'(?=\\chapter\{)', file.read_text())):
-        if not text.strip(): continue
-        slug = file.stem if file.stem != 'appendix' else 'appendix-' + str(n)
-        page = Article((book / slug / 'index.html').read_text())
-        expected = len(re.findall(r'\\begin\{(?:tabular|longtable)\}', text))
-        if page.tables != expected:
-            errors.append(f'{slug}: expected {expected} tables, got {page.tables}')
-            print((root / 'book-docs' / (slug + '.md')).read_text())
-        for code in re.findall(r'\\begin\{lstlisting\}(?:\[[^\n]*\])?\n(.*?)\\end\{lstlisting\}', text, flags=re.S):
-            if code.strip() not in page.blocks: errors.append(f'{slug}: changed or missing code: {code[:70]!r}')
+for book in [root / 'build/book', root / 'build/book-ja']:
+    for file in (root / 'book/chapters').glob('*.tex'):
+        for n, text in enumerate(re.split(r'(?=\\chapter\{)', file.read_text())):
+            if not text.strip(): continue
+            slug = file.stem if file.stem != 'appendix' else 'appendix-' + str(n)
+            page = Article((book / slug / 'index.html').read_text())
+            expected = len(re.findall(r'\\begin\{(?:tabular|longtable)\}', text))
+            if page.tables != expected:
+                errors.append(f'{slug}: expected {expected} tables, got {page.tables}')
+                print((root / 'book-docs' / (slug + '.md')).read_text())
+            for code in re.findall(r'\\begin\{lstlisting\}(?:\[[^\n]*\])?\n(.*?)\\end\{lstlisting\}', text, flags=re.S):
+                if code.strip() not in page.blocks: errors.append(f'{slug}: changed or missing code: {code[:70]!r}')
 if errors:
     raise SystemExit('\n'.join(errors))
 print(f'Content check passed: {count} articles; all book tables and code listings preserved.')

@@ -18,6 +18,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -28,7 +29,7 @@ jobs:
           python-version: "3.12"
       - run: pip install -r requirements-sites.txt
       - name: Install book typesetter
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends texlive-latex-extra lmodern
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends texlive-latex-extra texlive-fonts-recommended lmodern texlive-xetex texlive-lang-japanese texlive-lang-chinese fonts-noto-cjk
       - name: Build edition 0.3 PDF and web book
         run: |
           bash scripts/build-pdf.sh
@@ -41,8 +42,11 @@ jobs:
           name: wick-0.3-book-and-sites
           path: |
             wick-book.pdf
+            wick-book-ja.pdf
             build/book/
             build/reference/
+            build/book-ja/
+            build/reference-ja/
       - uses: actions/configure-pages@v5
         with:
           enablement: true

@@ -1,0 +1,141 @@
+\chapter{コレクション}
+
+wick には、リストとマップの二つのコンテナ型があります。また、まだ持っていない構造体の代わりとなる並行リストという書き方があります。本章ではこの三つを扱い、0からの添字に合う反復のパターンと、失敗し得る検索をすべてオプショナル値にする意図的な選択を説明します。
+
+\section{リスト}
+
+リストは型を持つ順序付きの列で、添字は0から始まります。要素型は三つのスカラー型のいずれかです。リストリテラルは内容から要素型を推論し、空のリテラルには型注釈が必要です。
+
+\begin{lstlisting}[language=wick]
+let xs = [1, 2, 3]            // list<num>, element type inferred
+let names = ["a", "b"]        // list<str>
+let flags: list<bool> = []    // empty literal REQUIRES the annotation
+\end{lstlisting}
+
+\noindent
+空リストの注釈は任意の心遣いではありません。`[]` には推論の材料がなく、コンパイラは \texttt{empty [] needs a type: let xs: list<num> = []} と伝えます。リストは同じ型の要素だけを持つので、型が混在するリテラルもコンパイルできません。\texttt{list elements must share one type} と報告され、`[1, "a"]` は拒否されます。
+
+\paragraph{リストの操作。} 基本操作は組み込み関数で、静的な要素型に応じて処理されます。
+
+\begin{lstlisting}[language=wick]
+push(xs, 4)                  // append; type-checked against the element type
+let last = pop(xs) ?? 0      // remove and return the last; T? (nil if empty)
+xs[0] = 10                   // index assignment
+let head = xs[0]             // index read
+let n = len(xs)              // number of elements
+\end{lstlisting}
+
+\noindent
+`push` は要素型に一致する値を末尾に加えます。`push(flags, 3)` はコンパイルできません。`pop` は最後の要素を取り除いて返しますが、リストは空かもしれないため、結果はオプショナル値 `T?` です。取り出すものがなければ `nil` になります。他のオプショナル値と同様、通常は `?? default` で扱います。`len` は要素数を `num` として返します。
+
+\paragraph{添字は実行時に検査します。} \texttt{[0, len)} の範囲外を読み書きすると、未定義の動作や黙って返される `nil` ではなく、\emph{実行時}エラーになります。そのフレームを止め、エラー画面に行番号と \texttt{list index N out of range (len M)} を表示します。静的な型システムには、一般に添字の値までは分からないので、この検査は動的なままです。ただし、メモリの安全性の穴ではなく、正確なメッセージ付きの検査です。
+
+\paragraph{要素型。} リストの要素は `num`、`bool`、`str` です。v0.3 にリストのリストはなく、`list<list<num>>` は \texttt{container elements must be num, bool, or str} と報告されます。本当に格子や不規則な構造が必要なときの回避策は、平坦なリストに対する添字計算です。本章の最後で示します。
+
+\section{マップ}
+
+マップは文字列をキーとし、値の型を持つコレクションです。キーは常に `str`、値は三つのスカラー型のいずれかです。
+
+\begin{lstlisting}[language=wick]
+let scores = ["ana": 3, "bo": 5]   // map<num>
+scores["cid"] = 1                  // insert or update
+let s = scores["dee"] ?? 0         // get is ALWAYS T? -- missing key is nil
+let n = len(scores)                // number of entries
+\end{lstlisting}
+
+\noindent
+マップリテラルは文字列リテラルのキーと値を組にします。リテラル内のキーは計算式ではなく文字列リテラルでなければなりません。\texttt{map keys must be str literals} という規則です。計算したキーで挿入するには、`m[k] = v` の添字代入を使います。リテラル内の値は、リストの要素と同様に、同じ型である必要があります。
+
+\paragraph{検索結果は必ずオプショナル値です。} マップで最も大切な事実は、`m[key]` の型が必ず `T?` であることです。直前に挿入したキーでも同じです。型システムはキーの存在を証明できないため、どの検索も存在しない可能性があると扱い、`T?` を渡します。これは意図的な設計です。誰もが忘れるキー不在の場合を呼び出し箇所で必ず意識し、`??` なら三文字で処理できます。型が仮定を許さないため、「さっきはあったのに」と驚くことはありません。
+
+\begin{lstlisting}[language=wick]
+scores["ana"] = 10
+let a = scores["ana"] ?? 0    // still T?; the ?? is required, not optional
+\end{lstlisting}
+
+\section{レコードとレコードのリスト}
+
+ランプ、レジスタ、回路部品は、論理的には一つの値です。Wick 0.2 からは、平坦なレコードが、その値に名前付きで検査されるフィールドを与えます。
+
+\begin{lstlisting}[language=wick]
+record Lamp { x: num, z: num, lit: bool }
+let lamps: list<Lamp> = []
+push(lamps, Lamp { x: 3.4, z: 3.4, lit: true })
+push(lamps, Lamp { x: -3.4, z: 3.4, lit: true })
+lamps[0].lit = false
+check(lamps[1].x == -3.4, "named field")
+fn relight(i: num) { lamps[i].lit = true }
+\end{lstlisting}
+
+レコードは使用前に宣言します。構築時にはすべてのフィールド名を指定し、欠落、重複、未知のフィールド、誤った型はエラーです。フィールドは `num`、`bool`、`str` に限定され、レコードにはメソッドや入れ子のコンテナがありません。レコードはヒープ上のオブジェクトです。別の変数へ代入すると共有されるため、フィールドの変更はどちらの参照からも見えます。独立したコピーが必要なときは、新しい値を構築します。
+
+古いチュートリアルは元のゲームと比較できるように、スカラーの並行リストを使っています。その表現も引き続き使えますが、レコードなら別々のフィールド用リストを同じ長さに保つ必要がなくなります。入れ子のデータには、今でも平坦な ID や別々のリストが必要です。第9章では8ビットのレジスタにレコードを使います。
+
+\section{反復のパターン}
+
+コレクションを回るループ形式は一つです。添字を反復し、その添字で要素にアクセスします。
+
+\begin{lstlisting}[language=wick]
+for i in 0..len(xs) {
+  use(xs[i])
+}
+\end{lstlisting}
+
+\noindent
+範囲は終点を含まず、リストの添字は0からなので、`0..len(xs)` は有効な添字だけを正確に訪れます。一つずれる誤りがありません。v0.3 に `for x in list` はなく、添字による形式だけです。その利点は、必要なときに `i` が手元にあることです。並行リストでは常に必要で、最も近い要素を探す問題では戻り値として必要です。
+
+\paragraph{添字を返す検索。} よくある形は、「ある条件に合う要素を探し、なければないと伝える」です。複数の戻り値も `for x in list` もないため、そこまでの最良の添字と、「なし」を示す番兵値を持つループを書きます。
+
+\begin{lstlisting}[language=wick]
+fn nearest_unlit(): num {        // returns a lamp index, or -1
+  let bi = 0 - 1
+  let bd = 0.0
+  for i in 0..len(lamp_x) {
+    if not lamp_lit[i] {
+      let dx = lamp_x[i] - px
+      let dz = lamp_z[i] - pz
+      let d = dx * dx + dz * dz
+      if bi < 0 or d < bd {
+        bi = i
+        bd = d
+      }
+    }
+  }
+  return bi
+}
+\end{lstlisting}
+
+\noindent
+呼び出し側は結果を使う前に番兵値を確認します。
+
+\begin{lstlisting}[language=wick]
+let i = nearest_unlit()
+if i >= 0 {
+  // i is a valid index
+}
+\end{lstlisting}
+
+\noindent
+初期値の `bi` は `-1` ではなく `0 - 1` と書いています。単項マイナスはあるため、どちらも合法です。このゲームのコードでは、たまたま減算の形にしています。`-1` はオプショナル値ではなく、普通の `num` の番兵値です。呼び出し側へ `num?` を伝えていくより `i >= 0` の検査の方が軽いためです。これは、言語に欠けている複数の戻り値の代用として定番の書き方です。
+
+\section{入れ子のコンテナを使わない入れ子データ}
+
+タイルの格子など、本当に二次元の構造が必要でも、`list<list<num>>` は使えません。その場合は平坦化します。一つのリストに行優先で格納し、添字を計算します。
+
+\begin{lstlisting}[language=wick]
+let W = 16
+let H = 12
+let tiles: list<num> = []
+for i in 0..W * H { push(tiles, 0) }
+
+fn get(tx: num, ty: num): num {
+  return tiles[ty * W + tx]
+}
+
+fn set(tx: num, ty: num, v: num) {
+  tiles[ty * W + tx] = v
+}
+\end{lstlisting}
+
+\noindent
+システム言語で生のバッファを扱うときと同じ工夫です。実行時の範囲検査とも問題なく組み合わせられます。範囲外の `ty * W + tx` は、他の範囲外の添字と同じように検出されます。入れ子のコンテナより記述は長くなりますが、対応するまでは、これが v0.3 の率直な答えです。

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wick — 言語リファレンス、サンプル、Lantern エンジン</title><meta name="description" content="Wick でゲームを書き、Lantern で実行。入門、言語とエンジンの API、書籍、最新リリースのダウンロードをご案内します。"><link rel="canonical" href="https://wick.aulenor.com/ja/">
+<meta property="og:title" content="Wick — 言語リファレンス、サンプル、Lantern エンジン"><meta property="og:url" content="https://wick.aulenor.com/ja/"><meta property="og:type" content="website">
+<link rel="alternate" hreflang="en" href="https://wick.aulenor.com/"><link rel="alternate" hreflang="ja" href="https://wick.aulenor.com/ja/">
+<script src="/theme.js"></script><link rel="stylesheet" href="/assets/fonts.css"><link rel="stylesheet" href="/style.css"><link rel="alternate" hreflang="en" href="https://wick.aulenor.com/"><link rel="alternate" hreflang="ja" href="https://wick.aulenor.com/ja/"><link rel="alternate" hreflang="x-default" href="https://wick.aulenor.com/"></head>
+<body><a class="skip" href="#main">本文へ移動</a>
+<header class="site-header wrap">
+  <div class="masthead"><a class="brand" href="/ja/" aria-label="Wick ホーム">wick<span class="version">0.3</span></a><span class="site-context">言語とゲームエンジン</span>
+  <form class="site-search" role="search" action="/ja/docs/" method="get"><label class="sr-only" for="site-query">Wick ドキュメントを検索</label><input id="site-query" name="q" type="search" placeholder="ドキュメントを検索: u8、lt.rect、オプショナル…" required><button type="submit">検索</button></form>
+  <label class="appearance">テーマ <select data-wick-theme aria-label="テーマ"><option value="system">システム</option><option value="light">ライト</option><option value="dark">ダーク</option></select></label><nav class="language-switch" aria-label="言語"><a href="/" lang="en" hreflang="en">English</a><a href="/ja/" lang="ja" hreflang="ja" aria-current="page">日本語</a></nav></div>
+  <nav aria-label="メインナビゲーション"><a href="/ja/docs/getting-started/">入門</a><a href="/ja/docs/">リファレンス</a><a href="/ja/book/">書籍</a><a href="/ja/lantern/">Lantern エンジン</a><a href="/ja/lantern/#downloads">ダウンロード</a><a href="/ja/docs/blog/">ブログ</a><a href="https://github.com/alikatgh/lantern">ソース</a></nav>
+</header><main id="main" class="wrap">
+<section class="intro" aria-labelledby="intro-title"><div><p class="eyebrow">Wick 0.3 / ゲームプログラマーのために</p><h1 id="intro-title">型のある言語。<br>小さなゲームエンジン。</h1>
+<p><strong>Wick</strong> でゲームロジックを書き、400 × 240 のソフトウェアレンダラを備えた 2D/3D エンジン、<a href="/ja/lantern/">Lantern</a> で実行します。</p><p>静的な型、明示的なオプショナル、検査付きのエンジン呼び出し。<code>main.wick</code> を保存すると、ゲームが再読み込みされます。</p>
+<p class="start"><a class="button" href="/ja/tour/">5 分間ツアーへ <span aria-hidden="true">→</span></a><a href="/ja/docs/getting-started/">最初のプログラムを実行する</a></p>
+<p class="availability">Wick は Lantern に同梱されています。<a href="/ja/lantern/#downloads">macOS Apple Silicon 版をダウンロード</a> · <a href="/ja/lantern/#build-from-source">ソースからビルド</a></p></div><figure class="example">
+      <figcaption><span>main.wick</span><span>移動する正方形</span></figcaption>
+      <pre tabindex="0" aria-label="Wick で正方形を動かすサンプル"><code><span class="kw">let</span> x = <span class="num">0</span>
+
+<span class="kw">fn</span> update(dt: <span class="type">num</span>) {
+  x = (x + <span class="num">40</span> * dt) % <span class="num">400</span>
+}
+
+<span class="kw">fn</span> draw() {
+  lt.clear(<span class="num">0.1</span>, <span class="num">0.1</span>, <span class="num">0.2</span>)
+  lt.rect(x, <span class="num">100</span>, <span class="num">16</span>, <span class="num">16</span>, <span class="num">1</span>, <span class="num">0.8</span>, <span class="num">0.2</span>, <span class="num">1</span>)
+}</code></pre>
+      <p><a href="/ja/docs/getting-started/#run-your-first-program">このサンプルを実行</a> · <a href="/examples/first-game/main.wick" download>main.wick をダウンロード</a> · <a href="/ja/docs/engine-api/">エンジン API</a></p>
+    </figure></section>
+<aside class="release" aria-label="最新リリース"><strong>2026 年 10 月 6 日</strong><p><a href="/ja/docs/blog/2026-10-06-release-0.3/">Wick 0.3 / Lantern 0.8.0</a> — ビット演算、レジスタのラップ、Bit Lab。</p><a href="https://github.com/alikatgh/lantern/blob/v0.8.0/CHANGELOG.md">変更履歴 →</a></aside>
+<div class="desk"><section aria-labelledby="reference-title"><h2 id="reference-title">言語リファレンス</h2><p class="section-lead">書きながら、規則、型、関数を調べられます。</p>
+<dl class="reference-list"><div><dt><a href="/ja/docs/syntax/">構文と制御フロー</a></dt><dd><code>let</code>、<code>fn</code>、<code>if</code>、ループ</dd></div><div><dt><a href="/ja/docs/types/">型とオプショナル</a></dt><dd><code>num</code>、<code>str?</code>、<code>??</code>、型の絞り込み</dd></div><div><dt><a href="/ja/docs/records/">レコード</a>と<a href="/ja/docs/collections/">コレクション</a></dt><dd>名前付きフィールド、リスト、マップ</dd></div><div><dt><a href="/ja/docs/builtins/">組み込み関数</a></dt><dd>数値、文字列、乱数、アサーション</dd></div><div><dt><a href="/ja/docs/bits/">ビット、バイト、ワード</a></dt><dd><code>bit_*</code>、<code>u8</code>、<code>u16</code>、<code>hex</code></dd></div><div><dt><a href="/ja/docs/errors/">コンパイルエラーと実行時エラー</a></dt><dd>メッセージ、原因、修正方法</dd></div></dl><p class="section-link"><a href="/ja/docs/">リファレンスの全項目 →</a></p></section>
+<aside class="learning" aria-labelledby="learn-title"><h2 id="learn-title">作りながら学ぶ</h2><article><h3><a href="/ja/docs/getting-started/">最初のプログラム</a></h3><p>ホストをインストールし、移動する正方形を実行して、動かしたまま変更します。</p></article><article><h3><a href="/ja/book/">Wick プログラミング言語</a></h3><p>言語、エンジン、コンパイラを順を追って学べます。</p><a href="/wick-book-ja.pdf">0.3 版をダウンロード（PDF）</a></article><article><h3><a href="/ja/lantern/#examples">サンプルゲーム</a></h3><p>Wick Lab、Lantern Night、レジスタを試せる Bit Lab を探索してください。</p></article></aside></div>
+<section class="engine-strip" aria-labelledby="engine-title"><div><p class="eyebrow">ゲームを動かすホスト</p><h2 id="engine-title"><a href="/ja/lantern/">Lantern エンジン</a></h2><p>メッシュ、スプライト、音声、入力、セーブ。1 つのゲームフォルダ、フレームのコールバック、型付きの <code>lt.*</code> API。</p></div><nav aria-label="Lantern の関連情報"><a href="/ja/lantern/#build-from-source">ビルドと実行</a><a href="/ja/docs/engine-api/">エンジン API</a><a href="/ja/lantern/#package-a-game">ゲームをパッケージ化</a><a href="/ja/lantern/#platforms">プラットフォームと制限</a></nav></section>
+</main><footer class="site-footer wrap"><p>Wick 0.3 · Lantern 0.8.0 · <a href="https://github.com/alikatgh/lantern/blob/main/LICENSE">zlib ライセンス</a></p><nav aria-label="フッター"><a href="/ja/docs/limits/">言語の制限</a><a href="https://github.com/alikatgh/lantern/issues">問題を報告</a><a href="https://famemu.aulenor.com/ja/">Famemu</a></nav></footer></body></html>

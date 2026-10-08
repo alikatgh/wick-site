@@ -49,4 +49,6 @@ nav:
   - Compile errors: appendix-2.md
   - Quick reference: appendix-3.md
 extra:
+  locale: en
+  section: book
   homepage: https://wick.aulenor.com/

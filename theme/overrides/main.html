@@ -1,14 +1,31 @@
 {% extends "base.html" %}
+{% set japanese = config.extra.locale == 'ja' %}
+{% set prefix = '/ja' if japanese else '' %}
+{% set section = config.extra.section %}
+{% set current_path = page.url if page else '' %}
 {% block extrahead %}
 {{ super() }}
 <link rel="stylesheet" href="{{ 'assets/fonts.css' | url }}">
 <script src="{{ 'assets/theme.js' | url }}"></script>
+<link rel="alternate" hreflang="en" href="https://wick.aulenor.com/{{ section }}/{{ current_path }}">
+<link rel="alternate" hreflang="ja" href="https://wick.aulenor.com/ja/{{ section }}/{{ current_path }}">
+<link rel="alternate" hreflang="x-default" href="https://wick.aulenor.com/{{ section }}/{{ current_path }}">
 {% endblock %}
 {% block header %}
 {{ super() }}
-<div class="wick-navigation"><nav aria-label="Wick website"><a href="https://wick.aulenor.com/">Wick home</a><a href="https://wick.aulenor.com/docs/getting-started/">Get started</a><a href="https://wick.aulenor.com/docs/">Reference</a><a href="https://wick.aulenor.com/book/">Book</a><a href="https://wick.aulenor.com/lantern/">Lantern engine</a><a href="https://wick.aulenor.com/lantern/#downloads">Downloads</a><a href="https://wick.aulenor.com/docs/blog/">Blog</a></nav><label class="appearance">Theme <select data-wick-theme aria-label="Theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label></div>
+<div class="wick-navigation"><nav aria-label="{{ 'Wick サイト内ナビゲーション' if japanese else 'Wick website' }}">
+<a href="{{ prefix }}/">{{ 'Wick ホーム' if japanese else 'Wick home' }}</a>
+<a href="{{ prefix }}/docs/getting-started/">{{ '入門' if japanese else 'Get started' }}</a>
+<a href="{{ prefix }}/docs/">{{ 'リファレンス' if japanese else 'Reference' }}</a>
+<a href="{{ prefix }}/book/">{{ '書籍' if japanese else 'Book' }}</a>
+<a href="{{ prefix }}/lantern/">{{ 'Lantern エンジン' if japanese else 'Lantern engine' }}</a>
+<a href="{{ prefix }}/lantern/#downloads">{{ 'ダウンロード' if japanese else 'Downloads' }}</a>
+<a href="{{ prefix }}/docs/blog/">{{ 'ブログ' if japanese else 'Blog' }}</a></nav>
+<div class="reading-controls"><nav class="language-switch" aria-label="{{ '表示言語' if japanese else 'Language' }}"><a lang="en" hreflang="en" href="https://wick.aulenor.com/{{ section }}/{{ current_path }}"{% if not japanese %} aria-current="page"{% endif %}>English</a><a lang="ja" hreflang="ja" href="https://wick.aulenor.com/ja/{{ section }}/{{ current_path }}"{% if japanese %} aria-current="page"{% endif %}>日本語</a></nav>
+<label class="appearance">{{ 'テーマ' if japanese else 'Theme' }} <select data-wick-theme aria-label="{{ 'テーマ' if japanese else 'Theme' }}"><option value="system">{{ 'システム' if japanese else 'System' }}</option><option value="light">{{ 'ライト' if japanese else 'Light' }}</option><option value="dark">{{ 'ダーク' if japanese else 'Dark' }}</option></select></label></div></div>
 {% endblock %}
 {% block footer %}
 {{ super() }}
-<div class="project-links"><a href="https://wick.aulenor.com/">Wick</a><a href="https://famemu.aulenor.com">A Famemu project</a><a href="https://github.com/alikatgh/lantern">Lantern source</a></div>
+{% if japanese %}<div class="project-links">使用ツール: <a href="https://squidfunk.github.io/mkdocs-material/">Material for MkDocs</a></div>{% endif %}
+<div class="project-links"><a href="{{ prefix }}/">Wick</a><a href="https://famemu.aulenor.com{{ prefix }}/">{{ 'Famemu のプロジェクト' if japanese else 'A Famemu project' }}</a><a href="https://github.com/alikatgh/lantern">{{ 'Lantern のソース' if japanese else 'Lantern source' }}</a></div>
 {% endblock %}

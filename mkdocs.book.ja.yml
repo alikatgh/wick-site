@@ -1,0 +1,57 @@
+site_name: Wick プログラミング言語
+site_url: https://wick.aulenor.com/ja/book/
+site_description: Wick の日本語リファレンスとプログラミングガイド。
+repo_url: https://github.com/alikatgh/wick-site
+repo_name: 書籍のソース
+edit_uri: ''
+docs_dir: book-docs-ja
+site_dir: build/book-ja
+theme:
+  name: material
+  language: ja
+  custom_dir: theme/overrides
+  font: false
+  icon:
+    logo: material/book-open-page-variant
+  palette:
+    scheme: default
+  features:
+  - navigation.sections
+  - navigation.footer
+  - content.code.copy
+  - search.highlight
+  - search.suggest
+extra_css:
+- assets/reading.css
+plugins:
+- search:
+    lang: [ja, en]
+markdown_extensions:
+- attr_list
+- admonition
+- tables
+- pymdownx.superfences
+- pymdownx.highlight
+- toc:
+    permalink: true
+    permalink_title: この見出しへの固定リンク
+nav:
+- 書籍について: index.md
+- 1 · はじめに: 01-introduction.md
+- 2 · Wick チュートリアル: 02-tutorial.md
+- 3 · 言語: 03-language.md
+- 4 · オプショナル値: 04-optionals.md
+- 5 · コレクション: 05-collections.md
+- 6 · エンジンインターフェース: 06-engine.md
+- 7 · 内部構造: 07-internals.md
+- 8 · 設計とトレードオフ: 08-design.md
+- 9 · ビット・バイト・バス: 09-bits-and-buses.md
+- 付録:
+  - 文法: appendix-1.md
+  - コンパイルエラー: appendix-2.md
+  - クイックリファレンス: appendix-3.md
+extra:
+  locale: ja
+  generator: false
+  section: book
+  homepage: https://wick.aulenor.com/ja/

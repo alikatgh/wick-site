@@ -15,3 +15,16 @@ if grep -q 'Overfull' "$OUT/main.log"; then
 fi
 cp "$OUT/main.pdf" "$ROOT/wick-book.pdf"
 cp "$OUT/main.pdf" "$ROOT/book/main.pdf"
+
+# Japanese requires a Unicode typesetter and embedded Japanese fonts.
+JA_OUT="$OUT/ja"
+mkdir -p "$JA_OUT/chapters"
+cd "$ROOT/book-ja"
+for pass in 1 2; do
+  xelatex -interaction=nonstopmode -halt-on-error -output-directory "$JA_OUT" main.tex
+done
+if grep -Eq 'Overfull|Missing character:' "$JA_OUT/main.log"; then
+  echo "Japanese PDF has overflow or missing glyphs; inspect $JA_OUT/main.log" >&2
+  exit 1
+fi
+cp "$JA_OUT/main.pdf" "$ROOT/wick-book-ja.pdf"

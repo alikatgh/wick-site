@@ -1,0 +1,287 @@
+\chapter{文法}
+
+以下の EBNF は、構文リファレンスとリファレンスコンパイラのフロントエンドをもとにした wick v0.3 の文法です。終端記号は引用符で囲み、\texttt{\{\ \}} は0回以上の繰り返し、\texttt{[\ ]} は省略可能、\texttt{|} は選択肢の区切りを表します。コメントと空白は字句解析器が扱うため、ここには示していません。式の規則の優先順位は、最も弱い `orExpr` から最も強い `postfix` まで、第3章の表と一致します。
+
+\begin{lstlisting}[basicstyle=\ttfamily\small,keywordstyle={}]
+program        = { toplevel } ;
+toplevel       = recordDecl | fnDecl | statement ;
+recordDecl     = "record" ident "{" field { "," field } "}" ;
+field          = ident ":" scalar ;
+
+fnDecl         = "fn" ident "(" [ params ] ")" [ ":" type ] block ;
+params         = param { "," param } ;
+param          = ident ":" type ;
+block          = "{" { statement } "}" ;
+
+statement      = letStmt | assign | callStmt | ifStmt | whileStmt
+               | forStmt | "break" | "continue" | returnStmt ;
+letStmt        = "let" ident [ ":" type ] "=" expr ;
+assign         = lvalue "=" expr ;
+lvalue         = ident [ "[" expr "]" ] [ "." ident ] ;
+callStmt       = call ;
+ifStmt         = "if" expr block { "elif" expr block } [ "else" block ] ;
+whileStmt      = "while" expr block ;
+forStmt        = "for" ident "in" expr ".." expr block ;
+returnStmt     = "return" [ expr ] ;
+
+type           = element [ "?" ]
+               | "list" "<" element ">" [ "?" ]
+               | "map"  "<" element ">" [ "?" ] ;
+scalar         = "num" | "bool" | "str" ;
+element        = scalar | ident ;  (* ident: declared record type *)
+
+expr           = orExpr ;
+orExpr         = andExpr    { "or"  andExpr } ;
+andExpr        = coalesce   { "and" coalesce } ;
+coalesce       = equality   { "??"  equality } ;
+equality       = comparison { ( "==" | "!=" ) comparison } ;
+comparison     = addition   { ( "<" | "<=" | ">" | ">=" ) addition } ;
+addition       = term       { ( "+" | "-" ) term } ;
+term           = unary      { ( "*" | "/" | "%" ) unary } ;
+unary          = ( "-" | "not" ) unary | postfix ;
+postfix        = primary { "(" [ args ] ")" | "[" expr "]" | "." ident } ;
+primary        = number | string | "true" | "false" | "nil"
+               | qualified | ident | "(" expr ")"
+               | listLit | mapLit | recordLit ;
+recordLit      = ident "{" ident ":" expr { "," ident ":" expr } "}" ;
+qualified      = ident "." ident ;         (* e.g. lt.draw *)
+call           = ( ident | qualified ) "(" [ args ] ")" ;
+args           = expr { "," expr } ;
+
+listLit        = "[" [ expr { "," expr } ] "]" ;
+mapLit         = "[" string ":" expr { "," string ":" expr } "]" ;
+
+ident          = letter { letter | digit } ;    (* letter includes _ *)
+number         = digit { digit } [ "." digit { digit } ]
+               | ( "0x" | "0X" ) hexDigit { hexDigit }
+               | ( "0b" | "0B" ) bit { bit } ;
+hexDigit       = digit | "a".."f" | "A".."F" ;
+bit            = "0" | "1" ;
+string         = '"' { char | escape } '"' ;
+escape         = "\n" | "\t" | '\"' | "\\" ;
+\end{lstlisting}
+
+\noindent
+文法についての補足です。空の `listLit`（\texttt{[]}）は構文上は合法ですが、要素型を推論できないため、それを含む `let` に型注釈が必要です。`mapLit` には文字列リテラルのキーが必要です。`forStmt` の `..` は一つのトークンで、字句解析器は `1..5` が `1`、`..`、`5` になることを保証します。型名は `type` の位置でだけ認識する文脈依存の名前であり、予約語ではありません。
+
+\chapter{コンパイルエラー一覧}
+
+wick の診断はすべて \texttt{file:line: message} の形で、エンジン内のエラー画面に現れます。ファイルを直して保存すると、ゲームがホットリロードされます。以下の表では、原因ごとにコンパイル時のメッセージを挙げ、意味と一般的な対処を示します。リファレンスコンパイラの表現には細かな違いがあるかもしれませんが、ここに示す形を基本とします。
+
+\begingroup
+\small
+\begin{longtable}{@{}p{0.40\linewidth}p{0.54\linewidth}@{}}
+\toprule
+\textbf{メッセージの形} & \textbf{意味と修正方法} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{メッセージの形} & \textbf{意味と修正方法} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{2}{r}{\emph{次のページに続く}} \\
+\endfoot
+\bottomrule
+\endlastfoot
+
+\texttt{expected str, got str?}（型は例） &
+普通の値が必要な場所に、オプショナル値または異なる型を使った。\texttt{??} で中の値を取り出すか、\texttt{if x != nil \{ \}} で絞り込む。 \\
+\addlinespace
+\texttt{if condition must be bool (wick has no truthiness)} &
+数値や文字列に \texttt{if x} を使った。\texttt{if x > 0}、\texttt{if s != ""} のように比較を書く。 \\
+\addlinespace
+\texttt{while condition must be bool} &
+上記と同じ、\texttt{while} の条件の誤り。 \\
+\addlinespace
+\texttt{unknown variable 'x' --- wick has no implicit globals; use let} &
+未宣言の名前に代入した。多くはタイプミス。\texttt{let} を加えるか、つづりを直す。 \\
+\addlinespace
+\texttt{unknown variable 'x' (declare it with let)} &
+未宣言の名前を読んだ。宣言するか、つづりを直す。 \\
+\addlinespace
+\texttt{'+' needs num+num or str+str (use str(x))} &
+異なる型を \texttt{+} で結んだ。\texttt{"n=" + str(n)} のように明示的に変換する。 \\
+\addlinespace
+\texttt{'-' needs num operands} / \texttt{arithmetic needs num operands} &
+算術演算子に \texttt{num} 以外のオペランドを渡した。 \\
+\addlinespace
+\texttt{f() argument 3: expected num, got str} &
+エンジンまたは自作関数の型付き呼び出しで型が不一致。シグネチャを確認する。 \\
+\addlinespace
+\texttt{f() needs at least N arguments} / \texttt{takes N arguments} &
+引数の数が不一致。シグネチャを確認する。 \\
+\addlinespace
+\texttt{unknown function 'f' (wick requires declare-before-use)} &
+定義より上で呼び出した。\texttt{fn} を上に移す。 \\
+\addlinespace
+\texttt{can't infer a type from nil; annotate: let x: str? = nil} &
+単独の \texttt{nil} で初期化した。型注釈を加える。 \\
+\addlinespace
+\texttt{empty [] needs a type: let xs: list<num> = []} &
+型のない空リテラル。\texttt{let} に型注釈を加える。 \\
+\addlinespace
+\texttt{list elements must share one type} &
+\texttt{[1, "a"]} のように型が混在するリテラル。リストは同じ型の要素だけを持つ。 \\
+\addlinespace
+\texttt{list elements must be num, bool, or str} &
+許可されない型のコンテナ要素。 \\
+\addlinespace
+\texttt{comparing non-optional to nil} &
+普通の型に \texttt{x != nil} を使った。\texttt{nil} にはならないので、検査を削除する。 \\
+\addlinespace
+\texttt{'??' left side must be an optional} &
+\texttt{nil} になり得ない \texttt{a} に \texttt{a ?? b} を使った。\texttt{??} を削除する。 \\
+\addlinespace
+\texttt{'??' default must be T} &
+既定値の型がオプショナル値の元の型と一致しない。 \\
+\addlinespace
+\texttt{'x' already declared in this scope} / \texttt{'x' already declared} &
+\texttt{let} が重複。代入するか、名前を変える。 \\
+\addlinespace
+\texttt{parenthesize this condition: (a != b) and ...} &
+絞り込みのパターンと \texttt{and}/\texttt{or} が混在。括弧を加える。 \\
+\addlinespace
+\texttt{break outside a loop} / \texttt{continue outside a loop} &
+囲むループのないループ制御文。 \\
+\addlinespace
+\texttt{fn declarations can't nest} &
+別の \texttt{fn} の中の \texttt{fn}。v0.3 ではトップレベルのみ。 \\
+\addlinespace
+\texttt{return outside a function} &
+トップレベルの \texttt{return}。 \\
+\addlinespace
+\texttt{void function can't return a value} &
+戻り値の型を宣言していない関数内の \texttt{return expr}。 \\
+\addlinespace
+\texttt{this function must return T} &
+値を返す関数内の、単独の \texttt{return} または型の不一致。 \\
+\addlinespace
+\texttt{map keys must be str literals} &
+マップリテラルに計算したキーを使った。\texttt{m[k] = v} で構築する。 \\
+\addlinespace
+\texttt{container elements must be num, bool, or str} &
+入れ子のコンテナ。平坦化する（第5章）。 \\
+\addlinespace
+\texttt{only lists and maps can be indexed} &
+リストでもマップでもない値に添字を使った。 \\
+\addlinespace
+\texttt{'and'/'or' needs bool operands} &
+論理演算子に \texttt{bool} 以外のオペランドを使った。 \\
+\addlinespace
+\texttt{unexpected character 'x'} &
+字句解析器が認識しないバイト。 \\
+\end{longtable}
+\endgroup
+
+\section*{実行時エラー}
+
+静的な型によって上記の種類の誤りをコンパイル時に取り除けますが、実行時にしか分からない値に依存する次の誤りは取り除けません。いずれもフレームを止め、行番号付きでエラー画面に出ます。
+
+\begin{center}
+\begin{tabular}{@{}p{0.42\linewidth}p{0.50\linewidth}@{}}
+\toprule
+\textbf{メッセージ} & \textbf{原因} \\
+\midrule
+\texttt{list index N out of range (len M)} &
+範囲外の \texttt{xs[i]} の読み取りまたは書き込み。 \\
+\texttt{check failed: <msg>} &
+自作の \texttt{check()} による表明が失敗。 \\
+\texttt{load\_texture/mesh/sound failed: <path>} &
+存在しない、または形式の不正なアセット。 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\chapter{早見表}
+
+\section*{組み込み関数}
+
+名前空間なしで、常に使えます。汎用の組み込み関数 `len`、`str`、`num`、`push`、`pop` は、コンパイル時に静的な型に応じて処理を選びます。
+
+\begin{center}
+\small\begin{tabular}{@{}p{0.45\linewidth}p{0.47\linewidth}@{}}
+\toprule
+\textbf{シグネチャ} & \textbf{備考} \\
+\midrule
+\texttt{len(x): num} & \texttt{str}、\texttt{list}、\texttt{map} の長さ \\
+\texttt{str(x): str} & \texttt{num}、\texttt{bool}、\texttt{str} を文字列へ。整数は小数なし \\
+\texttt{num(s: str): num?} & 数値として解析。失敗時は \texttt{nil}（\texttt{""} を含む） \\
+\texttt{push(xs: list<T>, v: T)} & 末尾に追加 \\
+\texttt{pop(xs: list<T>): T?} & 最後を取り除いて返す。空なら \texttt{nil} \\
+\midrule
+\texttt{floor(x: num): num} \enskip \texttt{ceil(x: num): num} & \\
+\texttt{abs(x: num): num} \enskip \texttt{sqrt(x: num): num} & \\
+\texttt{min(a: num, b: num): num} \enskip \texttt{max(a, b): num} & \\
+\texttt{sin(x: num): num} \enskip \texttt{cos(x: num): num} & ラジアン \\
+\texttt{atan(y: num, x: num): num} & 二引数の逆正接 \\
+\texttt{pi} & 定数、3.14159\ldots \\
+\midrule
+\texttt{rand(): num} & \texttt{[0, 1)} の一様な値。どこでも同じ列 \\
+\texttt{srand(seed: num)} & 再現可能な実行のためシードを再設定 \\
+\texttt{env(name: str): str?} & 環境変数を読む。未設定なら \texttt{nil} \\
+\texttt{check(cond: bool, msg: str)} & 実行時の表明 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section*{\texttt{lt.*} エンジンインターフェース}
+
+\begingroup\small
+\begin{longtable}{@{}p{0.45\linewidth}p{0.47\linewidth}@{}}
+\toprule
+\textbf{呼び出し} & \textbf{備考} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\multicolumn{2}{@{}l}{\emph{フレームと画面}} \\
+\texttt{lt.W} \enskip \texttt{lt.H} & 定数400、240 \\
+\texttt{lt.clear(r,g,b)} & 色と深度を消去 \\
+\texttt{lt.time(): num} & 起動後の秒数 \\
+\texttt{lt.screenshot(path: str)} & フレームを BMP として保存 \\
+\texttt{lt.quit()} \enskip \texttt{lt.escape\_quits(enable: bool)} & \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{3D シーン}} \\
+\texttt{lt.camera(ex,ey,ez, tx,ty,tz, fov=55)} & 位置と注視点 \\
+\texttt{lt.light(dx,dy,dz, ambient=0.35)} & 平行光源 \\
+\texttt{lt.point\_light(i, x,y,z, radius, r=1,g=1,b=1)} & スロット0--3 \\
+\texttt{lt.fog(start, end, r,g,b)} & 深度に線形 \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{メッシュ}} \\
+\texttt{lt.cube()} \enskip \texttt{lt.plane(segs=1)} & 単位プリミティブ \\
+\texttt{lt.sphere(seg=12)} \enskip \texttt{lt.cylinder(seg=16)} \enskip \texttt{lt.cone(seg=16)} & \\
+\texttt{lt.mesh(verts: list<num>): num} & 頂点ごとに浮動小数点数12個 \\
+\texttt{lt.load\_mesh(path: str): num} & Wavefront OBJ \\
+\texttt{lt.draw(m, x,y,z, rx,ry,rz, sx,sy,sz, r,g,b, tex=-1)} & 照明を付けて描画 \\
+\texttt{lt.draw\_lerp(a, b, t, \ldots, tex=-1)} & キーフレーム補間 \\
+\texttt{lt.billboard(tex, x,y,z, w,h, \ldots)} & カメラを向く四角形 \\
+\texttt{lt.shadow(x,y,z, radius, alpha=0.35)} & 接地感を出す簡易の影 \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{2D}} \\
+\texttt{lt.rect(x,y,w,h, r,g,b, a=1)} & 塗りつぶし、アルファ合成 \\
+\texttt{lt.load\_texture(path: str): num} & BMP。マゼンタは透明 \\
+\texttt{lt.sprite(tex, x,y, sx=1,sy=1)} & 左上を基準点に配置 \\
+\texttt{lt.sprite\_ex(tex, cx,cy, sx,sy, rot,r,g,b,a)} & 中心基準、回転、着色 \\
+\texttt{lt.sprite\_uv(tex, x,y,w,h, u0,v0,u1,v1)} & アトラス内の部分矩形 \\
+\texttt{lt.print(text: str, x,y, r=1,g=1,b=1,a=1)} & 8$\times$8フォント \\
+\midrule
+\multicolumn{2}{@{}l}{\emph{音声、入力、保存}} \\
+\texttt{lt.load\_sound(path: str): num} & WAV \\
+\texttt{lt.play(sound, volume=1, loop=0): num} & チャンネル、または $-1$ \\
+\texttt{lt.stop(channel)} \enskip \texttt{lt.volume(v)} & \\
+\texttt{lt.key(name: str): bool} & 押している間 \\
+\texttt{lt.pressed(name: str): bool} & このフレームで押された \\
+\texttt{lt.gamepad(): bool} \enskip \texttt{lt.rumble(low, high, ms)} & \\
+\texttt{lt.save(name: str, data: str): bool} & バイナリデータを安全に保存 \\
+\texttt{lt.load\_save(name: str): str?} & オプショナル値。読めなければ \texttt{nil} \\
+\end{longtable}
+\endgroup
+
+\noindent
+入力名：\texttt{left right up down z x c space return escape a s d w}。
+ゲームパッドでは十字キーとスティックが方向に、A、B、Y、Start が \texttt{z}、\texttt{x}、\texttt{c}、\texttt{return} に対応します。
+
+\section{ビットとレジスタ幅（0.3）}
+
+`bit_and`、`bit_or`、`bit_xor`、`bit_not`、`bit_shl`、`bit_shr` は符号なし32ビット整数を受け取ります。シフト数は0--31の整数です。`u8` と `u16` は安全に表現できる整数を256と65536の剰余で折り返します。`hex(n, width=1)` と `bin(n, width=1)` は、符号なしの値を最小桁数の0埋め付きで表示します。幅はそれぞれ1--8と1--32で、切り捨てはしません。すべての関数は、実行時に不正な数値範囲を拒否します。第9章を参照してください。

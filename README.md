@@ -14,6 +14,7 @@ The language and engine implementation lives in [alikatgh/lantern](https://githu
 | `docs/`, `mkdocs.yml` | Language and engine reference at `/docs/`, blog at `/docs/blog/` |
 | `book/chapters/*.tex` | Canonical book source; web at `/book/`, PDF at `/wick-book.pdf` |
 | `theme/`, `theme.js` | Shared reading styles, local fonts, navigation and appearance |
+| `ja/`, `docs-ja/`, `book-ja/` | Japanese counterparts at `/ja/`, `/ja/docs/`, `/ja/book/`, and `/wick-book-ja.pdf` |
 
 `book-docs/`, `build/` and `_site/` are generated. Fix book conversion in
 `scripts/build-book.py`; do not patch its generated Markdown or HTML.
@@ -22,7 +23,9 @@ The language and engine implementation lives in [alikatgh/lantern](https://githu
 
 Use an existing Python environment, or create a virtual environment and install
 `requirements-sites.txt`. Book conversion needs Pandoc (via the declared Python
-dependency); PDF generation needs `pdflatex`, `lmodern` and the LaTeX extra packages.
+dependency). The English PDF uses pdfLaTeX; Japanese uses XeLaTeX and Noto CJK fonts.
+On Ubuntu, install `texlive-latex-extra texlive-fonts-recommended lmodern
+texlive-xetex texlive-lang-japanese texlive-lang-chinese fonts-noto-cjk`.
 
 ```sh
 bash scripts/build-pdf.sh
@@ -65,3 +68,6 @@ against actual release files and supported platforms. Distinguish the Wick
 language version from the Lantern engine version; do not promise platform
 binaries that the release does not contain. Keep the homepage example, its
 `main.wick` download and the getting-started listing consistent.
+Update the Japanese counterpart in the same change. Preserve code examples,
+API names, source revisions and language-switch destinations. The build checks
+translation coverage, example parity, links, and PDF overflow or missing glyphs.

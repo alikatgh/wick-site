@@ -1,0 +1,229 @@
+\chapter{wick チュートリアル}
+
+本章では、空のフォルダから遊べるものになるまで、小さくても完全なゲームを作ります。言語機能は必要になった時点で紹介し、ゲームに必要な範囲を説明します。厳密な規則は第3章で扱います。最後には、変数、関数、オプショナル値、リスト、ループ、そしてエンジンが毎フレーム呼ぶ二つの関数を書き終えています。さらに、wick での開発を快適にするホットリロードと画面上のエラー表示も使います。
+
+\section{導入と実行}
+
+wick は lantern エンジンに含まれています。別途インストールするものはありません。エンジンをビルドできれば、wick を実行できます。
+
+\begin{lstlisting}[language=bash,basicstyle=\ttfamily\small,keywordstyle={}]
+git clone https://github.com/alikatgh/lantern && cd lantern
+brew install sdl2 lua cmake pkg-config   # macOS; Linux: same packages
+cmake -B build && cmake --build build -j8
+
+./build/lantern games/wicklab            # the first wick program
+./build/lantern games/showcase_wick      # Lantern Night, in wick
+\end{lstlisting}
+
+\noindent
+最初のコマンドはエンジンをビルドします。最後の二つは、リポジトリにあるゲームを実行します。`wicklab` は言語を短く紹介するデモで、`showcase_wick` は本書で繰り返し登場する Lantern Night の wick 版です。
+
+\section{ゲームは一つのフォルダ}
+
+wick のゲームは、`main.wick` というファイルを含むディレクトリです。エンジンにフォルダを指定すると、そのファイルがあれば実行し、なければ `main.lua` を使います。新しいゲームを始めるには、次のようにします。
+
+\begin{lstlisting}[language=bash,basicstyle=\ttfamily\small,keywordstyle={}]
+mkdir games/lamp
+$EDITOR games/lamp/main.wick
+./build/lantern games/lamp
+\end{lstlisting}
+
+\noindent
+画面は400×240ピクセルです。エンジンは毎秒60フレームで動作し、毎フレーム、名前で二つの関数を探します。
+
+\begin{lstlisting}[language=wick]
+fn update(dt: num) {   // dt = seconds since last frame, capped at 0.1
+}
+
+fn draw() {            // 3D first, then 2D composites on top
+  lt.clear(0.1, 0.1, 0.2)
+  lt.print("HELLO 400X240", 4, 4, 1, 1, 1, 1)
+}
+\end{lstlisting}
+
+\noindent
+どちらの関数も必須ではありません。トップレベルの文だけを持つ `main.wick` も正しいプログラムです。`fn` の外にあるトップレベルの文は、読み込み時に一度だけ実行されます。リソースの作成や状態の初期設定はそこで行います。この二つの関数を書いてファイルを保存し、フォルダを実行すると、濃い青で画面を消去し、組み込みの8×8フォントで一行の文字を表示するウィンドウが現れます。ゲームと呼べる最小限の形です。
+
+\section{変数と最初の動き}
+
+何かを動かしてみましょう。変数はすべて `let` で導入します。型は初期値から推論されるため、明示する機会は少なくなります。
+
+\begin{lstlisting}[language=wick]
+let x = 200.0      // num, inferred
+let y = 120.0
+\end{lstlisting}
+
+\noindent
+これはトップレベルの `let` なので、`x` と `y` はプログラムのグローバル変数です。フレームをまたいで値を保つので、プレイヤーの位置にちょうど向いています。次に `update` でキーボードを読み、`draw` で \texttt{(x, y)} に四角を描きます。
+
+\begin{lstlisting}[language=wick]
+let x = 200.0
+let y = 120.0
+
+fn update(dt: num) {
+  let speed = 120.0
+  if lt.key("left")  { x = x - speed * dt }
+  if lt.key("right") { x = x + speed * dt }
+  if lt.key("up")    { y = y - speed * dt }
+  if lt.key("down")  { y = y + speed * dt }
+  x = max(8, min(392, x))
+  y = max(8, min(232, y))
+}
+
+fn draw() {
+  lt.clear(0.09, 0.07, 0.16)
+  lt.rect(x - 4, y - 4, 8, 8, 1, 0.85, 0.3, 1)
+}
+\end{lstlisting}
+
+\noindent
+ここで早くも、いくつか注目すべき点があります。`speed` は `update` 内で `let` を使って宣言しているので、ローカル変数です。その呼び出しの間だけ存在します。前のフレームから経過した秒数 `dt` を掛けると、動きがフレームレートに依存しなくなります。機種が毎秒60フレームでも144フレームでも、四角は毎秒120ピクセル動きます。`max` と `min` は組み込み関数で、名前空間なしで常に使えます。`lt.key` は `bool` を返し、`if` が受け付けるのはこの型だけです。wick に真偽の暗黙変換はありません。`if x` と書いて「x が0でなければ」と解釈されることは期待できず、コンパイルもできません。
+
+\section{関数}
+
+関数は `fn` で宣言し、必ずトップレベルに置きます。v0.3 では関数を入れ子にできません。引数の型は必須です。戻り値の型は引数リストの後にコロンで続け、何も返さない関数では省略します。四角を上下に揺らす小さな補助関数を作ります。
+
+\begin{lstlisting}[language=wick]
+fn wobble(v: num): num {
+  return sin(v * 2) * 6
+}
+\end{lstlisting}
+
+\noindent
+`sin` は組み込み関数で、角度をラジアンで受け取ります。`wobble` を使うには時計が必要なので、トップレベルに `let t = 0.0` を加え、`update` で `t = t + dt` と進めます。描画は次のようになります。
+
+\begin{lstlisting}[language=wick]
+lt.rect(x - 4, y - 4 + wobble(t), 8, 8, 1, 0.85, 0.3, 1)
+\end{lstlisting}
+
+\noindent
+覚えておく規則は一つです。関数は、呼び出すより前に宣言する必要があります。コンパイラは一回走査で動作し、その理由は第7章で説明します。`update` と `draw` はあなたのコードではなくホストが呼ぶので、両者の順序は問いません。ただし `wobble` は、それを呼び出す行より上になければなりません。
+
+\section{オプショナル値と得点の保存}
+
+ここからが wick らしさの核心です。カウントを増やし、ディスクに保存したいとします。保存は簡単です。
+
+\begin{lstlisting}[language=wick]
+lt.save("lamp_best", str(best))
+\end{lstlisting}
+
+\noindent
+`str` は `num` を `str` に変換し、`lt.save` は名前付きの保存スロットにバイトを書き込みます。型システムが力を発揮するのは読み込みです。保存データが存在しない、あるいは読めないかもしれないため、`lt.load_save` は値を保証できません。その戻り値の型は `str` ではなく、\emph{オプショナル値}の文字列 `str?` です。`str` が必要なところに `str?` を使うと、コンパイラが止めます。
+
+\begin{lstlisting}[language=wick]
+let s = lt.load_save("lamp_best")   // s: str?
+lt.print(s, 4, 4, 1, 1, 1, 1)       // COMPILE ERROR: expected str, got str?
+\end{lstlisting}
+
+\noindent
+エラーは `expected str, got str?` です。これは望ましいエラーです。リリースの一か月後に誰かの端末で起きるのではなく、その行を書いた時点で起きます。`str?` を `str` にするには、`nil` の場合にどうするかを指定する必要があります。最も手早い方法は、既定値を与える `??` です。
+
+\begin{lstlisting}[language=wick]
+let best = num(lt.load_save("lamp_best") ?? "") ?? 0
+\end{lstlisting}
+
+\noindent
+内側から読みましょう。`lt.load_save("lamp_best")` は `str?` です。最初の `??` は保存データがないときに `""` を使い、`str` にします。`num` は `str` を数値として解析しますが、解析は失敗することがあります。`num("banana")` も `num("")` も数値を作れません。そのため `num` は `num?` を返します。二つ目の `??` は解析に失敗したときに `0` を使い、普通の `num` にします。値が存在しない二つの可能性を一行で処理できました。コンパイラが、どちらも見逃すことを許さなかったためです。序章にあった0バイトの保存ファイルのバグが、書けない形になりました。第4章で詳しく説明します。
+
+つなぎ合わせましょう。`best` をトップレベルで宣言し、プレイヤーが \texttt{Z} を押したら増やします。
+
+\begin{lstlisting}[language=wick]
+let best = num(lt.load_save("lamp_best") ?? "") ?? 0
+
+fn update(dt: num) {
+  // ... movement from before ...
+  if lt.pressed("z") {
+    best = best + 1
+    lt.save("lamp_best", str(best))
+  }
+}
+\end{lstlisting}
+
+\noindent
+`lt.pressed` はキーが押されたフレームだけ真になります。一方、`lt.key` は押している間ずっと真です。ゲームを動かし、\texttt{Z} を何度か押し、終了してから再び実行してみてください。値は保存され、安全に読み直されるので、カウントが残ります。
+
+\section{リストでランプを持つ}
+
+ゲームの名前は \emph{lamp} なので、ランプを加えましょう。四つ用意し、それぞれ位置と点灯・消灯のフラグを持たせます。この最初のチュートリアルでは並行リストを使います。レコードは第5章で紹介するため、ここではその代わりとなる\emph{並行リスト}の書き方を使います。複数のリストで同じ添字 `i` が一つのランプを表します。
+
+\begin{lstlisting}[language=wick]
+let lamp_x: list<num> = []
+let lamp_z: list<num> = []
+let lamp_lit: list<bool> = []
+\end{lstlisting}
+
+\noindent
+空のリストリテラル `[]` には型推論の材料になる要素がないため、型注釈が\emph{必須}です。左側の `list<num>` がそのためにあります。四つのランプでリストを埋めます。
+
+\begin{lstlisting}[language=wick]
+push(lamp_x, 3.4)  push(lamp_z, 3.4)  push(lamp_lit, true)
+push(lamp_x, -3.4) push(lamp_z, 3.4)  push(lamp_lit, true)
+push(lamp_x, -3.4) push(lamp_z, -3.4) push(lamp_lit, true)
+push(lamp_x, 3.4)  push(lamp_z, -3.4) push(lamp_lit, true)
+\end{lstlisting}
+
+\noindent
+`push` は末尾に要素を加え、型も検査します。`lamp_lit` の要素は `bool` なので、`push(lamp_lit, 3)` はコンパイルできません。リストの添字は0から始まり、数値範囲で反復します。半開区間 \texttt{[0, 4)} を回る `for` ループで、すべてのランプを点灯させる関数を作ります。
+
+\begin{lstlisting}[language=wick]
+fn reset_lamps() {
+  for i in 0..4 { lamp_lit[i] = true }
+}
+\end{lstlisting}
+
+\noindent
+`for i in a..b` は `i` を `a` から `b` の直前まで進めます。終点を含めないのは、添字を0から始める方式に合わせるためです。ここでは `0..4` と `0..len(lamp_lit)` が同じ意味になります。範囲外の添字を読み書きすると、黙って `nil` を返すのではなく、行番号付きの実行時エラーになります。すぐ後で、そのエラー画面を見ます。
+
+\section{一ラウンドを組み立てる}
+
+これで、目標のあるゲームを作る材料がそろいました。ランプは時間とともに消え、プレイヤーは近くに立って \texttt{Z} を押すと、最も近いランプを点灯できます。完全な処理は `games/showcase_wick/main.wick` にあります。ここでは、これまで説明した考え方に絞って更新処理の形を示します。
+
+\begin{lstlisting}[language=wick]
+let score = 0
+
+fn nearest_unlit(): num {     // lamp index, or -1 if all lit
+  let bi = 0 - 1
+  let bd = 0.0
+  for i in 0..4 {
+    if not lamp_lit[i] {
+      let dx = lamp_x[i] - x
+      let dz = lamp_z[i] - y
+      let d = dx * dx + dz * dz
+      if bi < 0 or d < bd { bi = i  bd = d }
+    }
+  }
+  return bi
+}
+
+fn update(dt: num) {
+  // ... movement, save on Z ...
+  let i = nearest_unlit()
+  if i >= 0 {
+    if lt.pressed("z") { lamp_lit[i] = true  score = score + 1 }
+  }
+}
+\end{lstlisting}
+
+\noindent
+ここには後の章につながる点が二つあります。`nearest_unlit` は普通の `num` を返します。添字、または番兵値の `-1` です。このチュートリアルでは複数の戻り値を使わないため、「添字か、何もないか」を返すとき、オプショナル値ではなく通常の範囲外の値で表します。また、最後の二行では `if i >= 0 and lt.pressed("z")` と一つにせず、`if` を入れ子にして条件を単純に保っています。組み合わせた条件をいつ括弧で囲む必要があるかは、第3章で扱います。
+
+\section{開発のループ}
+
+二つの機能が、書く・動かす・直すというサイクルを数分から数秒に縮めます。
+
+\paragraph{ホットリロード。} エンジンが動いている間に `main.wick` を保存すると、その場で再コンパイルして読み直します。それまでに作成したリソースは先にすべて解放するので、再読み込みでリークしません。一時間ゲームプレイを調整しても再起動は不要です。定数を変えて保存すると、実行中のゲームが変わります。
+
+\paragraph{エラー画面。} ファイルに誤りがあるとき、エンジンはクラッシュしてターミナルに戻るのではなく、\texttt{file:line: message} の形でエラーを画面に描き、待ち続けます。`str?` を `str` として使う、文字列と数値を `+` で結ぶ、呼び出しより下に定義した関数を呼ぶといったコンパイルエラーも、範囲外の添字や失敗した `check()` といった実行時エラーも、同じように表示します。ファイルを直して保存すると、エラー画面からゲームがホットリロードされます。実行中のゲームを離れることはほとんどありません。
+
+たとえば `best` の行から `?? 0` を取り除くと、画面には次のように出ます。
+
+\begin{lstlisting}[basicstyle=\ttfamily\small,keywordstyle={}]
+main.wick:1: expected num, got num?
+\end{lstlisting}
+
+\noindent
+元に戻すまで、ゲームは該当行を示して待ちます。
+
+\paragraph{決定的なスクリーンショット。} `LANTERN_SHOT` にパスを指定すると、エンジンは60フレーム目を BMP として保存して終了します。さらに `LANTERN_FIXED_DT=1` を指定すると、フレーム時刻の刻みが固定され、wick の `rand()` も決定的なので、どの機種でもバイト単位で同じ画像が得られます。ゲームプレイ全体を正確に再現できます。第6章では、これを基礎にテストの方法を組み立てます。今は「自分の端末では正しく見える」という感覚を、どの端末でも同じ意味を持つ検査にできると覚えておけば十分です。
+
+これで一つのゲームと、それを開発する一連の流れが完成しました。本書の残りでは、本章で例として示した内容を厳密に説明していきます。

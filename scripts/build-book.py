@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 """Build MkDocs chapters from the original LaTeX book, preserving code verbatim."""
 from pathlib import Path
-import re, shutil, html
+import re, shutil, html, argparse
 import pypandoc
 ROOT = Path(__file__).resolve().parents[1]
-out = ROOT / 'book-docs'
+parser = argparse.ArgumentParser()
+parser.add_argument('--lang', choices=['en', 'ja'], default='en')
+args = parser.parse_args()
+source = ROOT / ('book-ja' if args.lang == 'ja' else 'book')
+out = ROOT / ('book-docs-ja' if args.lang == 'ja' else 'book-docs')
 out.mkdir(exist_ok=True)
 nav = []
-for path in sorted((ROOT / 'book/chapters').glob('*.tex')):
+for path in sorted((source / 'chapters').glob('*.tex')):
     chunks = re.split(r'(?=\\chapter\{)', path.read_text())
     for n, text in enumerate(chunks):
         if not text.strip(): continue
@@ -28,6 +32,9 @@ for path in sorted((ROOT / 'book/chapters').glob('*.tex')):
         # Layout-only TeX wrappers become raw HTML in GFM, which suppresses
         # Markdown table parsing in MkDocs. Strip wrappers before conversion.
         text = re.sub(r'\\(?:begin|end)\{center\}', '\n\n', text)
+        # A PDF-only break after a run-in heading must not become a visible
+        # backslash in the web edition.
+        text = text.replace(r'\mbox{}\\', '\n\n')
         symbols = {r'\times': '×', r'\rightarrow': '→', '-1': '−1', '^{*}': '*'}
         def math_text(match):
             expression = match[1]
@@ -63,6 +70,10 @@ for path in sorted((ROOT / 'book/chapters').glob('*.tex')):
         if 'WICKPLACEHOLDER' in md: raise RuntimeError('Unresolved code placeholder')
         (out / (slug + '.md')).write_text(md)
         nav.append((title, slug + '.md'))
+if args.lang == 'ja':
+    shutil.copy(source / 'index.md', out / 'index.md')
+    print(f'Converted {len(nav)} Japanese chapters and appendices to {out}')
+    raise SystemExit(0)
 shutil.copy(ROOT / 'wick-book.pdf', out / 'wick-book.pdf')
 (out / 'index.md').write_text('''# The Wick Programming Language
 
