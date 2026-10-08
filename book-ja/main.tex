@@ -7,7 +7,10 @@
 \usepackage{xeCJK}
 \setmainfont{Latin Modern Roman}
 \setsansfont{Latin Modern Sans}
-\setmonofont{Latin Modern Mono}
+\setmonofont[
+  BoldFont={Latin Modern Mono},
+  BoldFeatures={FakeBold=1.5}
+]{Latin Modern Mono}
 \IfFontExistsTF{Noto Serif CJK JP}{
   \setCJKmainfont[AutoFakeSlant=0.15]{Noto Serif CJK JP}
   \setCJKmonofont{Noto Serif CJK JP}
