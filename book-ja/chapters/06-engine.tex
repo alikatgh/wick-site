@@ -1,0 +1,196 @@
+\chapter{エンジンインターフェース}
+
+wick のプログラムは `lt` 名前空間を通じて lantern エンジンとやり取りします。すべての `lt.*` 呼び出しには型付きシグネチャが登録され、コンパイラが検査します。引数の数や型が間違っていれば、自作の関数と同様、呼び出し名と引数の位置を示すコンパイルエラーになります。本章では、ゲーム全体を構成するフレームの契約を述べ、API を分野別に説明します。その後、エンジンと言語を一緒に設計して実現した、決定性と検証可能性の二つの性質を扱います。
+
+\section{フレームの契約}
+
+エンジンは名前で探した二つの関数を、毎秒60フレームで、各フレームに一度ずつ呼び、ゲームを動かします。
+
+\begin{lstlisting}[language=wick]
+fn update(dt: num) { }   // simulation; dt is seconds since the last frame
+fn draw() { }            // rendering; 3D calls first, 2D composites on top
+\end{lstlisting}
+
+\noindent
+`update(dt)` はシミュレーションを進めます。引数 `dt` は経過秒数で、\emph{上限を0.1に制限}しています。ブレークポイントや遅い読み込みなどで長く止まっても、一度の巨大なステップでプレイヤーが壁をすり抜けることを防ぎます。`draw()` はフレームを描画します。3D 呼び出しを先に行い、2D 呼び出しをその上へ合成するので、`lt.print` や `lt.rect` で描く HUD は常にシーンの上に出ます。
+
+どちらの関数も必須ではありません。両方ない `main.wick` も合法で、トップレベルの文を一度実行し、静止したフレームを表示します。`fn` の外のトップレベルの文は、読み込み時に正確に一度だけ実行します。メッシュを作り、テクスチャや音を読み込み、状態を初期化する場所です。順序は固定なので、覚えておきましょう。トップレベルを一度、その後は毎フレーム `update` と `draw`、最後にフレーム境界で回収を行います（第7章）。
+
+\section{フレームと画面}
+
+\begin{center}
+\small\begin{tabular}{@{}p{0.39\linewidth}p{0.53\linewidth}@{}}
+\toprule
+\textbf{呼び出し} & \textbf{備考} \\
+\midrule
+\texttt{lt.W} \enskip \texttt{lt.H} & コンパイル時の定数：400、240 \\
+\texttt{lt.clear(r, g, b)} & 色と深度を消去。\texttt{draw()} の最初に呼ぶ \\
+\texttt{lt.time(): num} & 起動後の秒数（\texttt{LANTERN\_FIXED\_DT} では固定刻み） \\
+\texttt{lt.screenshot(path: str)} & 400$\times$240のフレームを BMP として保存 \\
+\texttt{lt.quit()} & 正常終了を要求 \\
+\texttt{lt.escape\_quits(enable: bool)} & 既定では Escape で終了。ポーズメニュー用に無効化可能 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+`lt.W` と `lt.H` は呼び出しではなく数値定数です。コンパイル時に400と240になるので、`lt.W / 2` はレイアウトに自由に使える定数式です。画面は常に400×240で、エンジンが表示画像をウィンドウに合わせて拡大・縮小します。
+
+\section{3D シーン}
+
+\begin{center}
+\small\begin{tabular}{@{}p{0.43\linewidth}p{0.49\linewidth}@{}}
+\toprule
+\textbf{呼び出し} & \textbf{備考} \\
+\midrule
+\texttt{lt.camera(ex,ey,ez, tx,ty,tz, fov=55)} & 視点の位置と注視点 \\
+\texttt{lt.light(dx,dy,dz, ambient=0.35)} & 平行光源 \\
+\texttt{lt.point\_light(i, x,y,z, radius, r=1,g=1,b=1)} & スロット0--3。\texttt{radius <= 0} で無効化 \\
+\texttt{lt.fog(start, end, r,g,b)} & 視点からの深度に線形。\texttt{end <= start} で無効化 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+`fov`、`ambient` のように、末尾にあり既定値を持つ引数は省略できます。コンパイラが既定値を補うので、ネイティブ関数には常にすべての引数が届きます。点光源には0から3の四つのスロットがあります。半径を0以下に設定すると、そのスロットを無効化します。Lantern Night はこの方法でランプを消します。
+
+\begin{lstlisting}[language=wick]
+if lamp_lit[i] {
+  lt.point_light(i, lamp_x[i], 0.8, lamp_z[i], 3.6, 1.0, 0.70, 0.28)
+} else {
+  lt.point_light(i, 0, 0, 0, 0, 0, 0, 0)   // radius 0: off
+}
+\end{lstlisting}
+
+\section{メッシュ}
+
+\begin{center}
+\small\begin{tabular}{@{}p{0.43\linewidth}p{0.49\linewidth}@{}}
+\toprule
+\textbf{呼び出し} & \textbf{備考} \\
+\midrule
+\texttt{lt.cube(): num} & 単位立方体 \\
+\texttt{lt.plane(segs=1): num} & 分割した単位 XZ 平面 \\
+\texttt{lt.sphere(seg=12)}, \texttt{lt.cylinder(seg=16)}, \texttt{lt.cone(seg=16)} & 単位プリミティブ \\
+\texttt{lt.mesh(verts: list<num>): num} & 独自メッシュ。頂点ごとに浮動小数点数12個 \\
+\texttt{lt.load\_mesh(path: str): num} & Wavefront OBJ（法線がなければ面法線を使用） \\
+\texttt{lt.draw(m, x,y,z, rx,ry,rz, sx,sy,sz, r,g,b, tex=-1)} & グーロー照明で描画（回転・拡縮・色に既定値） \\
+\texttt{lt.draw\_lerp(a, b, t, x,y,z, \ldots, tex=-1)} & 頂点数が同じ二つのメッシュ間のキーフレーム補間 \\
+\texttt{lt.billboard(tex, x,y,z, w,h, u0,v0,u1,v1)} & カメラを向く四角形（スプライトのキャラクター） \\
+\texttt{lt.shadow(x,y,z, radius, alpha=0.35)} & 接地感を出す簡易の影 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+メッシュの構築関数はすべて `num` のハンドルを返します。ハンドルはエンジンが所有する不透明な整数なので、メッシュ型はありません。`lt.mesh` は、頂点ごとに位置3個、法線3個、テクスチャ座標2個、色4個、合計12個の浮動小数点数を持つ平坦な `list<num>` を受け取ります。第5章の平坦なリストの扱い方によく合います。`lt.draw` は末尾に多数の既定引数を持つため、よく使う場合は短く書けます。
+
+\begin{lstlisting}[language=wick]
+let ground = lt.plane(12)
+lt.draw(ground, 0, 0, 0, 0, 0, 0, 15, 1, 15, 0.42, 0.40, 0.40)
+\end{lstlisting}
+
+\section{2D}
+
+\begin{center}
+\small\begin{tabular}{@{}p{0.43\linewidth}p{0.49\linewidth}@{}}
+\toprule
+\textbf{呼び出し} & \textbf{備考} \\
+\midrule
+\texttt{lt.rect(x,y,w,h, r,g,b, a=1)} & 塗りつぶし、アルファ合成 \\
+\texttt{lt.load\_texture(path: str): num} & BMP。マゼンタ (255,0,255) は透明 \\
+\texttt{lt.sprite(tex, x,y, sx=1,sy=1)} & 左上を基準点に配置 \\
+\texttt{lt.sprite\_ex(tex, cx,cy, sx=1,sy=1, rot=0, r=1,g=1,b=1,a=1)} & 中心基準、回転、着色。負の倍率で反転 \\
+\texttt{lt.sprite\_uv(tex, x,y,w,h, u0,v0,u1,v1)} & アトラス内の部分矩形（タイルマップ） \\
+\texttt{lt.print(text: str, x,y, r=1,g=1,b=1,a=1)} & 組み込み8$\times$8フォント。\texttt{\textbackslash n} に対応 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+`lt.print` は組み込みの8×8ピクセルのフォントで描画し、`\n` を解釈します。`+` は `str` と `str` しか連結しないため、HUD の行を作るには `str` で数値を明示的に変換します。Lua の `string.format` と違い、整数を末尾の小数なしですっきり表示します。
+
+\begin{lstlisting}[language=wick]
+lt.print("LAMPS RELIT: " + str(score), 4, 3, 1, 1, 1, 0.95)
+\end{lstlisting}
+
+\section{音声、入力、保存}
+
+\begin{center}
+\small\begin{tabular}{@{}p{0.43\linewidth}p{0.49\linewidth}@{}}
+\toprule
+\textbf{呼び出し} & \textbf{備考} \\
+\midrule
+\texttt{lt.load\_sound(path: str): num} & WAV \\
+\texttt{lt.play(sound, volume=1, loop=0): num} & チャンネルを返す。16個すべて使用中なら $-1$ \\
+\texttt{lt.stop(channel)} \enskip \texttt{lt.volume(v)} & \\
+\texttt{lt.key(name: str): bool} & 押している間。キーボードとゲームパッドを統合 \\
+\texttt{lt.pressed(name: str): bool} & このフレームで押された \\
+\texttt{lt.gamepad(): bool} \enskip \texttt{lt.rumble(low, high, ms)} & \\
+\texttt{lt.save(name: str, data: str): bool} & バイナリデータを安全に保存 \\
+\texttt{lt.load\_save(name: str): str?} & \textbf{オプショナル値}。読めなければ \texttt{nil} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+`lt.key` はキーを押している間、真です。`lt.pressed` はキーを押したフレームだけ真です。連続的な移動と一回だけの動作の違いに対応します。認識する入力名は次のとおりです。
+
+\begin{quote}
+\ttfamily left right up down z x c space return escape a s d w
+\end{quote}
+
+\noindent
+キーボードとゲームパッドはこの名前へ統合されます。パッドの十字キーとスティックは方向に、ボタン A は `z`、B は `x`、Y は `c`、Start は `return` に対応します。`lt.key("z")` を使ったゲームは、追加のコードなしでどちらの入力でも動きます。
+
+この表でオプショナル値を返すのは `lt.load_save` だけです。言語全体の動機を語る章がこの呼び出しを中心にしているのは、偶然ではありません。シグネチャは `load_save(str): str?` です。`nil` を扱うまで、コンパイラは結果を使うことを許しません。それこそが第4章の主題です。
+
+\section{決定性}
+
+wick と lantern は、同じプログラムに同じ入力を与えると、どの機種でも同じフレームを生成するように作っています。二つの仕組みがそれを実現し、その上にテストの習慣を築いています。
+
+\paragraph{決定的な乱数。} 組み込みの `rand()` は、固定の \mbox{xorshift64$^{*}$} 生成器から \texttt{[0, 1)} の一様な値を返します。\emph{どの機種でも同じ列}です。時刻をシードにするモードはありません。実行ごとに変化をつけたい場合は、自分で選び記録できる数値を `srand(seed)` に渡します。
+
+\begin{lstlisting}[language=wick]
+srand(7)                    // same layout every run, on every machine
+let stars: list<num> = []
+for i in 0..40 {
+  push(stars, rand() * 400)
+  push(stars, rand() * 240)
+}
+\end{lstlisting}
+
+\noindent
+列が固定なので、シードを指定した実行は同じように再現されます。スクリーンショットのテストが意味を持つ理由です。「ランダムな」星空も、CI と手元で同じ星空になります。
+
+\paragraph{固定刻みの時刻。} `lt.time()` は起動後の秒数を返します。環境変数 `LANTERN_FIXED_DT` があると、フレーム時刻は実際の時計の進み方によらず、固定の刻みで進みます。決定的な `rand()` と組み合わせると、ゲームプレイ全体をフレームごとに再現できます。
+
+\paragraph{スクリーンショットの保存。} `LANTERN_SHOT=/tmp/x` を指定すると、エンジンは60フレーム目を BMP として保存して終了します。`LANTERN_FIXED_DT=1` も指定すれば、どこでもバイト単位で同じ画像になります。この二つが「まだ正しく見えるか」を機械的な検査に変えます。
+
+\begin{lstlisting}[language=bash,basicstyle=\ttfamily\small,keywordstyle={}]
+LANTERN_SHOT=/tmp/x LANTERN_FIXED_DT=1 ./build/lantern games/mygame
+\end{lstlisting}
+
+\section{検証を日常にする}
+
+決定性が役に立つには、ゲームが自分を動かし、確認できる必要があります。wick はそのために二つの組み込み関数を用意しています。
+
+\paragraph{\texttt{env} による自動プレイ。} `env(name): str?` は環境変数を読みます。未設定なら `nil` のオプショナル値です。ゲームが自動プレイのスイッチを公開し、それで分岐すれば、CI は固定シードでゲームを自動操作できます。
+
+\begin{lstlisting}[language=wick]
+let AUTO = env("SHOWCASE_AUTO") != nil   // deterministic self-play (CI)
+if AUTO { srand(7) }
+\end{lstlisting}
+
+\noindent
+Lantern Night の `AUTO` はキーボードを読む代わりに、最も近い消えたランプへプレイヤーを動かします。そのため、画面を表示しない CI でも実際の決定的なラウンドをプレイし、60フレーム目のスクリーンショットを本当の回帰テストにできます。
+
+\paragraph{\texttt{check} による表明。} `check(cond: bool, msg: str)` は実行時の表明です。`cond` が偽ならフレームを止め、エラー画面に \texttt{check failed: <msg>} を表示します。wick のテストスイートは、この仕組みで構成しています。既知の状態を用意するシーンで結果を `check` し、固定刻みの時刻で動かすことで、正確な結果を得ます。
+
+\begin{lstlisting}[language=wick]
+check(len(lamp_x) == 4, "expected four lamps")
+check(nearest_unlit() == -1, "all lamps should start lit")
+\end{lstlisting}
+
+\noindent
+`env` で制御する自動プレイ、決定的な `rand`、固定刻みの時刻、`check` を組み合わせると、どの機種でも同じ方法で自分をテストするゲームになります。初めから言語とエンジンを決定性のために設計することの、実用的な成果です。

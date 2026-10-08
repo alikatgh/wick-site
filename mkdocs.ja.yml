@@ -1,0 +1,66 @@
+site_name: Wick · 言語リファレンス
+site_description: Wick の日本語リファレンスとプログラミングガイド。
+site_url: https://wick.aulenor.com/ja/docs/
+repo_url: https://github.com/alikatgh/lantern
+repo_name: alikatgh/lantern
+edit_uri: ''
+theme:
+  name: material
+  language: ja
+  palette:
+    scheme: default
+  font: false
+  features:
+  - navigation.sections
+  - navigation.footer
+  - navigation.indexes
+  - content.code.copy
+  - toc.integrate
+  custom_dir: theme/overrides
+markdown_extensions:
+- attr_list
+- admonition
+- pymdownx.highlight:
+    anchor_linenums: true
+- pymdownx.superfences
+- tables
+- toc:
+    permalink: true
+nav:
+- 概要: index.md
+- 入門: getting-started.md
+- 言語:
+  - 構文: syntax.md
+  - 型とオプショナル: types.md
+  - レコード: records.md
+  - 関数: functions.md
+  - コレクション: collections.md
+  - 組み込み関数: builtins.md
+  - ビット、バイト、ワード: bits.md
+- Lantern エンジン: https://wick.aulenor.com/ja/lantern/
+- エンジン API（lt.*）: engine-api.md
+- コンパイルエラーの解説: errors.md
+- 内部構造と組み込み: internals.md
+- Wick と Lua の比較: comparison.md
+- 制限と機能台帳: limits.md
+- ブログ:
+  - blog/index.md
+  - 2026-10-06 · バージョン 0.3: blog/2026-10-06-release-0.3.md
+  - 2026-07-14 · バージョン 0.2: blog/2026-07-14-release-0.2.md
+  - 2026-07-14 · レコードの採用: blog/2026-07-14-admitting-records.md
+  - 2026-07-14 · ストアの安全性: blog/2026-07-14-store-safety.md
+  - 2026-07-14 · テストの方法: blog/2026-07-14-how-we-test.md
+  - 2026-07-14 · オプショナル値を採用した理由: blog/2026-07-14-why-optionals.md
+  - 2026-07-14 · ようこそ: blog/2026-07-14-welcome.md
+extra_css:
+- assets/reading.css
+extra:
+  locale: ja
+  section: docs
+  homepage: https://wick.aulenor.com/ja/
+
+docs_dir: docs-ja
+site_dir: build/reference-ja
+plugins:
+- search:
+    lang: [ja, en]

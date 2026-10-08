@@ -1,0 +1,247 @@
+\chapter{言語}
+
+本章はリファレンスです。wick v0.3 を網羅的かつ正確に説明します。ソーステキストがトークンになる仕組み、型の種類、変数のスコープ、式の組み立て方と結合の順序、文の種類、制御の流れ、関数の宣言と呼び出しを扱います。チュートリアルでは例で示したところも、本章では規則を明記します。付録Aの文法は、ここでの説明に対応する形式的な定義です。
+
+\section{字句構造}
+
+wick のプログラムは Unicode を表すバイトの列です。字句解析器は左から右、上から下へ読み、トークンの列に変換します。空白と改行はトークンを区切りますが、それ以外の意味はありません。wick には改行に依存する規則もセミコロンもありません。文の終わりを決めるのは改行ではなく文法です。
+
+\paragraph{コメント。} コメントは `//` で始まり、行末まで続きます。ブロックコメントはありません。
+
+\begin{lstlisting}[language=wick]
+let x = 10   // this is a comment; it ends at the newline
+\end{lstlisting}
+
+\paragraph{識別子。} 識別子は `[A-Za-z_][A-Za-z0-9_]*` に一致します。最初は英字またはアンダースコアで、その後に英字、数字、アンダースコアを任意の数だけ続けます。大文字と小文字を区別します。以下の語は予約されており、識別子には使えません。
+
+\begin{quote}
+\ttfamily let\quad fn\quad if\quad elif\quad else\quad while\quad for\quad
+in\quad break\quad continue\quad return\quad true\quad false\quad nil\quad
+and\quad or\quad not\quad record
+\end{quote}
+
+\noindent
+これがキーワードの一覧です。型名の `num`、`bool`、`str`、`list`、`map` はキーワードでは\emph{ありません}。型が必要な文脈でだけ認識されます。自分を混乱させたいなら、変数を `str` と名づけることもできます。
+
+\paragraph{数値。} 数値の型は IEEE-754 の倍精度浮動小数点数 `num` 一つだけです。数値リテラルは数字の列で、小数点を一つ含めてもかまいません。たとえば `42`、`3.5`、`0.25` です。16進の `0xFF` と2進の `0b1010` の整数リテラルも、`0xFFFFFFFF` まで受け付けます。接頭辞は大文字でも小文字でも使えます。不正な数字、数字の欠落、アンダースコア、接頭辞の後の小数部、桁あふれはコンパイルエラーです。指数表記は未対応です。字句解析器は範囲演算子に注意しており、`1..5` は数値 `1`、範囲トークン `..`、数値 `5` と解析します。`1.` と `.5` にはしません。小数部のあるリテラルを範囲演算子の隣に置くときは空白が必要ですが、実際の範囲では通常、整数の境界を使います。
+
+\paragraph{文字列。} 文字列リテラルは二重引用符で囲み、`\n`（改行）、`\t`（タブ）、`\"`（引用符そのもの）、`\\`（バックスラッシュそのもの）のエスケープを含められます。文字列は不変です。一重引用符の文字列や、複数行の文字列リテラルはありません。
+
+\begin{lstlisting}[language=wick]
+let a = "tenzin"
+let b = "line one\nline two"
+let c = "she said \"hi\""
+\end{lstlisting}
+
+\paragraph{演算子と区切り記号。} 字句解析器は、複数文字のトークン `..`（範囲）、`??`（nil 合体）、`==`、`!=`、`<=`、`>=` を、できるだけ長く一致させて認識します。一文字のトークンは、算術・比較演算子 `+ - * / % < >`、代入の `=`、オプショナル値の記号 `?`、メンバーのドット `.`、グループ化と区切りの \texttt{( ) [ ] \{ \} , :} です。それ以外の文字は字句エラーになり、\texttt{unexpected character 'x'} と報告されます。
+
+\section{型}
+
+wick の式にはすべて静的な型があり、コンパイル時に確定します。スカラー型、コンテナ型、オプショナル型、名前付きレコード型があります。
+
+\begin{center}
+\begin{tabular}{@{}p{0.18\linewidth}p{0.29\linewidth}p{0.45\linewidth}@{}}
+\toprule
+\textbf{型} & \textbf{値} & \textbf{備考} \\
+\midrule
+\texttt{num} & IEEE-754 倍精度 & 唯一の数値型 \\
+\texttt{bool} & \texttt{true}, \texttt{false} & 条件が受け付ける唯一の型 \\
+\texttt{str} & 不変のテキスト & \texttt{+} は \texttt{str} 同士だけを連結 \\
+\texttt{list<T>} & 順序付き、添字は0から & スカラーまたは平坦なレコードの要素 \\
+\texttt{map<T>} & 文字列をキーに持つ & スカラーまたは平坦なレコードの値 \\
+\texttt{T?} & \texttt{T} または \texttt{nil} & 中心機能である\emph{オプショナル値} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+`list` と `map` の要素型には、`num`、`bool`、`str`、または宣言済みの平坦なレコード型を使えます。v0.3 には入れ子のコンテナがありません。`list<list<num>>` や `map<list<str>>` は存在せず、指定すると \texttt{container elements must be scalar or record types} というエラーになります。第5章で添字計算による回避策を示します。
+
+\paragraph{レコード。} トップレベルの `record` で、`num`、`bool`、`str` の名前付きフィールドを宣言します。すべてのフィールド名を指定して値を作り、ドットでフィールドを参照・代入します。メソッドや入れ子のフィールドはありません。
+
+\begin{lstlisting}[language=wick]
+record Register { value: num, name: str }
+let a = Register { value: 0, name: "A" }
+a.value = 0xFF
+check(a.value == 255, "record field")
+\end{lstlisting}
+
+\paragraph{\texttt{nil} とオプショナル値。} `nil` は一般的な型の値ではありません。オプショナル型だけに属します。`T?` の式は `nil` または `T` を持てますが、型が分からない単独の `nil` は書けません。`let x = nil` はコンパイルできません。何の値が「存在しないかもしれない」のか推論できず、コンパイラは \texttt{can't infer a type from nil; annotate: let x: str? = nil} と伝えます。型注釈を付ければ問題ありません。
+
+\begin{lstlisting}[language=wick]
+let x: str? = nil     // x is str?, currently nil
+\end{lstlisting}
+
+\noindent
+第4章全体でオプショナル値を扱います。ここでは、`T?` はコンパイラが追跡する正式な型であり、`T` が必要な場所では `T?` を使えないことだけ押さえます。
+
+\paragraph{\texttt{void}。} 戻り値の型を省略して宣言した関数の戻り値型は `void` です。`void` は値ではありません。void 関数の呼び出しは式ではなく文であり、`let` の右辺や、より大きな式の中には置けません。試みると \texttt{can't assign a void expression} と報告されます。
+
+\section{変数とスコープ}
+
+変数はすべて `let` で導入します。名前を新しく作る方法は、これしかありません。特に、宣言していない名前への代入は暗黙の宣言ではなくコンパイルエラーです。この一つの規則で、Lua につきまとう「タイプミスがグローバル変数を作る」バグをまとめて取り除きます。
+
+\begin{lstlisting}[language=wick]
+let x = 10          // num, inferred from 10
+let y: num = 10     // the same, written out
+let s = "hi"        // str
+\end{lstlisting}
+
+\noindent
+型は初期値から推論するか、コロンの後に明示できます。空のコンテナリテラルや単独の `nil` など、推論の材料がないときは明示しなければなりません。分かりやすさのために、いつでも書いてかまいません。初期値と型注釈が両方あるときは一致が必要です。
+
+\paragraph{グローバル変数とローカル変数。} ファイルのトップレベルの `let` は、プログラムの\emph{グローバル変数}を作ります。ファイルの読み込み時に一度初期化され、すべてのフレームを通じてプログラムの終了まで存続します。関数内の `let` は\emph{ローカル変数}を作ります。呼び出しのスタックフレーム内に存在し、呼び出しが戻るとなくなります。そのため、プレイヤーの位置や得点など、フレームをまたぐ状態はトップレベルの `let` に置き、一時的な値はローカル変数に置きます。
+
+\paragraph{ブロックとシャドーイング。} 変数のスコープは、宣言された波括弧で囲むブロックと、その内側のブロックです。内側のブロックで同名の `let` を新しく宣言すると、外側の名前を\emph{隠す}ことができます。内側のブロックが終わるまで、内側の名前が外側の名前を隠します。\emph{同じ}スコープでの再宣言はエラーです。
+
+\begin{lstlisting}[language=wick]
+let n = 1
+if true {
+  let n = 2      // ok: shadows the outer n inside this block
+}
+let n = 3        // ERROR: 'n' already declared in this scope
+\end{lstlisting}
+
+\noindent
+最後の行のエラーは \texttt{'n' already declared} です。既存の変数を変更するには、もう一度 `let` を使うのではなく、代入します。
+
+\paragraph{代入。} 代入は一つの `=` を使い、代入先の名前は宣言済みでなければなりません。未宣言の名前を読むと \texttt{unknown variable 'x' (declare it with let)}、代入すると \texttt{unknown variable 'x' --- wick has no implicit globals; use let} と報告されます。代入する値の型は変数と互換性が必要です。互換性の規則は後で説明します。
+
+\section{式と優先順位}
+
+式は、リテラル、変数、呼び出し、添字、演算子を組み合わせます。演算子は次の優先順位で結合します。表は結合が最も弱いもの、つまり最後に評価されるものから、最も強いものへ並べています。二項演算子はすべて左結合です。
+
+\begin{center}
+\begin{tabular}{@{}cll@{}}
+\toprule
+\textbf{順位} & \textbf{演算子} & \textbf{意味} \\
+\midrule
+1 & \texttt{or} & 論理和（短絡評価） \\
+2 & \texttt{and} & 論理積（短絡評価） \\
+3 & \texttt{??} & nil 合体 \\
+4 & \texttt{==} \quad \texttt{!=} & 等価、不等価 \\
+5 & \texttt{<} \enskip \texttt{<=} \enskip \texttt{>} \enskip \texttt{>=} & 大小比較 \\
+6 & \texttt{+} \quad \texttt{-} & 加算・連結、減算 \\
+7 & \texttt{*} \enskip \texttt{/} \enskip \texttt{\%} & 乗算、除算、剰余 \\
+8 & 単項 \texttt{-}, \texttt{not} & 符号反転、論理否定 \\
+9 & \texttt{f(x)}, \texttt{a[i]} & 呼び出し、添字 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+したがって `a or b and c` は `a or (b and c)` と解析され、`1 + 2 * 3` は算術の慣例どおり `1 + (2*3)` となります。初めて使う人が戸惑いやすいのは、`??` が比較や算術より弱く、`and`・`or` より強く結合することです。`num(s) ?? 0` に括弧が不要なのはこのためです。合体演算が `num(s)` 全体にかかり、結果はそのまま使える普通の `num` になります。
+
+\paragraph{算術。} `+ - * / %` は `num` を受け取り、`num` を返します。両方のオペランドは非オプショナルの `num` でなければなりません。オプショナル値は中の値を取り出すまでエラーです。ゼロ除算は Lua と同じく IEEE-754 に従い、例外停止ではなく無限大や NaN を生成します。
+
+\paragraph{\texttt{+} の二つの役割。} `+` は両方が `num` なら数値の加算、両方が `str` なら文字列の連結です。混在は許しません。暗黙の変換はないので、一方が `str`、他方が `num` の `"score " + 5` はコンパイルできません。エラーは修正方法も示します。\texttt{'+' needs num+num or str+str (use str(x))}。`"score " + str(5)` と書きます。これは意図した設計です。数値を黙って文字列にすることは多くのバグの原因になるため、wick は意図を明示することを求めます。
+
+\paragraph{比較と等価性。} 大小比較の `< <= > >=` は `num` のオペランドを必要とし、`bool` を返します。等価の `==` と不等価の `!=` は同じ型の二つの値を比べ、`bool` を返します。`str` ではオブジェクトの同一性ではなく内容を比べます。異なる型の比較は \texttt{'==' operands must have the same type} というエラーです。ただし、オプショナル値と `nil` の比較は認められます。第4章で説明する型の絞り込みの書き方です。\emph{非}オプショナル値と `nil` の比較は、逆に \texttt{comparing non-optional to nil} というエラーです。非オプショナル値は `nil` にならず、その検査は無意味だからです。
+
+\paragraph{論理演算子。} `and` と `or` は `bool` を受け取り、`bool` を返し、短絡評価を行います。`a and b` は `a` が偽なら `b` を評価せず、`a or b` は `a` が真なら `b` を評価しません。`not` は `bool` を受け取り、反転します。真偽の暗黙変換はないため、`a` が数値のとき `a and b` とは書けません。意図する `bool` を返す比較を書きます。
+
+\paragraph{nil 合体演算子 \texttt{??}。} `a ?? b` の `a` はオプショナル型 `T?` である必要があります。`a` が `nil` でなければ `a` の中の値を取り出し、そうでなければ `b` を評価します。既定値 `b` は元の型 `T` でなければならず、式全体も非オプショナルの `T` になります。右辺は左辺が `nil` のときだけ評価します。非オプショナルの左辺に `??` を使うと、合体させる必要がないため \texttt{'??' left side must be an optional} というエラーになります。
+
+\paragraph{組み合わせた条件と括弧。} 型を絞り込む比較 `x != nil` を `and` や `or` と組み合わせると、コンパイラは括弧を求めます。読む人と絞り込み解析が、構造を曖昧さなく把握するためです。メッセージは \texttt{parenthesize this condition: (a != b) and ...} です。括弧を加えれば解決します。
+
+\begin{lstlisting}[language=wick]
+if (s != nil) and ready { }    // parenthesised as the compiler asks
+\end{lstlisting}
+
+\section{文}
+
+wick のプログラム本体は文の列です。文には次の形があります。
+
+\begin{lstlisting}[language=wick]
+let x = expr           // declaration (with optional : type)
+x = expr               // assignment to a declared variable
+xs[i] = expr           // element assignment (list index or map key)
+f(a, b)                // call statement; a non-void result is discarded
+if c { } elif c2 { } else { }
+while c { }
+for i in a..b { }      // i: num, from a to b-1
+break                  // exit the innermost loop
+continue               // next iteration of the innermost loop
+return expr            // or bare `return` in a void function
+\end{lstlisting}
+
+\noindent
+ブロックは常に波括弧を使います。一文だけだからといって省略する形はありません。文として使った呼び出しは、結果があれば破棄します。副作用のために関数を呼ぶときの方法です。要素への代入はリストの添字かマップのキーに対して行い、対象はすでにリストまたはマップである必要があります。他の値に添字を使うと \texttt{only lists and maps can be indexed} となります。
+
+\section{制御フロー}
+
+\paragraph{条件分岐。} `if`、任意の `elif` の連なり、任意の `else` で条件分岐を構成します。条件はすべて `bool` である必要があります。真偽の暗黙変換はないので、`if 1 { }` や `if name { }` はコンパイルできません。エラーは \texttt{if condition must be bool (wick has no truthiness)} と規則を直接示します。`if x > 0`、`if s != ""` のように、意図する比較を書きます。
+
+\begin{lstlisting}[language=wick]
+if score > best {
+  best = score
+} elif score == best {
+  // tie
+} else {
+  // nothing
+}
+\end{lstlisting}
+
+\paragraph{\texttt{while}。} `while` は `bool` の条件が成り立つ間、本体を繰り返します。条件は各反復の前に検査します。
+
+\begin{lstlisting}[language=wick]
+let i = 0
+while i < 4 {
+  i = i + 1
+}
+\end{lstlisting}
+
+\paragraph{\texttt{for} の範囲。} `for i in a..b` は、ループ変数 `i` を半開区間 \texttt{[a, b)}、つまり `a` から `b` の直前まで反復します。両端は `num` の式で、一度だけ評価します。ループ変数は新しい `num` のローカル変数で、スコープはループ本体です。v0.3 の反復形式はこれだけで、`for x in list` はありません。リストをたどるには添字を反復します。
+
+\begin{lstlisting}[language=wick]
+for i in 0..len(xs) {
+  lt.print(str(xs[i]), 4, 4 + i * 10, 1, 1, 1, 1)
+}
+\end{lstlisting}
+
+\noindent
+終点を含めないのは、0からの添字に意図的に合わせています。`0..len(xs)` は有効な添字 `0` から `len(xs) - 1` だけを正確に訪れるので、端の数を一つ間違える余地がありません。
+
+\paragraph{\texttt{break} と \texttt{continue}。} `break` は直近の外側のループを抜け、`continue` はそのループの次の反復に進みます。どちらもループ外ではエラーで、\texttt{break outside a loop}、\texttt{continue outside a loop} と報告されます。
+
+\section{関数}
+
+関数は `fn` でトップレベルにだけ宣言します。v0.3 では関数の入れ子、クロージャ、第一級の関数値はありません。入れ子の `fn` は \texttt{fn declarations can't nest} と報告されます。
+
+\begin{lstlisting}[language=wick]
+fn dist(ax: num, az: num, bx: num, bz: num): num {
+  let dx = bx - ax
+  let dz = bz - az
+  return sqrt(dx * dx + dz * dz)
+}
+\end{lstlisting}
+
+\paragraph{引数と戻り値の型。} すべての引数には型を明示します。引数の型推論はありません。戻り値の型がある場合は、引数リストの後にコロンで続けます。省略すれば `void` です。`void` の関数は単独の `return` で早期終了できますが、`return expr` は使えません。\texttt{void function can't return a value} というエラーです。戻り値の型を宣言した関数は、値を返す経路で、その型の `return expr` を使う必要があり、単独の `return` は使えません。\texttt{this function must return T} と報告されます。
+
+\paragraph{使用前の宣言。} 関数は、最初の呼び出しより上に宣言する必要があります。コンパイラは一回走査で、呼び出しに到達した時点で解決するため、ファイルの後ろにある関数を呼ぶと \texttt{unknown function 'f' (wick requires declare-before-use)} となります。定義を上に移せば直ります。ホストが呼ぶ二つの関数 `update` と `draw` は、互いの順序を問いません。毎フレーム名前で検索するのは、あなたのコードではなくホストだからです。
+
+\paragraph{再帰。} 関数本体の中では自身の名前がスコープ内にあるため、自分自身を呼び出せます。
+
+\begin{lstlisting}[language=wick]
+fn fib(k: num): num {
+  if k < 2 { return k }
+  return fib(k - 1) + fib(k - 2)
+}
+\end{lstlisting}
+
+\paragraph{呼び出しの検査。} 呼び出しは完全に型検査されます。引数の数を間違えると \texttt{f() needs at least N arguments} または \texttt{f() takes N arguments} と報告されます。型を間違えると、たとえば \texttt{f() argument 3: expected num, got str} のように、関数名と引数の位置を示します。これは自作の関数にも、型付きシグネチャを登録するエンジン呼び出しにも同じように適用されます（第6章）。
+
+\paragraph{戻り値を返す経路の網羅。} v0.3 は、非 void 関数のすべての経路が値を返すかどうかをまだ検証しません。戻り値の型を宣言した関数で末尾まで到達すると、呼び出しは `nil` を返します。この挙動に依存してはいけません。第8章の制約にも記載しています。守るべき習慣は簡単です。値を返す関数の最後の文を `return` にします。
+
+\section{代入の互換性}
+
+ある型を別の型が必要な場所に格納できるかどうかの規則は短いので、まとめて示します。
+
+\begin{itemize}
+\item `T?` が必要な場所に `T` を格納できます。オプショナル型への拡張はコストがなく、常に安全です。
+\item `T` が必要な場所に `T?` は格納\emph{できません}。先に `??` または型の絞り込みで中の値を取り出します。
+\item コンテナは不変です。`list<num>` は `num` の要素だけを受け付け、`list<num>` は `list<num?>` など別の型ではありません。要素型はコンテナ型の一部で、正確に一致する必要があります。
+\item `void` は値ではないため、まったく格納できません。
+\end{itemize}
+
+\noindent
+この四つの規則と、次章のオプショナル値の扱いが、wick の型検査のすべてです。`T` から `T?` への拡張以外の部分型関係も、暗黙の型変換も、組み込みの `list` と `map` 以外のジェネリクスもありません。仕組みは意図的に小さくしてあります。頭の中に収まる小ささこそ、この言語全体の狙いです。

@@ -1,0 +1,86 @@
+\chapter{ビット、バイト、バス}
+
+Wick 0.3 は、次の具体的なプロジェクトから生まれました。Intel 8080 を目標に、プレイヤーがプロセッサを組み立てるゲームです。そのゲームの言語には、ビットを目に見える形にし、レジスタ幅を明示する必要があります。本章では小さな部品を組み立てます。CPU 全体やそのタイミングを実装するものではありません。
+
+\section{意図するビットを書く}
+
+\begin{lstlisting}[language=wick]
+let opcode = 0x76
+let sign_mask = 0b10000000
+let last_address = 0xFFFF
+check(opcode == 118, "hexadecimal")
+check(sign_mask == 128, "binary")
+\end{lstlisting}
+
+16進と2進の接頭辞は、大文字でも小文字でも使えます。数字は基数に適合し、値全体は符号なし32ビットに収まる必要があります。数字のない接頭辞、アンダースコア、接頭辞付きの小数、`0xFFFFFFFF` を超える値はコンパイルエラーです。10進数の規則は変わりません。これらの値はすべて引き続き `num` で、整数型は追加していません。
+
+\section{ゲートとマスク}
+
+ビット関数は `bit_and`、`bit_or`、`bit_xor`、`bit_not`、`bit_shl`、`bit_shr` の六つです。最初の三つは二つの値を組み合わせます。NOT は32ビットすべてを反転します。左シフトはビット31より外のビットを捨て、右シフトは0で埋めます。オペランドは0から4294967295までの整数、シフト数は0から31までの整数でなければなりません。
+
+\begin{lstlisting}[language=wick]
+let wires = 0b10100101
+check(bit_and(wires, 0x0F) == 5, "low nibble")
+check(bit_xor(wires, 0x80) == 0x25, "toggle bit 7")
+check(bit_shr(wires, 7) == 1, "read high bit")
+check(bit_shl(1, 31) == 0x80000000, "high bit")
+\end{lstlisting}
+
+型や引数の数の誤りはコンパイルエラーです。小数のオペランドや32のシフト数など、数値の範囲の誤りは、Wick の呼び出し箇所を示す実行時エラーです。VM は C++ の整数変換やシフトを行う前に値を検証します。NaN と無限大も拒否します。
+
+これは普通の型付き関数です。追加しても演算子の優先順位は変わらず、`and`、`or`、`not` は引き続き真偽値に対して動きます。
+
+\section{レジスタには幅がある}
+
+`u8(n)` は安全に表現できる整数を256の剰余で折り返し、`u16(n)` は65536の剰余で折り返します。どちらも負の値を受け付けます。入力は有限な整数で、-9007199254740991以上9007199254740991以下でなければなりません。普通の算術は倍精度のままです。折り返しは、指定した場所でだけ行います。
+
+\begin{lstlisting}[language=wick]
+record Register { value: num, name: str }
+let a = Register { value: 0xFF, name: "A" }
+let wide = a.value + 1
+let carry = wide > 0xFF
+a.value = u8(wide)
+check(a.value == 0 and carry, "keep the carry")
+check(u8(-1) == 255, "byte underflow")
+check(u16(0xFFFF + 1) == 0, "PC rollover")
+check(u8(bit_not(0x0F)) == 0xF0, "8-bit NOT")
+\end{lstlisting}
+
+フラグを計算し終えるまでは、幅の広い結果を保持します。先に折り返すと、プレイヤーが見る必要のあるキャリーそのものを消してしまいます。8ビットの ADD では、ゼロは `result == 0`、符号はマスク `0x80` で検査し、補助キャリーは下位4ビットの和が `0x0F` を超えるかで検査します。パリティは折り返した結果の立っているビットを数え、偶数なら真です。
+
+\section{ペアとメモリ}
+
+上位バイトと下位バイトを合わせると、16ビットのアドレスになります。
+
+\begin{lstlisting}[language=wick]
+let h = 0x80
+let l = 0x05
+let address = bit_or(bit_shl(h, 8), l)
+check(address == 0x8005, "register pair")
+check(bit_shr(address, 8) == h, "high byte")
+check(u8(address) == l, "low byte")
+let memory: list<num> = []
+for i in 0..65536 { push(memory, 0) }
+memory[address] = 0x76
+check(memory[0x8005] == 118, "memory write")
+\end{lstlisting}
+
+このリストは新しいコンテナ型を加えずに、アドレス空間をモデル化します。要素は今でも数値なので、バイトを書き込む境界で `u8(value)` を使います。詰めて格納するバイトバッファではなく、ハードウェアのクロック速度も保証しません。ゲームは描画フレームとは独立して、意図したシミュレーションのステップでプロセッサを進められます。
+
+\section{状態を読みやすくする}
+
+`hex(value, width=1)` は接頭辞なしの大文字の桁を返し、`bin(value, width=1)` は2進の桁を返します。値の範囲は符号なし32ビットです。幅は最小桁数を指定する整数で、16進では1--8、2進では1--32です。表示欄に合わせて値を切り捨てることはありません。
+
+\begin{lstlisting}[language=wick]
+check(hex(10, 2) == "0A", "byte label")
+check(bin(5, 8) == "00000101", "bus label")
+check(hex(256, 2) == "100", "overflow stays visible")
+\end{lstlisting}
+
+\section{作業台と次のゲーム}
+
+`./build/lantern games/bitlab` を実行すると、小さな Wick の作業台でこれらの操作を確認できます。矢印キーで入力レジスタを選択・編集し、Z で ADD、AND、XOR を切り替えます。入力ビットをタッチまたはクリックすると反転します。フラグは8080の ADD、ANA、XRA の動作に従い、ANA の補助キャリー規則も含みます。どちらかの入力のビット3を反映し、常にフラグを立てる8085の規則とは異なります。参照資料は Intel の \emph{8080/8085 Assembly Language Programming} マニュアル（1977年）、第1章「Auxiliary Carry Flag」です。
+
+Bit Lab は言語リリースのための例です。プレイヤー向けの回路エディタ、進行システム、命令デコーダ、完全なプロセッサの検証は、引き続きゲーム側の作業です。ホストに回路シミュレータを隠しているのではありません。例のロジックは Wick のコードです。
+
+\paragraph{アップグレード。} 新しい十個の組み込み関数名と同じ名前のユーザー関数は、コンパイル時に拒否します。衝突するユーザー関数は改名してください。このリリースでは、インポート、クロージャ、入れ子のレコード、文字列の添字、新しい数値型は導入していません。

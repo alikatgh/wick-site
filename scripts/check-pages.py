@@ -19,7 +19,7 @@ class Page(HTMLParser):
         if tag == 'form' and a.get('action'): self.links.append(a['action'])
 
 root = Path(sys.argv[1] if len(sys.argv) > 1 else '_site').resolve()
-for required in ('index.html', 'tour/index.html', 'lantern/index.html', 'docs/index.html', 'book/index.html', 'examples/first-game/main.wick'):
+for required in ('index.html', 'tour/index.html', 'lantern/index.html', 'docs/index.html', 'book/index.html', 'examples/first-game/main.wick', 'ja/index.html', 'ja/tour/index.html', 'ja/lantern/index.html', 'ja/docs/index.html', 'ja/book/index.html', 'wick-book-ja.pdf'):
     if not (root / required).is_file(): raise SystemExit(f'Missing published file: {required}')
 pages = {p: Page(p.read_text()) for p in root.rglob('*.html')}
 errors = set()

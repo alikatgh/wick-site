@@ -1,0 +1,178 @@
+% wick プログラミング言語 日本語版
+% Compile with: xelatex main.tex (twice for the TOC)
+\documentclass[10pt]{book}
+
+% --- fonts & encoding ------------------------------------------------------
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setmainfont{Latin Modern Roman}
+\setsansfont{Latin Modern Sans}
+\setmonofont{Latin Modern Mono}
+\IfFontExistsTF{Noto Serif CJK JP}{
+  \setCJKmainfont[AutoFakeSlant=0.15]{Noto Serif CJK JP}
+  \setCJKmonofont{Noto Serif CJK JP}
+}{
+  \IfFontExistsTF{Hiragino Mincho ProN}{
+    \setCJKmainfont[AutoFakeBold=2,AutoFakeSlant=0.15]{Hiragino Mincho ProN}
+    \setCJKmonofont{Hiragino Mincho ProN}
+  }{
+    \setCJKmainfont[AutoFakeBold=2,AutoFakeSlant=0.15]{Hiragino Mincho Pro}
+    \setCJKmonofont{Hiragino Mincho Pro}
+  }
+}
+\IfFontExistsTF{Noto Sans CJK JP}{
+  \setCJKsansfont{Noto Sans CJK JP}
+}{
+  \IfFontExistsTF{Hiragino Sans}{
+    \setCJKsansfont{Hiragino Sans}
+  }{
+    \setCJKsansfont[AutoFakeBold=2]{Hiragino Kaku Gothic ProN}
+  }
+}
+\renewcommand{\contentsname}{目次}
+\renewcommand{\chaptername}{章}
+\renewcommand{\appendixname}{付録}
+\newif\ifwickappendix
+\wickappendixfalse
+\linespread{1.12}
+\usepackage{microtype}
+% inline code (\lstinline via backtick) cannot hyphenate; let TeX stretch
+% spaces a little to avoid overfull boxes rather than run into the margin.
+\setlength{\emergencystretch}{2.5em}
+\hbadness=2500
+
+% --- page geometry: ebook 6in x 9in ---------------------------------------
+\usepackage[paperwidth=6in,paperheight=9in,
+            top=0.85in,bottom=0.9in,inner=0.85in,outer=0.7in]{geometry}
+
+% --- tables, code, links --------------------------------------------------
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{titlesec}
+\usepackage[colorlinks=true,linkcolor={black!85},
+            urlcolor={blue!55!black},citecolor={blue!55!black},
+            unicode=true,
+            pdftitle={wick プログラミング言語 — 日本語版},
+            pdfauthor={The lantern engine authors}]{hyperref}
+
+% --- colors ---------------------------------------------------------------
+\definecolor{wkKeyword}{RGB}{20,60,140}
+\definecolor{wkType}{RGB}{120,40,120}
+\definecolor{wkComment}{RGB}{100,110,100}
+\definecolor{wkString}{RGB}{140,70,20}
+\definecolor{wkRule}{gray}{0.75}
+\definecolor{wkBg}{gray}{0.975}
+
+% --- the wick listings language -------------------------------------------
+\lstdefinelanguage{wick}{
+  morekeywords={let,fn,if,elif,else,while,for,in,break,continue,return,%
+                true,false,nil,and,or,not,record},
+  morekeywords=[2]{num,bool,str,list,map,void},
+  sensitive=true,
+  morecomment=[l]{//},
+  morestring=[b]",
+}
+
+\lstdefinelanguage{luatwin}{
+  morekeywords={local,function,end,if,then,elseif,else,while,do,for,in,%
+                return,true,false,nil,and,or,not,break},
+  sensitive=true,
+  morecomment=[l]{--},
+  morestring=[b]",
+}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{wkKeyword}\bfseries,
+  keywordstyle=[2]\color{wkType},
+  commentstyle=\color{wkComment}\itshape,
+  stringstyle=\color{wkString},
+  showstringspaces=false,
+  columns=fullflexible,
+  keepspaces=true,
+  frame=single,
+  rulecolor=\color{wkRule},
+  backgroundcolor=\color{wkBg},
+  framexleftmargin=2pt,
+  xleftmargin=6pt,xrightmargin=6pt,
+  aboveskip=1.1em,belowskip=1.1em,
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=2,
+}
+
+% inline code helper: \lstinline with backtick delimiter is used in prose
+
+% --- headings -------------------------------------------------------------
+\titleformat{\chapter}[display]
+  {\normalfont\Large\bfseries}
+  {\filright\normalsize\ifwickappendix 付録\thechapter\else 第\thechapter 章\fi}
+  {0.6em}
+  {\Huge}
+\titlespacing*{\chapter}{0pt}{10pt}{28pt}
+
+\setcounter{tocdepth}{1}
+\setcounter{secnumdepth}{2}
+
+% ==========================================================================
+\begin{document}
+
+% Activate inline code after packages finish their begin-document hooks.
+\lstMakeShortInline[basicstyle=\ttfamily,keywordstyle=\color{wkKeyword}]`
+
+% --- title page -----------------------------------------------------------
+\begin{titlepage}
+\centering
+\vspace*{1.4in}
+{\Huge\bfseries wick プログラミング言語\par}
+\vspace{1.2em}
+{\large lantern エンジンのための\\小さな型付きスクリプト言語\par}
+\vfill
+{\large lantern エンジン開発者\par}
+\vspace{0.8em}
+{\normalsize バージョン0.3 \quad\textbullet\quad 2026\\日本語版\par}
+\vspace{1.2in}
+\end{titlepage}
+
+% --- colophon -------------------------------------------------------------
+\thispagestyle{empty}
+\null\vfill
+\noindent
+\textit{wick プログラミング言語}、バージョン0.3、日本語版。\par
+\vspace{0.6em}
+\noindent
+wick と lantern エンジンは、zlib ライセンスで公開するオープンソースです。字句解析器、一回走査の型付きコンパイラ、バイトコード、スタック仮想マシンからなる言語実装は、依存ライブラリのない約二千行の \mbox{C\texttt{++}} で、エンジンとともに
+\texttt{github.com/alikatgh/lantern} にあります。\par
+\vspace{0.6em}
+\noindent
+本書の日本語版は、\LaTeX{} と XeLaTeX を使い、日本語の明朝体と Latin Modern で組版しています。すべてのコード例は Wick 0.3 向けです。診断の例は、意図的にエラーを示しています。\par
+\vspace{0.6em}
+\noindent
+Copyright \textcopyright{} 2026 The lantern engine authors.
+本書は、エンジンと同じ zlib の条件で配布します。出典や著作者を偽らない限り、このテキストを使用、複製、変更できます。\par
+\vfill
+
+% --- contents -------------------------------------------------------------
+\frontmatter
+\tableofcontents
+
+% --- chapters -------------------------------------------------------------
+\mainmatter
+\include{chapters/01-introduction}
+\include{chapters/02-tutorial}
+\include{chapters/03-language}
+\include{chapters/04-optionals}
+\include{chapters/05-collections}
+\include{chapters/06-engine}
+\include{chapters/07-internals}
+\include{chapters/08-design}
+\include{chapters/09-bits-and-buses}
+
+% --- appendices -----------------------------------------------------------
+\wickappendixtrue
+\appendix
+\include{chapters/appendix}
+
+\end{document}

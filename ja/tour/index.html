@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>5 分で分かる Wick — ゲームのための小さな型付き言語</title>
+  <meta name="description" content="Wick の機能、Lua と共存する理由、最初のプログラムの実行方法をご紹介します。実際のサンプル、ソースコード、ダウンロード、現在の制限を確認できます。">
+  <link rel="canonical" href="https://wick.aulenor.com/ja/tour/">
+  <link rel="alternate" hreflang="en" href="https://wick.aulenor.com/tour/">
+  <link rel="alternate" hreflang="ja" href="https://wick.aulenor.com/ja/tour/">
+  <meta property="og:title" content="5 分で分かる Wick">
+  <meta property="og:description" content="ゲームのための小さな型付き言語。実際のサンプル、オプショナルを採用した理由、ダウンロードから最初のプログラムまでの手順をご紹介します。">
+  <meta property="og:url" content="https://wick.aulenor.com/ja/tour/">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://wick.aulenor.com/tour/bitlab.png">
+  <meta property="og:image:alt" content="Lantern で動作する Bit Lab。2 つのバイトレジスタ、ADD 演算、プロセッサのフラグ。">
+  <script src="/theme.js"></script>
+  <link rel="stylesheet" href="/assets/fonts.css">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/tour/tour.css">
+<link rel="alternate" hreflang="en" href="https://wick.aulenor.com/tour/"><link rel="alternate" hreflang="ja" href="https://wick.aulenor.com/ja/tour/"><link rel="alternate" hreflang="x-default" href="https://wick.aulenor.com/tour/"></head>
+<body>
+<a class="skip" href="#main">本文へ移動</a>
+<header class="site-header wrap">
+  <div class="masthead">
+    <a class="brand" href="/ja/" aria-label="Wick ホーム">wick<span class="version">0.3</span></a>
+    <span class="site-context">言語とゲームエンジン</span>
+    <form class="site-search" role="search" action="/ja/docs/" method="get"><label class="sr-only" for="site-query">Wick ドキュメントを検索</label><input id="site-query" name="q" type="search" placeholder="ドキュメントを検索: u8、lt.rect、オプショナル…" required><button type="submit">検索</button></form>
+    <label class="appearance">テーマ <select data-wick-theme aria-label="テーマ"><option value="system">システム</option><option value="light">ライト</option><option value="dark">ダーク</option></select></label>
+    <nav class="language-switch" aria-label="言語"><a href="/tour/" lang="en" hreflang="en">English</a><a href="/ja/tour/" lang="ja" hreflang="ja" aria-current="page">日本語</a></nav>
+  </div>
+  <nav aria-label="メインナビゲーション"><a href="/ja/tour/" aria-current="page">5 分間ツアー</a><a href="/ja/docs/getting-started/">入門</a><a href="/ja/docs/">リファレンス</a><a href="/ja/book/">書籍</a><a href="/ja/lantern/">Lantern エンジン</a><a href="/ja/lantern/#downloads">ダウンロード</a><a href="https://github.com/alikatgh/lantern">ソース</a></nav>
+</header>
+<main id="main" class="wrap">
+  <section class="intro tour-intro" aria-labelledby="tour-title">
+    <div>
+      <p class="eyebrow">Wick 0.3 · Lantern 0.8.0 · オープンソース</p>
+      <h1 id="tour-title">5 分で分かる Wick。</h1>
+      <p>ゲームロジックのための、小さな静的型付け言語。それを動かす小さなエンジン。最初に必要なのは、1 つの <code>main.wick</code> ファイルです。</p>
+      <p>Wick はゲームの読み込み時に、型とエンジン呼び出しを検査します。<a href="/ja/lantern/">Lantern</a> が 400 × 240 のレンダラ、入力、音声、ゲームループを提供します。</p>
+      <p class="start"><a class="button" href="#run">Mac で実行する <span aria-hidden="true">→</span></a><a href="/ja/lantern/#build-from-source">ソースからビルド</a></p>
+      <p class="availability">ダウンロードできるビルドは macOS Apple Silicon 向けです。アドホック署名済みで、Apple の公証は受けていません。<a href="#limits">Wick を選ぶ前に、制限を確認してください。</a></p>
+    </div>
+    <figure class="tour-capture">
+      <img src="/tour/bitlab.png" width="400" height="240" alt="Lantern 内の Bit Lab。レジスタ A は FF、B は 01。ADD の結果は 00 にラップし、キャリーとゼロのフラグが立っています。">
+      <figcaption><strong>Lantern で動作する Bit Lab。</strong> 実際のエンジンの画面です。ダウンロードできるサンプルでは、レジスタの変更、ビットの切り替え、演算の選択を試せます。<a href="https://github.com/alikatgh/lantern/blob/v0.8.0/games/bitlab/main.wick">Wick のソースを読む →</a></figcaption>
+    </figure>
+  </section>
+  <div class="guide-layout">
+    <aside class="guide-nav"><nav aria-label="このページの内容"><strong>短い案内</strong><a href="#why">新しい言語を作った理由</a><a href="#program">完全なプログラム</a><a href="#run">入手、実行、変更</a><a href="#limits">適した用途</a></nav></aside>
+    <div class="engine-content">
+      <section id="why">
+        <p class="eyebrow">01 / 理由</p>
+        <h2>値がない場合を明示する。</h2>
+        <p>保存したスコアが存在しないことがあります。保存したテキストの解析に失敗することもあります。Wick は両方の操作にオプショナルの結果を与えるため、数値が何も知らせず <code>nil</code> になることはありません。</p>
+        <figure class="example"><figcaption><span>スコアの読み込み</span><span>Wick</span></figcaption><pre tabindex="0" aria-label="Wick でオプショナルのスコアを扱うサンプル"><code><span class="comment">// load_save returns str?; num returns num?</span>
+<span class="kw">let</span> saved = lt.load_save(<span class="str">"best"</span>) ?? <span class="str">""</span>
+<span class="kw">let</span> best = num(saved) ?? <span class="num">0</span></code></pre></figure>
+        <p class="tour-code-note">最初の <code>??</code> は、セーブがない場合を処理します。2 つ目は、テキストが数値でない場合を処理します。どちらの場合も、<code>best</code> は <code>num</code> です。</p>
+        <h3>Lua を使うだけではだめなのか？</h3>
+        <p>Lua も使えます。Lantern は同じエンジン API で Lua も実行します。Wick は静的な型、明示的なオプショナル、真偽値の条件式、エンジンの引数の型と個数の検査を加えます。こうした制約が小さなゲームを書く助けになる場合に、Wick を選んでください。</p>
+        <p>クロージャ、第一級関数、複数の戻り値など、Wick にない機能が必要な場合は、Lua のほうが柔軟です。Wick はまだ初期段階の言語で、機能を意図的に小さく保っています。</p>
+        <p><a href="/ja/docs/comparison/">Wick と Lua で同じゲームを比較する →</a> · <a href="/ja/docs/internals/">コンパイラと VM の内部構造</a></p>
+      </section>
+      <section id="program">
+        <p class="eyebrow">02 / ゲームの形</p>
+        <h2>これでプログラム全体です。</h2>
+        <p>黄色い正方形が画面を横切ります。<code>update</code> が秒あたりのピクセル数で位置を進め、<code>draw</code> が画面をクリアして正方形を描きます。右端に達すると左端に戻ります。</p>
+        <figure class="example"><figcaption><span>main.wick</span><span>移動する正方形</span></figcaption><pre tabindex="0" aria-label="Wick で正方形を動かすサンプル"><code><span class="kw">let</span> x = <span class="num">0</span>
+
+<span class="kw">fn</span> update(dt: <span class="type">num</span>) {
+  x = (x + <span class="num">40</span> * dt) % <span class="num">400</span>
+}
+
+<span class="kw">fn</span> draw() {
+  lt.clear(<span class="num">0.1</span>, <span class="num">0.1</span>, <span class="num">0.2</span>)
+  lt.rect(x, <span class="num">100</span>, <span class="num">16</span>, <span class="num">16</span>, <span class="num">1</span>, <span class="num">0.8</span>, <span class="num">0.2</span>, <span class="num">1</span>)
+}</code></pre></figure>
+        <p class="tour-code-note"><a href="/examples/first-game/main.wick" download>この main.wick をそのままダウンロード</a> · <a href="/ja/docs/engine-api/">エンジンの呼び出しを調べる</a></p>
+      </section>
+      <section id="run">
+        <p class="eyebrow">03 / ローカルで試す</p>
+        <h2>入手して、実行して、変更する。</h2>
+        <ol class="tour-steps">
+          <li><h3>エンジンとサンプルを入手する。</h3><p><a href="https://github.com/alikatgh/lantern/releases/download/v0.8.0/lantern-0.8.0-macos-arm64-bitlab.tar.gz">macOS Apple Silicon 用の Lantern をダウンロード</a>します。展開して、そのフォルダでターミナルを開いてください。Wick は同梱されており、個別のインストーラはありません。</p><p class="muted">macOS 15.6 でビルド。バイナリはアドホック署名済みで、公証は受けていません。<a href="https://github.com/alikatgh/lantern/releases/tag/v0.8.0">リリースファイルとチェックサム</a> · <a href="/ja/lantern/#build-from-source">ソースからのビルド手順</a></p></li>
+          <li><h3>Bit Lab を起動する。</h3><pre tabindex="0" aria-label="Bit Lab を実行"><code>./lantern games/bitlab</code></pre><p>上の画像のようなレジスタの作業台が表示されます。左右キーでレジスタを選び、上下キーで値を変更します。<kbd>Z</kbd> で ADD、AND、XOR を切り替え、Escape で終了します。</p></li>
+          <li><h3>動く正方形を自分で変えてみる。</h3><p>サンプル用のフォルダを作成します。</p><pre tabindex="0" aria-label="ゲームフォルダを作成"><code>mkdir -p games/first-game</code></pre><p>上のサンプルの <a href="/examples/first-game/main.wick" download>main.wick</a> をそのフォルダ内に保存し、実行します。</p><pre tabindex="0" aria-label="最初のゲームを実行"><code>./lantern games/first-game</code></pre><p>ファイルの <code>40</code> を <code>80</code> に変えて保存してください。ゲームが再読み込みされ、正方形は最初から動き出し、速度が 2 倍になります。再読み込みするとゲームの状態は初期化されます。</p><p>コンパイラのメッセージが表示されたら、示された行を修正してもう一度保存してください。<a href="/ja/docs/errors/">よくあるエラーと修正方法を確認できます。</a></p></li>
+        </ol>
+      </section>
+      <section id="limits">
+        <p class="eyebrow">04 / 採用を決める前に</p>
+        <h2>意図的に小さく。まだ初期段階。</h2>
+        <p>Wick は小さなゲーム、実験、言語とエンジンの連携を学ぶ用途に向いています。コンパイラとバイトコード VM は zlib ライセンスで公開しています。</p>
+        <dl class="reference-list">
+          <div><dt>言語</dt><dd>モジュール、クロージャ、第一級関数、複数の戻り値、ネストしたコンテナはまだありません。ゲームには 1 つの <code>main.wick</code> ファイルを使います。</dd></div>
+          <div><dt>エンジン</dt><dd>固定の 400 × 240 ソフトウェアレンダラ、頂点ごとの照明、BMP テクスチャ、WAV 音声。JIT はありません。</dd></div>
+          <div><dt>プラットフォーム</dt><dd>現在のリリースは macOS Apple Silicon のバイナリを提供します。ほかのデスクトップ環境にはソースからのビルドが必要で、このリリースに Linux や Windows のバイナリはありません。このページにブラウザ用ランタイムはありません。</dd></div>
+          <div><dt>サンプルの範囲</dt><dd>Bit Lab はレジスタとビット演算の作業台であり、完全な Intel 8080 エミュレータではありません。</dd></div>
+        </dl>
+        <p><a href="/ja/docs/limits/">言語の制限の全項目</a> · <a href="/ja/lantern/#platforms">プラットフォームの対応状況</a> · <a href="https://github.com/alikatgh/lantern/blob/v0.8.0/LICENSE">ライセンス</a></p>
+        <h3>さらに学ぶ。</h3>
+        <p>順を追った解説には <a href="/ja/book/">The Wick Book</a> を読んでください。照明、入力、スコアの保存を備えたゲームを見るには、<a href="https://github.com/alikatgh/lantern/tree/v0.8.0/games/showcase_wick">Lantern Night</a> を開いてください。特定の規則や関数が必要なときには、<a href="/ja/docs/">リファレンス</a>を利用できます。</p>
+        <p>バグや説明の不足を見つけたら、<a href="https://github.com/alikatgh/lantern/issues">小さなサンプルを添えて報告してください。</a></p>
+      </section>
+    </div>
+  </div>
+</main>
+<footer class="site-footer wrap"><p>Wick 0.3 · Lantern 0.8.0 · <a href="https://github.com/alikatgh/lantern/blob/main/LICENSE">zlib ライセンス</a></p><nav aria-label="フッター"><a href="/ja/">Wick ホーム</a><a href="/ja/docs/">リファレンス</a><a href="https://github.com/alikatgh/lantern">ソースコード</a></nav></footer>
+</body>
+</html>
