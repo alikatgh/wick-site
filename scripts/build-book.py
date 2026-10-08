@@ -32,6 +32,9 @@ for path in sorted((source / 'chapters').glob('*.tex')):
         # Layout-only TeX wrappers become raw HTML in GFM, which suppresses
         # Markdown table parsing in MkDocs. Strip wrappers before conversion.
         text = re.sub(r'\\(?:begin|end)\{center\}', '\n\n', text)
+        # A PDF-only break after a run-in heading must not become a visible
+        # backslash in the web edition.
+        text = text.replace(r'\mbox{}\\', '\n\n')
         symbols = {r'\times': '×', r'\rightarrow': '→', '-1': '−1', '^{*}': '*'}
         def math_text(match):
             expression = match[1]

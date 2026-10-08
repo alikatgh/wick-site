@@ -35,3 +35,4 @@ jobs:
             build/reference/
             build/book-ja/
             build/reference-ja/
+            _site/
