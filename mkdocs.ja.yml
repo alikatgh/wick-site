@@ -26,6 +26,7 @@ markdown_extensions:
 - tables
 - toc:
     permalink: true
+    permalink_title: この見出しへの固定リンク
 nav:
 - 概要: index.md
 - 入門: getting-started.md
@@ -56,6 +57,7 @@ extra_css:
 - assets/reading.css
 extra:
   locale: ja
+  generator: false
   section: docs
   homepage: https://wick.aulenor.com/ja/
 

@@ -34,6 +34,7 @@ markdown_extensions:
 - pymdownx.highlight
 - toc:
     permalink: true
+    permalink_title: この見出しへの固定リンク
 nav:
 - 書籍について: index.md
 - 1 · はじめに: 01-introduction.md
@@ -51,5 +52,6 @@ nav:
   - クイックリファレンス: appendix-3.md
 extra:
   locale: ja
+  generator: false
   section: book
   homepage: https://wick.aulenor.com/ja/

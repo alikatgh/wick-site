@@ -16,7 +16,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements-sites.txt
-      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends texlive-latex-extra lmodern texlive-xetex texlive-lang-japanese fonts-noto-cjk
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends texlive-latex-extra lmodern texlive-xetex texlive-lang-japanese texlive-lang-chinese fonts-noto-cjk
       - name: Typeset PDF and build both sites
         run: |
           bash scripts/build-pdf.sh

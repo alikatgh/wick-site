@@ -26,5 +26,6 @@
 {% endblock %}
 {% block footer %}
 {{ super() }}
+{% if japanese %}<div class="project-links">使用ツール: <a href="https://squidfunk.github.io/mkdocs-material/">Material for MkDocs</a></div>{% endif %}
 <div class="project-links"><a href="{{ prefix }}/">Wick</a><a href="https://famemu.aulenor.com{{ prefix }}/">{{ 'Famemu のプロジェクト' if japanese else 'A Famemu project' }}</a><a href="https://github.com/alikatgh/lantern">{{ 'Lantern のソース' if japanese else 'Lantern source' }}</a></div>
 {% endblock %}
