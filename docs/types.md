@@ -85,3 +85,28 @@ Mesh, texture, and sound handles from `lt.load_*` are plain `num` today.
 Passing a texture id to `lt.play` type-checks; wrong use is a runtime
 no-op or error. Branded handle types are a candidate if store games need
 them — not yet admitted.
+
+## Native 64-bit builds and numeric precision
+
+Current [Lantern source](https://github.com/alikatgh/lantern/pull/5) defaults Wick and
+the engine to native 64-bit builds. Developers can explicitly select
+`-DWICK_HOST_BITS=32` with a compatible 32-bit toolchain and dependencies.
+Configuration and compilation reject a target-width mismatch. This option does
+not supply a missing toolchain or promise a 32-bit build on every platform.
+Direct C++ embedders use the same `WICK_HOST_BITS` definition; its default is 64.
+
+```sh
+cmake -S . -B build -DWICK_HOST_BITS=64
+cmake --build build
+./build/lantern --build-info --json
+```
+
+The build-info command reports the compiled host width, selected target,
+architecture and numeric storage/precision without opening a window or running
+a game. It is available from current source; older release downloads and
+retained Nyurgun review apps have not been replaced.
+
+Wick `num` remains C++ `double`: on the verified binary64 target, 64 bits of
+storage and 53 bits of integer precision. Native 64-bit pointers do not add exact
+`i64` or `u64` types, change existing bit helpers, or widen bytecode operands.
+The 32-bit choice keeps these source-level numeric semantics.

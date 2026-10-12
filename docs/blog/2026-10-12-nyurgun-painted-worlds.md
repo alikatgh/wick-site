@@ -321,3 +321,29 @@ editing focus, while Sakha wording awaits review by a fluent speaker. Native
 presentation, native campaign play and cultural accuracy still need review.
 This report records implemented engine and game work and the quality we are working
 toward, with further character animation and painted-art refinement ahead.
+
+## 64-bit by default, with an explicit 32-bit choice
+
+Nyurgun remains a 2D game. We are targeting detailed painted characters and
+worlds, fluid animation, layered motion and edited audio on modern native
+64-bit hardware. Historical console influences guide the craft; binary width
+alone does not establish presentation quality.
+
+The first concrete platform change is in Wick and Lantern's build contract:
+native 64-bit is the default, and developers can explicitly select
+`-DWICK_HOST_BITS=32` with a matching toolchain and dependencies. A mismatch is
+rejected. Direct Wick embedding enforces the same choice. Agents and developers
+can inspect a compiled runtime with `lantern --build-info --json`, without
+opening a game or executing its code. See the [reference](../../types/#native-64-bit-builds-and-numeric-precision).
+
+Wick's existing `num` uses binary64 on the verified target, with 53 bits of
+integer precision. Exact 64-bit integer types remain separate language work.
+Nyurgun's retained 0.4.8 Mac executables are already ARM64; this source increment
+does not replace that app or its ZIP. Actual 32-bit builds and the Windows,
+Linux and Intel Mac target matrix remain unverified.
+
+Lantern currently hosts the game. Ember32 models a separate ARM7 virtual console;
+a proposed Ember64 native runtime tier would need to preserve Wick, painted
+RGBA rendering, audio and saves before hosting Nyurgun. That tier and the
+reusable desktop runner remain planned work. Neither is claimed as a released
+feature, and this build-policy change adds no new art or approved recordings.
