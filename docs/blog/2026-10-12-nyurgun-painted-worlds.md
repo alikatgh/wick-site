@@ -64,6 +64,39 @@ draw path from the same fixed headless state after two frames at physical
 density 4. Faces and armour details are clearer; native presentation and final
 visual quality remain unreviewed.*
 
+## Recovering the painted worlds
+
+All ten panoramas now retain exact crops from the original project-generated
+paintings, instead of being reduced to 800×240 during import. Their textures
+are 960×288, 1320×396 or 1600×480. Every crop keeps its original RGB pixels;
+the old exports were not enlarged. Logical framing, camera motion, terrain
+and character positions remain unchanged.
+
+Independent checks compare 5,469,600 source pixels and preserve every original
+and non-world export. The selected inputs total 13,033,476 bytes within the
+unchanged 30 MiB bound. Old/new scenes were compared through the real renderer
+at physical density 2, with actors, interface and both camera-pan endpoints.
+This recovers visible brushwork and cliff detail. Further character animation,
+world composition and native presentation still need work.
+
+## A continuous fresh-save campaign
+
+The implemented rescue → VI → VII → VIII route now passes in one continuous
+11,934-frame run from empty private saves. Ordinary keyboard inputs drive the
+unchanged Wick controllers, combat and traversal; all four chapters write their
+normal saves with no save warnings. The verifier checks canonical assembled
+source, contiguous chapter order and sixteen required scene captures.
+
+This is headless gameplay evidence using the real VM, renderer and audio mixer
+with synthetic OS input, presentation and audio output. It does not establish
+native play or an adaptation of the whole epic.
+
+The new local 0.4.5 review app packages Lantern main's audio and compiler checks
+with the recovered worlds. It passed exact resource, ARM64/macOS 15, signature
+and extracted-archive verification. Runtime preparation rebuilds 37 hash-verified
+source inputs before probing the typed audio API. Older apps remain preserved;
+the new candidate is unlaunched and is not a public executable release.
+
 ## A game that makes the tools answerable
 
 The rescue and later episodes exercise dialogue, inventory, progression,
@@ -123,6 +156,6 @@ future work.
 
 Sakha is the game's language foundation. English and Russian are the immediate
 editing focus, while Sakha wording awaits review by a fluent speaker. Native
-presentation, the full campaign and cultural accuracy still need review.
+presentation, native campaign play and cultural accuracy still need review.
 This report records implemented engine and game work and the quality we are working
 toward, with further character animation and painted-art refinement ahead.
