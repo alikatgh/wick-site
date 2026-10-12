@@ -91,6 +91,46 @@ need their own detail work. A recorded face-size mismatch and concealed hip/gait
 limitations in one Aytaly pose remain; native play and final visual/cultural
 approval remain open.
 
+## A journey atlas for the epic { #a-journey-atlas-for-the-epic }
+
+The journey atlas now follows the implemented rescue arc of chapters IV–V and
+chapters VI, VII and VIII. The chapter index shows the story order. Each map brings
+together the current place, the next character or goal and a crop from the
+painted scene. The rescue map keeps the actual five-region geometry and
+landmarks, so it remains useful for finding a way through the world.
+
+![Chapter VI journey atlas in English, showing the western mountains, the current place and Timir D’esintey as the next encounter.](../assets/nyurgun/journey-atlas-vi-2026-10-12.png)
+
+*Chapter VI at physical density 2, drawn from an assembled game state through
+the real Wick VM and Lantern renderer. The opaque panel and clear HD text keep
+the map readable over the painted world.*
+
+Chapter VIII separates Nyurgun’s present northbound route from Sabya’s account
+of the past. It leaves unknown distances and fates unknown, rather than filling
+the gaps with invented geography or outcomes.
+
+![Chapter VIII journey atlas in Russian, separating Nyurgun’s northbound route from Sabya’s account of the past.](../assets/nyurgun/journey-atlas-viii-2026-10-12.png)
+
+*The present journey and the reported past appear in separate areas of the map.
+This is a seeded headless capture, not a native play session.*
+
+The new labels are available in Sakha, Russian and English; Sakha remains a draft
+awaiting fluent review. **51 seeded render fixtures across all three languages**
+pass at physical density 2, using the assembled game. Controls check stale
+previous-chapter state, standalone restores and text bounds. These are seeded
+headless checks of the atlas.
+
+Separately, the complete implemented campaign passes with ordinary inputs, map
+open/pause/resume controls and unchanged saving at software density 1. A full
+density-2 campaign timed out in Chapter VI; the HD fixtures above do not substitute
+for that run.
+
+The **0.4.7 local Mac review candidate** is built, signed and archive-verified.
+It remains unnotarized. Desktop-control access failed even with permission enabled,
+so no successful new native game window or native play cadence is verified.
+No approved AI voice or music takes are bundled, and the whole epic remains
+unfinished.
+
 ## Reviewing the integrated candidate
 
 The new **0.4.6 local Mac review candidate** brings the sharper 32-pose hero,
