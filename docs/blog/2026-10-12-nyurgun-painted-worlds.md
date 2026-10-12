@@ -64,6 +64,28 @@ draw path from the same fixed headless state after two frames at physical
 density 4. Faces and armour details are clearer; native presentation and final
 visual quality remain unreviewed.*
 
+## Recovering main-character poses
+
+All 32 main-character poses now recover twice their previous atlas detail from
+the original R4 and roll paintings. The 2048×512 texture retains the same logical
+grid, foot roots, frame IDs and timing. Every source scale stays below one.
+Historical crop losses and ownership exclusions remain recorded; this is source
+recovery, not anatomy repair or additional animation.
+
+![Idle pose: old atlas on the left, recovered source detail on the right](../assets/nyurgun/hero-idle-detail-comparison-2026-10-12.png)
+
+![Walking pose: old atlas on the left, recovered source detail on the right](../assets/nyurgun/hero-walk-detail-comparison-2026-10-12.png)
+
+*Actual production-draw comparisons at physical density 2, with unchanged
+framing. These fixed poses do not establish native animation quality.*
+
+Independent checks reconstruct the earlier atlases exactly, compare all
+4,194,304 RGBA channels per export, and reject 35 importer mutations. Sixteen
+renderer comparisons cover eight pose classes in both directions; every
+shifted-root control is rejected. Fresh independent review and a primary
+renderer rerun pass. [The source/art update is merged into main](https://github.com/alikatgh/nyurgun/pull/8).
+The preserved 0.4.5 app predates it; native and overall visual approval remain open.
+
 ## Recovering painted sword and whip poses
 
 Chapter VI now retains twice the previous atlas detail in its sword and sacred-whip
