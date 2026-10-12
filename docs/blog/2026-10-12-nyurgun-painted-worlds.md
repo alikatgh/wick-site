@@ -350,7 +350,8 @@ feature, and this build-policy change adds no new art or approved recordings.
 
 ## More source detail and a readable first gate
 
-Local candidate 0.4.9 recovers 33,436,160 source pixels across 15 atlas families.
+Local candidate 0.4.9 recovers retained painting detail across 15 atlas families.
+Repacking adds 33,436,160 atlas pixels, including transparent space.
 All 27 art contracts pass; logical roots and animation timing stay unchanged.
 Ten world panoramas, the rescue cast and the tree already retain available
 original detail. This does not make every asset 4K: an 8,192-pixel-wide action
