@@ -52,11 +52,53 @@ Handles (meshes, textures, sounds) are `num`.
 
 ## Audio
 
+The legacy calls remain available:
+
 | Call | Notes |
 |---|---|
-| `lt.load_sound(path: str): num` | WAV |
-| `lt.play(sound, volume=1, loop=0): num` | returns channel, −1 if all 16 busy |
-| `lt.stop(channel)` · `lt.volume(v)` | |
+| `lt.load_sound(path: str): num` | WAV sound ID; explicit load failure raises an error |
+| `lt.play(sound, volume=1, loop=0): num` | channel 0–15, or −1 if unavailable |
+| `lt.stop(channel)` · `lt.volume(v)` | legacy channel stop and master volume |
+
+The following calls are in [Lantern main source](https://github.com/alikatgh/lantern/pull/4),
+not the public 0.8.0 binaries. Build current source to use them.
+
+| Call | Result and behavior |
+|---|---|
+| `lt.try_load_sound(path: str): num` | sound ID, or −1 for missing, invalid or over-budget WAV; sandbox violations still raise an error |
+| `lt.sound_unload(sound): bool` | releases unused decoded data; refuses active or paused users |
+| `lt.voice_play(sound, bus=0, volume=1, loop=0, fade_seconds=0): num` | stable positive voice handle, or −1; linear initial fade |
+| `lt.voice_stop(voice, fade_seconds=0): bool` | immediate stop or linear fade to silence |
+| `lt.voice_pause(voice, paused=1): bool` | 1 pauses, 0 resumes; freezes sample position and voice fade |
+| `lt.voice_active(voice): bool` | includes paused and fading voices; false after completion or stop |
+| `lt.music(sound, volume=1, loop=1, crossfade_seconds=0.5): num` | stable voice handle, or −1; replaces new music-bus voices with equal-power crossfades |
+| `lt.bus_volume(bus, volume, ramp_seconds=0): bool` | independent linear bus-gain ramp |
+| `lt.ducking(music_level, attack_seconds=0.08, release_seconds=0.3): bool` | music attenuation while speech contributes audible samples; level 1 disables attenuation |
+
+Buses are `lt.SFX=0`, `lt.MUSIC=1` and `lt.SPEECH=2`. For the new calls, loop
+and pause flags are **numeric 0 or 1**, gains are finite 0..1, and times are
+finite 0..60 seconds.
+All old and new voices share 16 slots. Stable voice handles are never reused;
+keep them separate from legacy channel IDs. Legacy playback bypasses the new
+buses and speech ducking. A paused voice retains its slot and sound.
+
+```wick
+let line = lt.try_load_sound("audio/dialogue/arrival.wav")
+let speaking = -1
+lt.ducking(0.3, 0.08, 0.3)
+if line >= 0 { speaking = lt.voice_play(line, lt.SPEECH) }
+// On skip or dialogue close, stop before unloading the sound.
+if lt.voice_active(speaking) { lt.voice_stop(speaking) }
+if line >= 0 { lt.sound_unload(line) }
+```
+
+Playback uses the mixer sample clock. The callback performs no file access,
+allocation or asset deallocation. Invalid assets, a full pool or an unavailable
+device make `lt.music` return −1 and leave existing music unchanged.
+WAV input supports PCM 8/16/24/32 and IEEE float32, mono/stereo, 8–192 kHz,
+resampled to 48 kHz stereo. Limits are 64 MiB encoded and decoded per sound,
+128 MiB decoded in total and 256 loaded sounds. Streaming and compressed codecs
+are not implemented. See [the full audio contract](https://github.com/alikatgh/lantern/blob/main/docs/WICK.md#native-audio-buses-and-stable-voices).
 
 ## Input & saves
 
