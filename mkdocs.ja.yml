@@ -46,6 +46,7 @@ nav:
 - 制限と機能台帳: limits.md
 - ブログ:
   - blog/index.md
+  - '2026-10-12 · Nyurgun：Wick で描く世界、人物、物語': blog/2026-10-12-nyurgun-painted-worlds.md
   - 2026-10-06 · バージョン 0.3: blog/2026-10-06-release-0.3.md
   - 2026-07-14 · バージョン 0.2: blog/2026-07-14-release-0.2.md
   - 2026-07-14 · レコードの採用: blog/2026-07-14-admitting-records.md

@@ -1,5 +1,6 @@
 # Wick ブログ { #the-wick-blog }
 
+- [Nyurgun：Wick で描く世界、人物、物語](2026-10-12-nyurgun-painted-worlds.md) — 2026 年 10 月 12 日
 - [Wick 0.3: ビットを使って作る](2026-10-06-release-0.3.md) — 2026 年 10 月 6 日
 
 

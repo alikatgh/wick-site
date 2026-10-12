@@ -1,5 +1,6 @@
 # The wick blog
 
+- [Nyurgun: painted worlds, characters and story in Wick](2026-10-12-nyurgun-painted-worlds.md) — 12 October 2026
 - [Wick 0.3: bits you can build with](2026-10-06-release-0.3.md) — 6 October 2026
 
 
