@@ -64,6 +64,24 @@ draw path from the same fixed headless state after two frames at physical
 density 4. Faces and armour details are clearer; native presentation and final
 visual quality remain unreviewed.*
 
+## Reviewing the integrated candidate
+
+The new **0.4.6 local Mac review candidate** brings the sharper 32-pose hero,
+sword/whip atlas and Chapter VI hurt/death priority into one package with the
+recovered painted worlds and native audio runtime. Its unchanged source passes
+the implemented rescue-to-VIII campaign in **11,934 ordinary-input frames**.
+Eight captures from the exact package cover three-language titles/dialogue,
+the opening and the map at physical density 2. Independent artifact review
+checks the packaged source, artwork, signatures and archive bytes/permissions;
+earlier candidates remain unchanged.
+
+![English opening drawn from the exact 0.4.6 package using the real Wick VM and Lantern renderer with synthetic OS input.](../assets/nyurgun/painted-characters-candidate-2026-10-12.png)
+
+This is a local, unnotarized review archive, not a public game release. Native
+desktop control remains unavailable; no successful 0.4.6 game window or hardware
+sound is verified. VoiceStudio/YuE takes, final visual and cultural approval,
+fluent Sakha review and the complete epic remain unfinished.
+
 ## Recovering main-character poses
 
 All 32 main-character poses now recover twice their previous atlas detail from
