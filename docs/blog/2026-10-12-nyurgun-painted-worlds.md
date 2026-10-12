@@ -94,8 +94,10 @@ native play or an adaptation of the whole epic.
 The new local 0.4.5 review app packages Lantern main's audio and compiler checks
 with the recovered worlds. It passed exact resource, ARM64/macOS 15, signature
 and extracted-archive verification. Runtime preparation rebuilds 37 hash-verified
-source inputs before probing the typed audio API. Older apps remain preserved;
-the new candidate is unlaunched and is not a public executable release.
+source inputs before probing the typed audio API. Older apps remain preserved.
+An automated launch attempt stopped during macOS application registration,
+before Wick/game initialization. Successful native play remains unverified;
+this is not a public executable release.
 
 ## A game that makes the tools answerable
 
@@ -103,6 +105,13 @@ The rescue and later episodes exercise dialogue, inventory, progression,
 interaction prompts and saving. The departure adds a paired catch and recovery
 sequence followed by four armament poses. Targeted checks run the real Wick
 compiler, VM and renderer, rather than substituting game logic in a test mock.
+
+A later Chapter VI source repair gives Nyurgun's hurt and death poses priority
+when a sword or whip swing was active. Twenty-four painted fixture cases cover
+both directions, held death, ordinary retry and attacks during later invulnerability.
+The same regression rejects the earlier source, and the final assembled campaign
+again passes from empty saves in 11,934 frames. These are headless checks; the
+preserved 0.4.5 app predates this repair.
 
 ## Voices and music belong to the game
 
