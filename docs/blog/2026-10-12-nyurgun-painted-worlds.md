@@ -388,3 +388,49 @@ The signed local app and ZIP/DMG packages are review artifacts. The app has not
 successfully launched; native presentation is unverified and it is unnotarized,
 with zero approved AI voice/music takes. Native play, performance, cultural
 review and the finished game remain open.
+
+## Rendering painted worlds with bounded workers
+
+[Lantern PR #7](https://github.com/alikatgh/lantern/pull/7) adds an opt-in painted
+2D compositor: direct affine sampling, alpha-weighted filtering, atlas-cell
+clamping and a persistent pool bounded to eight workers, with serial fallback.
+Typed Wick APIs report the actual mode and worker count; build-info exposes the
+capability to agents and packaging.
+
+The map previously redrew the world behind its opaque panel. The compositor now
+skips earlier pixels covered by one later opaque untextured rectangle, preserving
+the visible border, alpha and draw order. Tests include 336 byte-exact comparisons
+against unculled painted rendering, clipping, translucent/textured covers and
+transformed boundaries. All 16 engine CTests pass with test presentation; fresh
+independent reviews found no remaining code findings.
+
+A source-stable check runs the real Wick VM, production callbacks and CPU
+renderer through 1,848 ordinary-input frames. English/Russian title, opening
+gameplay and map states match between one and eight workers. Sources and private
+saves remain unchanged during measurement, and all phase framebuffer digests
+match the preceding compositor.
+
+Final eight-worker CPU timings at 3600×2160 are:
+
+| Scene | English median / 95th percentile | Russian median / 95th percentile |
+| --- | --- | --- |
+| Title | 22.9 / 30.9 ms | 20.0 / 28.1 ms |
+| Opening gameplay | 35.0 / 48.7 ms | 30.4 / 48.5 ms |
+| Map | 19.9 / 25.8 ms | 10.5 / 25.1 ms |
+
+Each case uses 30 warmup and 120 measured frames on one development Mac; native
+display upload and audio-device work are excluded. Timing varied between runs.
+The synthetic covered-map case improved from 17.8 to 2.5 ms median with an
+identical framebuffer, but the real game still exceeds the 16.67 ms budget.
+Sustained native 60 FPS remains unfinished.
+
+New Nyurgun packages select the painted compositor by default and require proof
+from a pinned reviewed runtime, with an explicit legacy option. Density 2 and
+explicit native/density overrides remain. The retained 0.4.9 app, ZIP and DMG
+are unchanged.
+
+Full 4K art is unfinished. An 800×240 logical scrolling panorama needs roughly
+7200×2160 source pixels at this density. Enlarging current originals cannot
+supply that detail. New paintings in the existing project art conversation,
+paged animation atlases, measured texture-memory budgets and native visual
+review remain required. No new artwork or approved AI recordings are claimed.
