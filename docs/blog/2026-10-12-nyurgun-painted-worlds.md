@@ -91,6 +91,31 @@ need their own detail work. A recorded face-size mismatch and concealed hip/gait
 limitations in one Aytaly pose remain; native play and final visual/cultural
 approval remain open.
 
+## Recovering the rescue characters
+
+Captive Aytaly, the celestial messenger and Aiyy Umsuur now draw from a separate
+atlas at four times their old packed density. It copies selected pixels from
+our retained original generated paintings without resizing them. Their logical
+size and foot position stay the same; the old props atlas is preserved.
+
+![The messenger before and after recovery of the original painted detail, drawn through the actual game prop function.](../assets/nyurgun/rescue-messenger-detail-2026-10-12.png)
+
+The new mask contract makes its boundaries explicit: very faint pixels, smaller
+components and the lower source crop boundary are excluded. It does not reconstruct
+the unknown historical packing mask or prove complete silhouette ownership.
+Eighteen actual prop draws at three physical densities, independent source-channel
+checks and fresh review pass. This is clearer static art, with animation and
+final cultural review still ahead.
+
+![Seeded opening scene with the clearer messenger, rendered by the real Wick VM and Lantern renderer with synthetic OS presentation.](../assets/nyurgun/rescue-opening-detail-2026-10-12.png)
+
+The **0.4.8 local Mac review candidate** includes these actors and the journey
+atlas. It is built, signed and archive-verified; the ordinary-input headless
+campaign again passes 11,934 frames at density 1. The seeded scenes above are
+render checks, not native-window screenshots. Native desktop review remains
+blocked by the computer-control connection despite enabled permission. No
+approved AI recordings are bundled, and the whole epic remains unfinished.
+
 ## A journey atlas for the epic
 
 The journey atlas now follows the implemented rescue arc of chapters IV–V and
