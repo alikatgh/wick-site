@@ -64,6 +64,27 @@ draw path from the same fixed headless state after two frames at physical
 density 4. Faces and armour details are clearer; native presentation and final
 visual quality remain unreviewed.*
 
+## Recovering painted sword and whip poses
+
+Chapter VI now retains twice the previous atlas detail in its sword and sacred-whip
+poses. Fifteen original painted poses supply sixteen 512×192 physical cells;
+the logical canvas, foot roots, frame indices and animation timing stay the same.
+The new atlas is recovered from the original generated paintings at scales below
+one, without enlarging the old packed sheet.
+
+![Sword pose: old atlas on the left, recovered source detail on the right](../assets/nyurgun/sword-detail-comparison-2026-10-12.png)
+
+![Sacred-whip pose: old atlas on the left, recovered source detail on the right](../assets/nyurgun/whip-detail-comparison-2026-10-12.png)
+
+*These fixed-state comparisons use the actual game draw path at physical density 2.
+They show recovered detail, not an approved animation or native play session.*
+
+Exact source reconstruction checks all 6,291,456 atlas RGBA channels. Twenty-one
+importer rejection controls, eight renderer comparisons and eight shifted-root
+controls pass. Fresh independent review found no defects.
+[The source/art change is merged into main](https://github.com/alikatgh/nyurgun/pull/7).
+The preserved 0.4.5 app predates it; overall character quality still needs work.
+
 ## Recovering the painted worlds
 
 All ten panoramas now retain exact crops from the original project-generated
