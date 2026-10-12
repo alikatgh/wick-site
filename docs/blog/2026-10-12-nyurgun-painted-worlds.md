@@ -434,3 +434,24 @@ Full 4K art is unfinished. An 800×240 logical scrolling panorama needs roughly
 supply that detail. New paintings in the existing project art conversation,
 paged animation atlases, measured texture-memory budgets and native visual
 review remain required. No new artwork or approved AI recordings are claimed.
+
+## Local Mac installer 0.4.10 { #local-installer-0410 }
+
+The **0.4.10 local review app** packages the verified `painted-2d-v1` runtime
+for Apple Silicon Macs running macOS 15 or later. Density 2 remains the default;
+higher densities are experimental. The preserved 0.4.9 artifacts stay unchanged.
+
+The app is ad-hoc signed and unnotarized. The local DMG is built and passes native
+CRC verification. [Installer evidence](https://github.com/alikatgh/nyurgun/blob/main/docs/verification/painted-installer-0410.json)
+records exact checks of all 43 staged-app files/resources and unchanged source
+inputs. All 54 macOS packaging checks pass, and fresh independent source review
+reported no findings. The installer is a private local review artifact, with no
+public download.
+
+Opt-in `--clone-files` packaging requires native APFS copy-on-write clones.
+Each cloned file is independent, and cloning failure stops packaging without
+a full-copy fallback. Normal copying remains the default.
+
+Mounted-image contents and native window/play remain unverified. Actual 60 FPS,
+full 4K source artwork and final art/audio approval remain unfinished. Zero approved
+AI voice or music takes are bundled.
