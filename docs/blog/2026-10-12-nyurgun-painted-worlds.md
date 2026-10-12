@@ -91,7 +91,7 @@ need their own detail work. A recorded face-size mismatch and concealed hip/gait
 limitations in one Aytaly pose remain; native play and final visual/cultural
 approval remain open.
 
-## A journey atlas for the epic { #a-journey-atlas-for-the-epic }
+## A journey atlas for the epic
 
 The journey atlas now follows the implemented rescue arc of chapters IV–V and
 chapters VI, VII and VIII. The chapter index shows the story order. Each map brings
