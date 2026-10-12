@@ -5,7 +5,10 @@
 Nyurgun is a story-driven Sakha action-exploration game written in Wick. Its
 traversal and combat draw on Castlevania; conversations, inventory and decisions
 draw on Ultima. The aim is to bring Sakha literature and visual art into a game
-whose people, places and choices carry the story.
+whose people, places and choices carry the story. The production vision is a
+fully AI-authored game held to the craft expected of human-made work: coherent
+art direction, distinct characters, purposeful animation and carefully edited
+story and sound.
 
 The narrative follows the Orosin/Ergis 1947 text. The local working game joins
 the five-region Aytaly rescue arc of chapters IV–V to source-audited episodes
@@ -67,6 +70,42 @@ The rescue and later episodes exercise dialogue, inventory, progression,
 interaction prompts and saving. The departure adds a paired catch and recovery
 sequence followed by four armament poses. Targeted checks run the real Wick
 compiler, VM and renderer, rather than substituting game logic in a test mock.
+
+## Voices and music belong to the game
+
+[Native audio is now merged into Lantern main](https://github.com/alikatgh/lantern/pull/4).
+Wick can address sound effects, music and speech separately, keep stable voice
+handles, pause a line, fade it out and crossfade music on the mixer sample clock.
+Audible speech can lower the music and release it after the line ends. The
+callback performs no file access, allocation or asset deallocation.
+
+Nyurgun's source now routes dialogue by its exact subtitle key, character and
+selected language. Advancing or skipping a line retires the old voice; pause and
+journal screens suspend playback, and a language change cancels the previous
+language. The audio controller also follows the later cinematic sequences and
+scene music. Missing optional recordings leave text and progression available.
+
+[VoiceStudio](https://github.com/debpalash/VoiceStudio) is the required voice
+production tool, and [YuE](https://github.com/multimodal-art-projection/YuE) is the
+required music tool. The production plan covers eight character and narrator
+directions, 219 speech entries across Sakha, Russian and English, and seven music
+cues. These are plans, not finished performances. Versioned command-line adapters
+prepare bounded, inspectable jobs and provenance records; they do not install
+models, start inference or silently substitute another generator. The initial
+music contract pins the original YuE-v1 source and models separately from YuE2.
+
+Recordings must pass listening, editorial, cultural and rights review before the
+asset manifest admits them. Packaging checks the approved file hashes, current
+subtitles and generated loaders, and rejects a runtime without the native audio
+capability. No approved AI voice or music takes are bundled yet. The public
+Lantern 0.8.0 download and retained Nyurgun review apps remain unchanged.
+
+The real engine tests passed 594 assertions and all 12 CTest targets. Nyurgun's
+source passed 22 audio integration assertions, 154 episode-entry cases and a
+5,425-frame production self-play run. These checks use synthetic audio or
+headless presentation; hardware playback, listening quality and final character
+performances remain unverified. WAVs are decoded into bounded memory;
+streaming and compressed codecs remain future work.
 
 ## An agent-facing compiler check
 

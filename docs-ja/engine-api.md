@@ -52,11 +52,52 @@ Lantern の各呼び出しには、**コンパイラが検査する型付きシ�
 
 ## 音声 { #audio }
 
+従来の呼び出しも引き続き使えます。
+
 | 呼び出し | 補足 |
 |---|---|
-| `lt.load_sound(path: str): num` | WAV |
-| `lt.play(sound, volume=1, loop=0): num` | チャンネルを返します。16 個すべてが使用中なら −1 |
-| `lt.stop(channel)` · `lt.volume(v)` | |
+| `lt.load_sound(path: str): num` | WAV のサウンド ID。明示的な読み込み失敗はエラーになります |
+| `lt.play(sound, volume=1, loop=0): num` | チャンネル 0〜15。再生できなければ −1 |
+| `lt.stop(channel)` · `lt.volume(v)` | 従来のチャンネル停止とマスター音量 |
+
+次の機能は [Lantern の main ソース](https://github.com/alikatgh/lantern/pull/4)にあります。
+公開中の 0.8.0 バイナリには含まれないため、利用には現在のソースからのビルドが必要です。
+
+| 呼び出し | 戻り値と動作 |
+|---|---|
+| `lt.try_load_sound(path: str): num` | サウンド ID。WAV がない、不正、上限超過の場合は −1。サンドボックス違反はエラーになります |
+| `lt.sound_unload(sound): bool` | 未使用の展開済みデータを解放。再生中や一時停止中の利用者があれば拒否 |
+| `lt.voice_play(sound, bus=0, volume=1, loop=0, fade_seconds=0): num` | 再利用されない正のボイスハンドル、または −1。開始時は線形フェード |
+| `lt.voice_stop(voice, fade_seconds=0): bool` | 即時停止、または無音までの線形フェード |
+| `lt.voice_pause(voice, paused=1): bool` | 1 で一時停止、0 で再開。サンプル位置とボイスのフェードを固定 |
+| `lt.voice_active(voice): bool` | 一時停止中とフェード中も含む。完了または停止後は false |
+| `lt.music(sound, volume=1, loop=1, crossfade_seconds=0.5): num` | ボイスハンドル、または −1。新しい音楽バスのボイスを等パワーのクロスフェードで置き換える |
+| `lt.bus_volume(bus, volume, ramp_seconds=0): bool` | バスごとの線形音量ランプ |
+| `lt.ducking(music_level, attack_seconds=0.08, release_seconds=0.3): bool` | 台詞が聞こえるサンプルを出す間の音楽の減衰。レベル 1 で減衰を無効化 |
+
+バスは `lt.SFX=0`、`lt.MUSIC=1`、`lt.SPEECH=2` です。新しい呼び出しでは、ループと一時停止のフラグは
+**数値の 0 または 1**、ゲインは有限の 0..1、時間は有限の 0..60 秒です。
+従来の再生と新しいボイスは計 16 スロットを共有します。ボイスハンドルは再利用されません。
+従来のチャンネル ID とは区別してください。従来の再生には、新しいバスや台詞による音楽の減衰は適用しません。
+一時停止中のボイスも、スロットとサウンドを保持します。
+
+```wick
+let line = lt.try_load_sound("audio/dialogue/arrival.wav")
+let speaking = -1
+lt.ducking(0.3, 0.08, 0.3)
+if line >= 0 { speaking = lt.voice_play(line, lt.SPEECH) }
+// On skip or dialogue close, stop before unloading the sound.
+if lt.voice_active(speaking) { lt.voice_stop(speaking) }
+if line >= 0 { lt.sound_unload(line) }
+```
+
+再生はミキサーのサンプル時刻を使います。コールバック内ではファイル操作、メモリ確保、
+音声データの解放を行いません。不正なアセット、スロット不足、音声デバイスが使えない場合は、
+`lt.music` が −1 を返し、現在の音楽を維持します。
+WAV 入力は PCM 8/16/24/32 と IEEE float32、モノラル・ステレオ、8〜192 kHz に対応し、
+48 kHz ステレオに変換します。上限はサウンドごとに入力・展開後それぞれ 64 MiB、
+展開済みデータ全体で 128 MiB、読み込み済みサウンド数 256 です。
+ストリーミングと圧縮コーデックは未実装です。[音声機能の完全な契約](https://github.com/alikatgh/lantern/blob/main/docs/WICK.md#native-audio-buses-and-stable-voices)を参照してください。
 
 ## 入力と保存 { #input-saves }
 
