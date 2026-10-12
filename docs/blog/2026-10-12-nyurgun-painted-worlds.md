@@ -64,6 +64,33 @@ draw path from the same fixed headless state after two frames at physical
 density 4. Faces and armour details are clearer; native presentation and final
 visual quality remain unreviewed.*
 
+## Recovering the supporting cast
+
+Faces, braids and embroidered clothing need to remain readable during play.
+The twelve-slot Chapter VI–VIII cast now recovers four times its previous atlas
+detail directly from three retained project-generated paintings. The same
+characters, complete paired handover, foot roots and walking cycle remain;
+this adds no poses or anatomy repair.
+
+![Paired handover: old atlas on the left, recovered original painted detail on the right.](../assets/nyurgun/supporting-handover-detail-2026-10-12.png)
+
+![Aytaly walking: old atlas on the left, recovered original painted detail on the right.](../assets/nyurgun/supporting-walk-detail-2026-10-12.png)
+
+*Fixed-state comparisons through the actual game draw functions at physical
+density 4. These show recovered source detail with unchanged framing; they do
+not establish native animation quality.*
+
+Independent reconstruction compares every source-derived RGBA channel, and
+28 importer rejection controls plus 24 production draws check all twelve slots
+in both facings. Fresh independent review passes, as does the implemented
+campaign in **11,934 ordinary-input frames** with the new art.
+
+This later source change is not in the preserved 0.4.6 review archive. The
+opening messenger and rescue-arc actors use a separate props atlas and still
+need their own detail work. A recorded face-size mismatch and concealed hip/gait
+limitations in one Aytaly pose remain; native play and final visual/cultural
+approval remain open.
+
 ## Reviewing the integrated candidate
 
 The new **0.4.6 local Mac review candidate** brings the sharper 32-pose hero,
