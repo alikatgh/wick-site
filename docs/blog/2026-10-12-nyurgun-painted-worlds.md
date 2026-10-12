@@ -347,3 +347,44 @@ a proposed Ember64 native runtime tier would need to preserve Wick, painted
 RGBA rendering, audio and saves before hosting Nyurgun. That tier and the
 reusable desktop runner remain planned work. Neither is claimed as a released
 feature, and this build-policy change adds no new art or approved recordings.
+
+## More source detail and a readable first gate
+
+Local candidate 0.4.9 recovers retained painting detail across 15 atlas families.
+Repacking adds 33,436,160 atlas pixels, including transparent space.
+All 27 art contracts pass; logical roots and animation timing stay unchanged.
+Ten world panoramas, the rescue cast and the tree already retain available
+original detail. This does not make every asset 4K: an 8,192-pixel-wide action
+atlas is a strip of poses, not an 8K character.
+
+![Chapter VI duel, captured headlessly with draft Sakha text](../assets/nyurgun/vi-source-detail-2026-10-12.png)
+
+*Chapter VI in the verified headless campaign at default density 2. Sakha
+wording remains an unreviewed draft.*
+
+The first gate now explains when to seek the messenger's clue or hearth coal,
+preserving the story prerequisites. A 700-frame ordinary-input route and 18
+localized guidance views pass. The frozen default-density-2 rescue→VI→VII→VIII
+campaign completes in 11,970 frames, with 20 captures and four map returns;
+protected source and resource bytes remain unchanged.
+
+![English guidance near the first gate, captured headlessly](../assets/nyurgun/opening-gate-guidance-2026-10-12.png)
+
+*English gate guidance from the real Wick VM and Lantern renderer, using
+test-only OS presentation. This is headless evidence.*
+
+Actual VM font renders pass 84 Latin/Sakha letter-pair checks at densities
+2, 3, 6, 9 and 10, including scaled text. Independent raster-layer comparisons
+differ by at most one RGB level.
+
+[Lantern PR #6](https://github.com/alikatgh/lantern/pull/6), merged into main at
+`d59b521`, has green PR/main CI, all 15 CTests and iOS compilation/linking.
+The experimental renderer bounds its framebuffer to 4,000×2,400, supports
+densities 1–10, exposes framebuffer-size APIs and adds a 2D fast path.
+Measured 4K CPU rendering still takes about 181 ms before upload; default
+density 2 stays unchanged. This is not 4K-ready.
+
+The signed local app and ZIP/DMG packages are review artifacts. The app has not
+successfully launched; native presentation is unverified and it is unnotarized,
+with zero approved AI voice/music takes. Native play, performance, cultural
+review and the finished game remain open.
