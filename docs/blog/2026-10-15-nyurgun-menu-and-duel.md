@@ -92,3 +92,34 @@ Native inspection covered the exact app's Sakha title and Continue into VI camp
 at full health. Further controlled play was interrupted by user input; native
 far-distance behavior, boss victory and measured cadence are not claimed.
 No new art or audio is integrated.
+
+## 0.4.19 update: illustrated inventory, mouse controls and Timir's finish
+
+Inventory now shows selectable cards using existing painted props. Cards
+highlight under the pointer; the herb card shows count, health and actual
+recovery. Mouse actions cover the book, menus, dialogue and progression/retry
+prompts. Keyboard controls remain; held clicks or simultaneous X/click input
+cannot duplicate a healing action.
+
+Timir uses all twelve existing poses in their appropriate sequence. At two HP
+he waits in a safe stagger for the required grapple: approach holding Up/W or
+use the prompt in range. The story still requires the whip and plea.
+
+The final assembly passes 85 pointer checks with 31 captures and 76 first-phase
+reach checks. Seventeen finisher-input checks and 53 pose/UI cases bind the
+preceding assembly; four VI mouse-hook corrections were separately reviewed.
+The final ordinary-input headless campaign reaches VIII in 12,602 frames with
+twenty captures and four map roundtrips. All 42 bundler and 69 package tests pass,
+with no open independent-review findings. Strict ad-hoc signature and 43 exact
+source/runtime comparisons bind the local app. All 46 old 0.4.18 files are unchanged.
+
+Native inspection covered the visible pointer/title, mouse Continue into VI,
+illustrated inventory at 20/20 health with zero herbs and disabled Eat, mouse
+Map/Close, and pause/Resume. Native herb consumption, a full boss victory and
+measured cadence remain unverified; the app is unnotarized.
+
+A read-only audit covered 1,392 supported visuals at the Downloads top level and
+in selected asset-named folders. It found 75 exact Nyurgun matches and reconciled
+27 asset families/81 bindings. Matched originals are unchanged; ten new candidates
+remain unused. This does not cover every personal directory or archive. No new
+art or audio is integrated; approved audio is zero and cultural approval remains open.
