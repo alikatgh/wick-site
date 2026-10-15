@@ -123,3 +123,43 @@ in selected asset-named folders. It found 75 exact Nyurgun matches and reconcile
 27 asset families/81 bindings. Matched originals are unchanged; ten new candidates
 remain unused. This does not cover every personal directory or archive. No new
 art or audio is integrated; approved audio is zero and cultural approval remains open.
+
+## 0.4.20 update: painted inventory icons and menu ornaments
+
+Six newly generated paintings now illustrate herbs, coal, dash, wing and the
+journal/pouch headers. Original corner ornaments frame the title, book, pause
+and Help panels. The Help footer has its own space, and the revised chapter
+pause frame keeps all four corners clear of the buttons. Gameplay, mouse and
+keyboard input, healing and save formats are unchanged.
+
+![Sakha title with painted ornaments](../assets/nyurgun/nyurgun-0420-title-sah.png)
+
+![Sakha inventory with the four item paintings](../assets/nyurgun/nyurgun-0420-inventory-sah.png)
+
+![English journal with its painted header](../assets/nyurgun/nyurgun-0420-journal-en.png)
+
+![Revised Sakha chapter pause frame](../assets/nyurgun/nyurgun-0420-pause-sah.png)
+
+![English Help page with a clear footer](../assets/nyurgun/nyurgun-0420-help-en.png)
+
+These are headless captures from the real Wick renderer. The final R2 drawing
+variant combines 36 newly checked pause cases with unchanged earlier UI/Help
+evidence: 150 effective UI checks and 105 captures, plus 85 pointer checks and
+31 captures. The lossless packer passes 60 checks; the source launcher passes 16.
+The actual final assembly completes the ordinary-input headless campaign through
+VIII in 12,602 frames with twenty captures and four map roundtrips. Independent reviews
+have no open findings. Strict ad-hoc signature binds 48 app files/45 source-runtime
+copies; all 46 old 0.4.19 and 48 initial 0.4.20 app files remain unchanged. Source launch
+prefers the verified pointer runtime when present and retains explicit overrides.
+
+Native CUA inspection covers the exact R2 app's title/pointer, mouse Continue,
+four complete pause corners, Resume, inventory at 20/20 with zero herbs, journal/map
+and Close to grounded play, with visible Close hover. These observations have
+no saved native screenshot hash. Herb consumption was not observed.
+
+The requested 48-pixel source padding failed. Qualified packing preserves full
+512-pixel RGBA icon cells with 8-pixel gutters, including 28 alpha-1 border pixels
+and 1,220 tiny detached components. No matte, masking or resampling is used to
+hide them. The 36 older art assets and earlier apps remain unchanged. Full native
+campaign, boss victory, herb consumption, measured cadence, notarization,
+cultural/Sakha approval and approved audio remain unfinished.
