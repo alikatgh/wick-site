@@ -1,5 +1,6 @@
 # The wick blog
 
+- [Nyurgun 0.4.16: a clearer menu, journey book and duel](2026-10-15-nyurgun-menu-and-duel.md) — 15 October 2026
 - [Nyurgun 0.4.15: five painted worlds and clearer combat](2026-10-15-nyurgun-five-painted-worlds.md) — 15 October 2026
 - [Nyurgun: painted worlds, characters and story in Wick](2026-10-12-nyurgun-painted-worlds.md) — 12 October 2026
 - [Wick 0.3: bits you can build with](2026-10-06-release-0.3.md) — 6 October 2026
