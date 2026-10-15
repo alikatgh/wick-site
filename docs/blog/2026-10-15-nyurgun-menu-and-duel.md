@@ -72,3 +72,23 @@ three herbs at 20/20 health, X preserving herbs at full health, and map/back
 navigation. Damaged-health eating in native play, a fresh full campaign and
 travel execution were not rerun. All 46 files in the 0.4.16 app remain unchanged;
 no new art or audio is integrated.
+
+## 0.4.18 update: Timir's sword reach
+
+Timir's first-phase overhead could damage the player from far outside his sword
+reach. The repair uses the same physical forward and vertical sword areas for
+damage, warnings and the bright strike arc, mirrored with his facing. Raised
+and downward sword poses now match the attack, and the strike ends at recovery.
+An ordinary Z jump clears the low sweep in either direction. Attack timings,
+HP, later phases, the grapple and save formats remain unchanged.
+
+The exact local 0.4.18 app passes 103 targeted checks with 22 captures and
+63 package tests. An ordinary-input headless campaign reaches VIII in 12,563
+frames with twenty captures and four map roundtrips. Independent review has
+no current findings; strict ad-hoc signature and 43 source/runtime comparisons
+bind the new app. All 46 files in the previous 0.4.17 app remain unchanged.
+
+Native inspection covered the exact app's Sakha title and Continue into VI camp
+at full health. Further controlled play was interrupted by user input; native
+far-distance behavior, boss victory and measured cadence are not claimed.
+No new art or audio is integrated.
