@@ -54,3 +54,21 @@ Full native gameplay and cadence, the requested Castlevania-level craft,
 full 4K presentation, cultural/fluent Sakha review, notarization and the complete
 epic remain open. Approved voice and music takes remain at zero. Earlier
 0.4.13 and 0.4.15 artifacts and reports are preserved.
+
+## 0.4.17 update: herbs and map navigation
+
+The rescue and Chapter VI inventory now share a herb card showing herb count,
+current/max health and X to eat one herb. It shows the actual recovery available,
+up to six HP: at 11/12 health, the card shows +1. Full health and an empty pouch
+have explicit disabled messages. Healing controllers and saves are unchanged.
+
+From VI's map, Left opens inventory and Right opens journal. From the rescue map,
+Down opens inventory and Up opens journal.
+
+The exact local 0.4.17 app passes 47 targeted checks with 33 three-language
+captures, 63 packaging tests and strict ad-hoc signature verification. Independent
+review has no open findings. Native inspection covered saved VI inventory with
+three herbs at 20/20 health, X preserving herbs at full health, and map/back
+navigation. Damaged-health eating in native play, a fresh full campaign and
+travel execution were not rerun. All 46 files in the 0.4.16 app remain unchanged;
+no new art or audio is integrated.
