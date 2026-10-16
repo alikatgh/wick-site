@@ -1,6 +1,6 @@
 # The wick blog
 
-- [Nyurgun 0.4.22: a village at human scale and responsive mouse combat](2026-10-16-nyurgun-playable-world.md) — 16 October 2026
+- [Human scale and mouse input in painted 2D scenes](2026-10-16-nyurgun-playable-world.md) — 16 October 2026
 - [Nyurgun 0.4.16: a clearer menu, journey book and duel](2026-10-15-nyurgun-menu-and-duel.md) — 15 October 2026
 - [Nyurgun 0.4.15: five painted worlds and clearer combat](2026-10-15-nyurgun-five-painted-worlds.md) — 15 October 2026
 - [Nyurgun: painted worlds, characters and story in Wick](2026-10-12-nyurgun-painted-worlds.md) — 12 October 2026
