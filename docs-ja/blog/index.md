@@ -1,5 +1,6 @@
 # Wick ブログ { #the-wick-blog }
 
+- [Nyurgun 0.4.22：人物に合った村の縮尺とマウス戦闘の改善](2026-10-16-nyurgun-playable-world.md) — 2026 年 10 月 16 日
 - [Nyurgun 0.4.16：メニュー、旅の手帳、決闘を読み取りやすく](2026-10-15-nyurgun-menu-and-duel.md) — 2026 年 10 月 15 日
 - [Nyurgun 0.4.15：5 つの絵画調の世界と読み取りやすい戦闘](2026-10-15-nyurgun-five-painted-worlds.md) — 2026 年 10 月 15 日
 - [Nyurgun：Wick で描く世界、人物、物語](2026-10-12-nyurgun-painted-worlds.md) — 2026 年 10 月 12 日
