@@ -22,6 +22,8 @@ one on the wrong type is a compile error, not a runtime surprise.
 | `abs(x: num): num` · `sqrt(x: num): num` | |
 | `min(a: num, b: num): num` · `max(a, b)` | |
 | `sin(x: num): num` · `cos(x: num): num` | radians |
+| `clamp(val: num, low: num, high: num): num` | bound `val` between the limits; reversed limits are accepted |
+| `lerp(a: num, b: num, t: num): num` | linear interpolation `a + (b - a) * t`; `t` is not clamped |
 | `atan(y: num, x: num): num` | two-argument arctangent |
 | `pi` | constant |
 

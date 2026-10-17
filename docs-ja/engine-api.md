@@ -48,7 +48,26 @@ Lantern の各呼び出しには、**コンパイラが検査する型付きシ�
 | `lt.sprite(tex, x,y, sx=1,sy=1)` | 左上を基準に配置 |
 | `lt.sprite_ex(tex, cx,cy, sx=1,sy=1, rot=0, r=1,g=1,b=1,a=1)` | 中心、回転、色付け。負の倍率で反転 |
 | `lt.sprite_uv(tex, x,y,w,h, u0,v0,u1,v1)` | アトラス内の部分矩形（タイルマップ） |
+| `lt.sprite_grounded(tex, frame, cols, rows, x, feet, w, h, baseline, dir=1, r=1, g=1, b=1, lift=0)` | アトラスセルを2分割し、下側の帯を固定して上側を伸縮 |
+| `lt.glow_radial(cx, cy, rx, ry, r=1, g=1, b=1, a=1)` | 横と縦の半径を指定する柔らかな放射状グロー |
+| `lt.texture_has_alpha(tex): bool` | 明示的なRGBAアルファマスクの有無。透過画素の有無とは別 |
+| `lt.draw_count(): num` | 現在のフレーム、または最後に完了したフレームの2Dクアッド数 |
 | `lt.print(text: str, x,y, r=1,g=1,b=1,a=1)` | 内蔵 8×8 フォント。`\n` に対応 |
+
+`sprite_grounded`の座標は論理単位です。`baseline`は伸縮前の上側の高さで、
+`feet`は下側の帯の上端です。上側は`feet - baseline - lift`から`feet`まで、
+下側は`feet`から`feet + h - baseline`まで描かれます。`dir < 0`で左右反転します。
+有効な接地描画は2クアッドです。原画の足元と床、衝突判定の位置は別に合わせます。
+
+### フレームシーンの記録 { #frame-scene-telemetry }
+
+`LANTERN_FRAME_JSON=<prefix>`を設定すると、`LANTERN_SHOT_FRAME`で指定した
+フレームで`<prefix>.json`を出力し、実行を終了します。
+スキーマは`lantern.frame-scene.v1`です。記録対象は投入された2Dクアッドで、
+形状、UV、色、種類、接地フラグ、テクスチャのパスと明示的アルファの情報を含みます。
+メッシュ、衝突判定、場面全体の可視性を表す記録ではありません。
+`draw_count()`には2Dの図形、スプライト、グロー、デバッグ文字のクアッドを含み、
+`beginFrame`でリセットされます。画像とネイティブ環境での確認も併用してください。
 
 ## 音声 { #audio }
 

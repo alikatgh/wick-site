@@ -22,6 +22,8 @@
 | `abs(x: num): num` · `sqrt(x: num): num` | |
 | `min(a: num, b: num): num` · `max(a, b)` | |
 | `sin(x: num): num` · `cos(x: num): num` | ラジアン |
+| `clamp(val: num, low: num, high: num): num` | `val`を上下限の範囲に制限。上下限が逆順でも使用可能 |
+| `lerp(a: num, b: num, t: num): num` | 線形補間 `a + (b - a) * t`。`t`の範囲制限なし |
 | `atan(y: num, x: num): num` | 2 引数の逆正接 |
 | `pi` | 定数 |
 
