@@ -48,7 +48,26 @@ Handles (meshes, textures, sounds) are `num`.
 | `lt.sprite(tex, x,y, sx=1,sy=1)` | top-left anchored |
 | `lt.sprite_ex(tex, cx,cy, sx=1,sy=1, rot=0, r=1,g=1,b=1,a=1)` | center, rotate, tint; negative scale flips |
 | `lt.sprite_uv(tex, x,y,w,h, u0,v0,u1,v1)` | atlas sub-rect (tilemaps) |
+| `lt.sprite_grounded(tex, frame, cols, rows, x, feet, w, h, baseline, dir=1, r=1, g=1, b=1, lift=0)` | split an atlas cell into two quads; stretch the upper section while the lower band stays fixed |
+| `lt.glow_radial(cx, cy, rx, ry, r=1, g=1, b=1, a=1)` | soft radial glow with horizontal and vertical radii |
+| `lt.texture_has_alpha(tex): bool` | query an explicit RGBA alpha mask, independently of pixel opacity |
+| `lt.draw_count(): num` | 2D quad count for the current or last completed frame |
 | `lt.print(text: str, x,y, r=1,g=1,b=1,a=1)` | built-in 8×8 font, `\n` aware |
+
+`sprite_grounded` uses logical coordinates. `baseline` is the upper section's
+unstretched height, and `feet` is the lower band's top. The upper quad spans
+`feet - baseline - lift` through `feet`; the lower quad spans `feet` through
+`feet + h - baseline`. `dir < 0` mirrors horizontally. A valid grounded draw
+submits two quads. Align the source artwork, floor and collision separately.
+
+### Frame scene telemetry
+
+Set `LANTERN_FRAME_JSON=<prefix>` to write `<prefix>.json` at the frame selected
+by `LANTERN_SHOT_FRAME`, then end the run. The schema is `lantern.frame-scene.v1`.
+It records submitted 2D quad geometry, UVs, tint, kinds, grounding flags, texture
+paths and explicit-alpha metadata. It does not describe meshes, collision or
+whole-scene visibility. `draw_count()` includes 2D rect, sprite, glow and debug
+font quads and resets at `beginFrame`. Use raster and native checks alongside it.
 
 ## Audio
 

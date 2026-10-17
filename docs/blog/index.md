@@ -1,5 +1,6 @@
 # The wick blog
 
+- [Grounded sprites and frame telemetry in Lantern](2026-10-17-agentic-2d-primitives.md) — 17 October 2026
 - [Human scale and mouse input in painted 2D scenes](2026-10-16-nyurgun-playable-world.md) — 16 October 2026
 - [Nyurgun 0.4.16: a clearer menu, journey book and duel](2026-10-15-nyurgun-menu-and-duel.md) — 15 October 2026
 - [Nyurgun 0.4.15: five painted worlds and clearer combat](2026-10-15-nyurgun-five-painted-worlds.md) — 15 October 2026
@@ -18,6 +19,8 @@ that history.
 
 | Date | Title |
 |---|---|
+| 2026-10-17 | [Grounded sprites and frame telemetry in Lantern](2026-10-17-agentic-2d-primitives.md) |
+| 2026-10-06 | [Wick 0.3: bits you can build with](2026-10-06-release-0.3.md) |
 | 2026-07-14 | [wick 0.2 — Release notes](2026-07-14-release-0.2.md) |
 | 2026-07-14 | [Admitting records](2026-07-14-admitting-records.md) |
 | 2026-07-14 | [Store safety is a language property](2026-07-14-store-safety.md) |
