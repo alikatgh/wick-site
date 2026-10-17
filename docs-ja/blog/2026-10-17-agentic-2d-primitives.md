@@ -9,7 +9,7 @@
 `lt.sprite_grounded`はアトラスの1セルを、隣接する2つのクアッドに分けて描きます。`baseline`は上側の高さを論理画素単位で指定します。`feet`は下側の帯の上端で、その下端は`feet + h - baseline`です。`lift`を変えると、下側の帯を固定したまま上側を上方に伸ばせます。
 
 ```wick
-// 描画部分の例。soleYは下側の帯の上端。
+// An illustrative draw fragment; soleY is the lower band's top.
 lt.sprite_grounded(atlas, pose, 4, 2, x, soleY, 32, 64, 58,
                    1, 1, 1, 1, lift)
 ```
