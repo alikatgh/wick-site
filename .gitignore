@@ -16,3 +16,9 @@ docs/assets/reading.css
 .wrangler/
 
 docs/assets/
+
+# Secrets — never commit (templates are fine)
+.env
+.env.*
+!.env.example
+!.env.schema
