@@ -1,5 +1,6 @@
 # The wick blog
 
+- [Purpose-built 2D primitives and frame telemetry for agentic development](2026-10-17-agentic-2d-primitives.md) — 17 October 2026
 - [Wick 0.3: bits you can build with](2026-10-06-release-0.3.md) — 6 October 2026
 
 
@@ -14,6 +15,8 @@ that history.
 
 | Date | Title |
 |---|---|
+| 2026-10-17 | [Purpose-built 2D primitives and frame telemetry for agentic development](2026-10-17-agentic-2d-primitives.md) |
+| 2026-10-06 | [Wick 0.3: bits you can build with](2026-10-06-release-0.3.md) |
 | 2026-07-14 | [wick 0.2 — Release notes](2026-07-14-release-0.2.md) |
 | 2026-07-14 | [Admitting records](2026-07-14-admitting-records.md) |
 | 2026-07-14 | [Store safety is a language property](2026-07-14-store-safety.md) |

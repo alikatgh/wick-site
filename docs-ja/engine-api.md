@@ -48,6 +48,10 @@ Lantern の各呼び出しには、**コンパイラが検査する型付きシ�
 | `lt.sprite(tex, x,y, sx=1,sy=1)` | 左上を基準に配置 |
 | `lt.sprite_ex(tex, cx,cy, sx=1,sy=1, rot=0, r=1,g=1,b=1,a=1)` | 中心、回転、色付け。負の倍率で反転 |
 | `lt.sprite_uv(tex, x,y,w,h, u0,v0,u1,v1)` | アトラス内の部分矩形（タイルマップ） |
+| `lt.sprite_grounded(tex, frame, cols, rows, x, feet, w, h, baseline, dir=1, r=1, g=1, b=1, lift=0)` | ベースライン分割による接地キャラクター描画（足元を固定） |
+| `lt.glow_radial(cx, cy, rx, ry, r=1, g=1, b=1, a=1)` | 滑らかな放射状減衰の光クアッド |
+| `lt.texture_has_alpha(tex): bool` | テクスチャがアルファチャンネルを持つかを判定 |
+| `lt.draw_count(): num` | 現在のフレームで投入された描画コマンド数を取得 |
 | `lt.print(text: str, x,y, r=1,g=1,b=1,a=1)` | 内蔵 8×8 フォント。`\n` に対応 |
 
 ## 音声 { #audio }

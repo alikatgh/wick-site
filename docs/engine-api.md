@@ -48,6 +48,10 @@ Handles (meshes, textures, sounds) are `num`.
 | `lt.sprite(tex, x,y, sx=1,sy=1)` | top-left anchored |
 | `lt.sprite_ex(tex, cx,cy, sx=1,sy=1, rot=0, r=1,g=1,b=1,a=1)` | center, rotate, tint; negative scale flips |
 | `lt.sprite_uv(tex, x,y,w,h, u0,v0,u1,v1)` | atlas sub-rect (tilemaps) |
+| `lt.sprite_grounded(tex, frame, cols, rows, x, feet, w, h, baseline, dir=1, r=1, g=1, b=1, lift=0)` | grounded character split along baseline; soles stay planted |
+| `lt.glow_radial(cx, cy, rx, ry, r=1, g=1, b=1, a=1)` | smooth radial light quad |
+| `lt.texture_has_alpha(tex): bool` | query whether texture has an alpha channel |
+| `lt.draw_count(): num` | returns number of submitted draw calls in current frame |
 | `lt.print(text: str, x,y, r=1,g=1,b=1,a=1)` | built-in 8×8 font, `\n` aware |
 
 ## Audio
