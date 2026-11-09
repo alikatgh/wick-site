@@ -13,6 +13,16 @@ extract it, and open a terminal in the extracted folder. It contains `lantern`,
 Commands below assume the downloaded bundle. In a source checkout, replace
 `./lantern` with `./build/lantern` and `./lantern_pack` with `./build/lantern_pack`.
 
+## Edit with VS Code (optional)
+
+[Wick Language for VS Code](https://marketplace.visualstudio.com/items?itemName=albertn.wick-language)
+adds syntax highlighting, bracket matching, `//` comments and six snippets for
+`.wick` files. In VS Code, open Quick Open and enter
+`ext install albertn.wick-language` to install it.
+Diagnostics, completions and go-to-definition are not available yet.
+
+Run your game with Lantern using the commands below.
+
 ## Run your first program
 
 Create a game directory from the folder containing the engine:

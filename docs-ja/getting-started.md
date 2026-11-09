@@ -13,6 +13,16 @@
 以下のコマンドは、ダウンロードしたバンドルを使うことを前提としています。ソースをチェックアウトした場合は、
 `./lantern` を `./build/lantern` に、`./lantern_pack` を `./build/lantern_pack` に置き換えてください。
 
+## VS Code で編集する（任意） { #edit-with-vs-code-optional }
+
+[VS Code 用の Wick Language](https://marketplace.visualstudio.com/items?itemName=albertn.wick-language)
+では、`.wick` ファイルのシンタックスハイライト、括弧の対応表示、`//` コメント、
+6 個のスニペットを利用できます。VS Code の Quick Open を開き、
+`ext install albertn.wick-language` と入力してインストールしてください。
+診断、補完、定義への移動にはまだ対応していません。
+
+ゲームは、以下のコマンドで Lantern を使って実行します。
+
 ## 最初のプログラムを実行する { #run-your-first-program }
 
 エンジンがあるフォルダから、ゲーム用のディレクトリを作成します。
